@@ -1,0 +1,28 @@
+Date/Time:  Sun Aug 28 02:36:16 2022
+
+===================================
+Lyapunov Exponents (Wolf): duffing
+===================================
+
+Program Parameters
+-----------------------------------
+Dimension:              2           
+Number of Parameters:   5           
+Forcing Periods:        1000        
+Timesteps per Period:   1000        
+Timestep value:         0.0062831853
+-----------------------------------
+Initial Conditions
+-----------------------------------
+Initial Time (t):       0.0000000000
+x[0]:                   0.0000000000
+x[1]:                   0.0000000000
+-----------------------------------
+System Parameters
+-----------------------------------
+par[0]:                 1           
+par[1]:                 0.15        
+par[2]:                 0.025       
+par[3]:                 -0.5        
+par[4]:                 1           
+-----------------------------------
