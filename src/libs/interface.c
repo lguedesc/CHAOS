@@ -95,7 +95,7 @@ void invalid_option(unsigned int option, char* category, size_t maxlength) {
 }
 
 void end_of_execution(size_t maxlength) {
-    printf("%s", "  Execution ended successfully! Press any key to exit program...\n");
+    printf("%s", "\n  Execution ended successfully! Press any key to exit program...\n");
     partition(4, maxlength);
     while(getchar()!='\n'){}
     getchar(); // wait for ENTER

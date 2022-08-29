@@ -42,6 +42,7 @@ char *convert_dir(const char *rawdir) {
             }
         #endif
     }
+    // The user is responsible to free (newdir) after function call
     return newdir;
 }
 

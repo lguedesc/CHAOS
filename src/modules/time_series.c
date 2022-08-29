@@ -62,6 +62,7 @@ void timeseries(char *funcname, void (*edosys)(int, double *, double, double *, 
     fclose(output_info);
     
     // Free allocated memory
+    free(dir);
     free(input_filename);
     free(x); free(par);
 }

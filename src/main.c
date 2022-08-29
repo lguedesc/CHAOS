@@ -8,9 +8,12 @@
 #include "modules/poinc_map.h"
 #include "modules/lyap_exp_wolf.h"
 #include "modules/ftime_series.h"
-#include <crtdbg.h>
+#include "modules/bifurcation.h"
+#include "modules/fbifurcation.h"
+#include "modules/dyndiag.h"
+#include "modules/epbasin.h"
+#include "modules/forcedbasin.h"
 
-char **create_memory_to_store_names(size_t rows, size_t cols);
 void execute_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname);
 
 #define FUNC_1 duffing
@@ -25,7 +28,25 @@ void execute_modules(unsigned int module, void (*edosys)(int, double *, double, 
 #define NUM_OF_SYSTEMS 2
 #define NUM_OF_EH_SYSTEMS 1
 #define NUM_OF_TOOLBOXES 2
-#define NUM_OF_MODULES 9
+#define NUM_OF_MODULES 9 
+
+char *systemNames[NUM_OF_SYSTEMS] = {"Duffing Oscillator",
+                                     "2 DoF Duffing Oscillator"};
+ 
+char *EHsystemNames[NUM_OF_EH_SYSTEMS] = {"Bistable Energy Harvester"};
+
+char *toolboxesNames[NUM_OF_TOOLBOXES] = {"Nonlinear Dynamics Toolbox",
+                                          "Energy Harvesting Toolbox"};
+                            
+char *moduleNames[NUM_OF_MODULES] = {"Time Series",
+                                     "Poincare Map",
+                                     "Lyapunov Exponents (Method from Wolf et al., 1985)", 
+                                     "Full Time Series (Integrator + Poincare Map + Lyapunov Exponents)",
+                                     "Bifurcation Diagram",
+                                     "Full Bifurcation Diagram (Automatic Identification of Attractors)",
+                                     "Dynamical Diagram",
+                                     "Basin of Attraction (Fixed Points)",
+                                     "Basin of Attraction (Forced)"};
 
 void call_system(unsigned int system, unsigned int module) {
     switch(system) {
@@ -52,44 +73,8 @@ void call_EH_system(unsigned int system, unsigned int module) {
     }
 }
 
-void assign_system_names(char **systemnames, char **EHsystemnames) {
-    // Nonlinear Dynamics Toolbox System Names
-    strcpy(systemnames[0], "Duffing Oscillator");
-    strcpy(systemnames[1], "2 DoF Duffing Oscillator");
-    // Energy Harvesting Toolbox System Names
-    strcpy(EHsystemnames[0], "Bistable Energy Harvester");
-}
-
-void assign_toolbox_names(char **toolboxnames) {
-    // Toolbox Names
-    strcpy(toolboxnames[0], "Nonlinear Dynamics Toolbox");
-    strcpy(toolboxnames[1], "Energy Harvesting Toolbox");
-}
-
-void assign_module_names(char **modulenames) {
-    // Module Names
-    strcpy(modulenames[0], "Time Series");
-    strcpy(modulenames[1], "Poincare Map");
-    strcpy(modulenames[2], "Lyapunov Exponents (Method from Wolf et al., 1985)");
-    strcpy(modulenames[3], "Full Time Series (Integrator + Poincare Map + Lyapunov Exponents)");
-    strcpy(modulenames[4], "Bifurcation Diagram");
-    strcpy(modulenames[5], "Full Bifurcation Diagram (Automatic Identification of Attractors)");
-    strcpy(modulenames[6], "Dynamical Diagram");
-    strcpy(modulenames[7], "Basin of Attraction (Fixed Points)");
-    strcpy(modulenames[8], "Basin of Attraction (Forced)");
-}
-
-
 int main (void) {
 
-    char **systemNames = create_memory_to_store_names(NUM_OF_SYSTEMS, MAX_NAMELENGTH);
-    char **EHsystemNames = create_memory_to_store_names(NUM_OF_EH_SYSTEMS, MAX_NAMELENGTH);
-    char **toolboxesNames = create_memory_to_store_names(NUM_OF_TOOLBOXES, MAX_NAMELENGTH);
-    char **moduleNames = create_memory_to_store_names(NUM_OF_MODULES, MAX_NAMELENGTH);
-    assign_system_names(systemNames, EHsystemNames);
-    assign_toolbox_names(toolboxesNames);
-    assign_module_names(moduleNames);
-    
     // Define Control Variables
     unsigned int toolbox;
     unsigned int system;
@@ -116,22 +101,8 @@ int main (void) {
         partition(1, MAX_NAMELENGTH);
     }
     
-    // Free Memory
-    free(systemNames);
-    free(EHsystemNames);
-    free(toolboxesNames);
-    free(moduleNames);
-    
     // End of execution
     end_of_execution(MAX_NAMELENGTH);
-}
-
-char **create_memory_to_store_names(size_t rows, size_t cols) {
-    char **arr = malloc(rows * sizeof **arr);
-    for (int i = 0; i < rows; i++) {
-        arr[i] = malloc(cols * sizeof **arr);
-    }
-    return arr;
 }
 
 void execute_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname) {
@@ -149,23 +120,22 @@ void execute_modules(unsigned int module, void (*edosys)(int, double *, double, 
             ftime_series(outputname, edosys);
             break;
         case 5:
-            // Call solution of the type solution(edosys, outputname);
+            bifurcation(outputname, edosys);
             break;
         case 6:
-            // Call solution of the type solution(edosys, outputname);
+            fbifurcation(outputname, edosys);
             break;
         case 7:
-            // Call solution of the type solution(edosys, outputname);
+            dyndiag(outputname, edosys);
             break;
         case 8:
-            // Call solution of the type solution(edosys, outputname);
+            epbasin(outputname, edosys);
             break;
         case 9:
-            // Call solution of the type solution(edosys, outputname);
+            forcedbasin(outputname, edosys);
             break;    
         default:
             printf("Invalid Module\n");
             exit(0);
     }
 }
-

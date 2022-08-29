@@ -1,0 +1,57 @@
+4
+9
+6
+
+1000 1000 750
+
+0.0
+0.0 0.0 0.0 0.0
+
+1.8
+0.3
+0.025
+0.025
+-1.0
+-1.0
+1.0
+1.0
+1.0
+
+0
+-3.0
+3.0
+200  
+
+2
+-3.0
+3.0
+200
+
+/* Variables */
+DIM
+nPar
+
+nP nDiv
+
+t0
+IC: x[0] x[1] x[2] ...
+
+par[0] = OMEGA
+par[1] = gamma
+par[2] = zeta1
+par[3] = zeta2
+par[4] = alpha1
+par[5] = alpha2
+par[6] = beta1
+par[7] = beta2
+par[8] = rho
+
+Index of control parameter in X
+varparX_i
+varparX_f
+pixels_X
+
+Index of control parameter in Y
+varparY_i
+varparY_f
+pixels_Y
