@@ -9,7 +9,7 @@
 #include "../libs/iofiles.h"
 #include "epbasin.h"
 
-void epbasin(char *funcname, void (*edosys)(int, double *, double, double *, double *)) {
+void epbasin(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     // Declare Program Parameters
     const double pi = 4 * atan(1);  // Pi number definition
     int DIM;                        // Dimension of the system
@@ -33,8 +33,8 @@ void epbasin(char *funcname, void (*edosys)(int, double *, double, double *, dou
     char *dir = convert_dir(rawdir);
     const char *ext = ".csv";                                                                           // Extension of output file
     const char *ext_info = ".txt";                                                                      // Extension of info file
-    snprintf(output_epbasin_name, sizeof(output_epbasin_name), "%s%s_epbasin", dir, funcname);            // Assign name for output file without extension
-    snprintf(output_info_name, sizeof(output_info_name), "%s%s_info", dir, funcname);                   // Assign name for output info without extension
+    snprintf(output_epbasin_name, sizeof(output_epbasin_name), "%s%s_epbasin", dir, outputname);            // Assign name for output file without extension
+    snprintf(output_info_name, sizeof(output_info_name), "%s%s_info", dir, outputname);                   // Assign name for output info without extension
     FILE *output_epbasin = create_output_file(output_epbasin_name, ext, dir);                             // Create dynamical diagram output file 
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);                            // Create info output file
     

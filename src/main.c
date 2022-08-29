@@ -14,7 +14,7 @@
 #include "modules/epbasin.h"
 #include "modules/forcedbasin.h"
 
-void execute_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname);
+void execute_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
 
 #define FUNC_1 duffing
 #define OUTPUTNAME_1 "duffing"
@@ -51,10 +51,10 @@ char *moduleNames[NUM_OF_MODULES] = {"Time Series",
 void call_system(unsigned int system, unsigned int module) {
     switch(system) {
         case 1:
-            execute_modules(module, FUNC_1, OUTPUTNAME_1);
+            execute_modules(module, FUNC_1, OUTPUTNAME_1, systemNames[0]);
             break;
         case 2:
-            execute_modules(module, FUNC_2, OUTPUTNAME_2);
+            execute_modules(module, FUNC_2, OUTPUTNAME_2, systemNames[1]);
             break;
         default:
             printf("Invalid...\n");
@@ -65,7 +65,7 @@ void call_system(unsigned int system, unsigned int module) {
 void call_EH_system(unsigned int system, unsigned int module) {
     switch(system) {
         case 1:
-            execute_modules(module, EH_FUNC_1, EH_OUTPUTNAME_1);
+            execute_modules(module, EH_FUNC_1, EH_OUTPUTNAME_1, EHsystemNames[0]);
             break;
         default:
             printf("Invalid...\n");
@@ -105,34 +105,34 @@ int main (void) {
     end_of_execution(MAX_NAMELENGTH);
 }
 
-void execute_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname) {
+void execute_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname) {
     switch (module) {
         case 1:
-            timeseries(outputname, edosys);
+            timeseries(funcname, outputname, edosys);
             break;
         case 2:
-            poincaremap(outputname, edosys);
+            poincaremap(funcname, outputname, edosys);
             break;
         case 3:
-            lyapunov_exp_wolf(outputname, edosys);
+            lyapunov_exp_wolf(funcname, outputname, edosys);
             break;
         case 4:
-            ftime_series(outputname, edosys);
+            ftime_series(funcname, outputname, edosys);
             break;
         case 5:
-            bifurcation(outputname, edosys);
+            bifurcation(funcname, outputname, edosys);
             break;
         case 6:
-            fbifurcation(outputname, edosys);
+            fbifurcation(funcname, outputname, edosys);
             break;
         case 7:
-            dyndiag(outputname, edosys);
+            dyndiag(funcname, outputname, edosys);
             break;
         case 8:
-            epbasin(outputname, edosys);
+            epbasin(funcname, outputname, edosys);
             break;
         case 9:
-            forcedbasin(outputname, edosys);
+            forcedbasin(funcname, outputname, edosys);
             break;    
         default:
             printf("Invalid Module\n");

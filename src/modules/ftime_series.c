@@ -9,7 +9,7 @@
 #include "../libs/iofiles.h"
 #include "ftime_series.h"
 
-void ftime_series(char *funcname, void (*edosys)(int, double *, double, double *, double *)) {
+void ftime_series(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     
     // Declare Program Parameters
     const double pi = 4 * atan(1);  // Pi number definition
@@ -36,9 +36,9 @@ void ftime_series(char *funcname, void (*edosys)(int, double *, double, double *
     char *dir = convert_dir(rawdir);
     const char *ext = ".csv";                                                                               // Extension of output file
     const char *ext_info = ".txt";                                                                          // Extension of info file
-    snprintf(output_ftimeseries_name, sizeof(output_ftimeseries_name), "%s%s_ftimeseries", dir, funcname);  // Assign name for output ftimeseries file without extension
-    snprintf(output_poinc_name, sizeof(output_poinc_name), "%s%s_poinc", dir, funcname);                    // Assign name for output poincare file without extension
-    snprintf(output_info_name, sizeof(output_info_name), "%s%s_info", dir, funcname);                       // Assign name for output info without extension
+    snprintf(output_ftimeseries_name, sizeof(output_ftimeseries_name), "%s%s_ftimeseries", dir, outputname);  // Assign name for output ftimeseries file without extension
+    snprintf(output_poinc_name, sizeof(output_poinc_name), "%s%s_poinc", dir, outputname);                    // Assign name for output poincare file without extension
+    snprintf(output_info_name, sizeof(output_info_name), "%s%s_info", dir, outputname);                       // Assign name for output info without extension
     FILE *output_ftimeseries = create_output_file(output_ftimeseries_name, ext, dir);                       // Create ftimeseries output file 
     FILE *output_poinc = create_output_file(output_poinc_name, ext, dir);                                   // Create poincare output file 
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);                                     // Create info output file

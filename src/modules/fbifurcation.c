@@ -9,7 +9,7 @@
 #include "../libs/iofiles.h"
 #include "fbifurcation.h"
 
-void fbifurcation(char *funcname, void (*edosys)(int, double *, double, double *, double *)) {
+void fbifurcation(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     // Declare Program Parameters
     const double pi = 4 * atan(1);  // Pi number definition
     int DIM;                        // Dimension of the system
@@ -35,8 +35,8 @@ void fbifurcation(char *funcname, void (*edosys)(int, double *, double, double *
     char *dir = convert_dir(rawdir);
     const char *ext = ".csv";                                                                           // Extension of output file
     const char *ext_info = ".txt";                                                                      // Extension of info file
-    snprintf(output_bifurc_name, sizeof(output_bifurc_name), "%s%s_fbifurc", dir, funcname);             // Assign name for output rk4 without extension
-    snprintf(output_info_name, sizeof(output_info_name), "%s%s_info", dir, funcname);                   // Assign name for output info without extension
+    snprintf(output_bifurc_name, sizeof(output_bifurc_name), "%s%s_fbifurc", dir, outputname);             // Assign name for output rk4 without extension
+    snprintf(output_info_name, sizeof(output_info_name), "%s%s_info", dir, outputname);                   // Assign name for output info without extension
     FILE *output_bifurc = create_output_file(output_bifurc_name, ext, dir);                             // Create bifurc output file 
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);                                 // Create info output file
     

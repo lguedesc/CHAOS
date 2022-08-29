@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 void clear_screen();
 void partition(int mode, size_t maxlength);
 void welcome_header(size_t maxlength);

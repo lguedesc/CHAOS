@@ -9,7 +9,7 @@
 #include "../libs/iofiles.h"
 #include "time_series.h"
 
-void timeseries(char *funcname, void (*edosys)(int, double *, double, double *, double *)) {
+void timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     
     // Declare Program Parameters
     const double pi = 4 * atan(1);  // Pi number definition
@@ -35,8 +35,8 @@ void timeseries(char *funcname, void (*edosys)(int, double *, double, double *, 
     char *dir = convert_dir(rawdir);
     const char *ext = ".csv";                                                                           // Extension of output file    
     const char *ext_info = ".txt";                                                                      // Extension of info file
-    snprintf(output_rk4_name, sizeof(output_rk4_name), "%s%s_rk4", dir, funcname);                      // Assign name for output rk4 without extension
-    snprintf(output_info_name, sizeof(output_info_name), "%s%s_info", dir, funcname);                   // Assign name for output info without extension
+    snprintf(output_rk4_name, sizeof(output_rk4_name), "%s%s_rk4", dir, outputname);                      // Assign name for output rk4 without extension
+    snprintf(output_info_name, sizeof(output_info_name), "%s%s_info", dir, outputname);                   // Assign name for output info without extension
     FILE *output_rk4 = create_output_file(output_rk4_name, ext, dir);    // Create rk4 output file 
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);  // Create info output file
     
@@ -109,59 +109,57 @@ void tseries_print_info(FILE *info ,int dim, int npar, int np, int ndiv, double 
     //Get time and date
     time_t tm;
     time(&tm);
+    size_t maxlen = 100;
 
     if (strcmp(mode, "screen") == 0) {   
-        printf("\n  ===================================\n");
-        printf("  Time Series: %s\n", funcname);
-        printf("  ===================================\n\n");
-        printf("  Program Parameters\n");
-        printf("  -----------------------------------\n");
-        printf("%-24s%-12d\n", "  Dimension: ", dim);
-        printf("%-24s%-12d\n", "  Number of Parameters: ", npar);
-        printf("%-24s%-12d\n", "  Forcing Periods: ", np);
-        printf("%-24s%-12d\n", "  Timesteps per Period: ", ndiv);
-        printf("%-24s%-12g\n", "  Timestep value: ", h);
-        printf("  -----------------------------------\n");
+        printf("\n  Program Parameters\n");
+        printf("  -------------------------------------------------\n");
+        printf("%-30s%s%-20d\n", "  Dimension:", " ", dim);
+        printf("%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
+        printf("%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
+        printf("%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
+        printf("%-30s%s%-20g\n", "  Timestep value:", " ", h);
+        printf("  -------------------------------------------------\n");
         printf("  Initial Conditions\n");
-        printf("  -----------------------------------\n");
-        printf("%-24s%-12lf\n", "  Initial Time (t): ", t);
+        printf("  -------------------------------------------------\n");
+        printf("%-30s%s%-20lf\n", "  Initial Time (t):", " ",  t);
         for (int i = 0; i < dim; i++) {
-            printf("%s%-1d%-21s%-12g\n", "  x[", i, "]: ", x[i]);
+            printf("%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
         }
-        printf("  -----------------------------------\n");
+        printf("  -------------------------------------------------\n");
         printf("  System Parameters\n");
-        printf("  -----------------------------------\n");
+        printf("  -------------------------------------------------\n");
         for (int i = 0; i < npar; i++) {
-            printf("%s%-1d%-19s%-12g\n", "  par[", i, "]: ", par[i]);
+            printf("%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
-        printf("  -----------------------------------\n");
+        printf("  -------------------------------------------------\n");
     } 
     else if (strcmp(mode, "file") == 0) {
-        fprintf(info, "Date/Time:  %s", ctime(&tm)); 
-        fprintf(info, "\n===================================\n");
-        fprintf(info, "Time series: %s\n", funcname);
-        fprintf(info, "===================================\n\n");
-        fprintf(info, "Program Parameters\n");
-        fprintf(info, "-----------------------------------\n");
-        fprintf(info, "%-24s%-12d\n", "Dimension: ", dim);
-        fprintf(info, "%-24s%-12d\n", "Number of Parameters: ", npar);
-        fprintf(info, "%-24s%-12d\n", "Forcing Periods: ", np);
-        fprintf(info, "%-24s%-12d\n", "Timesteps per Period: ", ndiv);
-        fprintf(info, "%-24s%-12.10lf\n", "Timestep value: ", h);
-        fprintf(info, "-----------------------------------\n");
-        fprintf(info, "Initial Conditions\n");
-        fprintf(info, "-----------------------------------\n");
-        fprintf(info, "%-24s%-12.10lf\n", "Initial Time (t): ", t);
+        fprintf(info, "  Date/Time:  %s", ctime(&tm)); 
+        fprintf(info, "\n  =================================================\n");
+        fprintf(info, "  Time Series: %s\n", funcname);
+        fprintf(info, "  =================================================\n\n");
+        fprintf(info, "  Program Parameters\n");
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "%-30s%s%-20d\n", "  Dimension:", " ", dim);
+        fprintf(info, "%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
+        fprintf(info, "%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
+        fprintf(info, "%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
+        fprintf(info, "%-30s%s%-20g\n", "  Timestep value:", " ", h);
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "  Initial Conditions\n");
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "%-30s%s%-20lf\n", "  Initial Time (t):", " ",  t);
         for (int i = 0; i < dim; i++) {
-            fprintf(info, "%-2s%-1d%-21s%-12.10lf\n", "x[", i, "]: ", x[i]);
+            fprintf(info, "%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
         }
-        fprintf(info, "-----------------------------------\n");
-        fprintf(info, "System Parameters\n");
-        fprintf(info, "-----------------------------------\n");
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "  System Parameters\n");
+        fprintf(info, "  -------------------------------------------------\n");
         for (int i = 0; i < npar; i++) {
-            fprintf(info, "%-4s%-1d%-19s%-12g\n", "par[", i, "]: ", par[i]);
+            fprintf(info, "%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
-        fprintf(info, "-----------------------------------\n");
+        fprintf(info, "  -------------------------------------------------\n");
     }
     else {
         printf("Information could not be printed using mode (%s)...\n", mode);

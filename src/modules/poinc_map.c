@@ -9,7 +9,7 @@
 #include "../libs/iofiles.h"
 #include "poinc_map.h"
 
-void poincaremap(char *funcname, void (*edosys)(int, double *, double, double *, double *)) {
+void poincaremap(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     
     // Declare Program Parameters
     const double pi = 4 * atan(1);  // Pi number definition
@@ -36,14 +36,14 @@ void poincaremap(char *funcname, void (*edosys)(int, double *, double, double *,
     char *dir = convert_dir(rawdir);
     const char *ext = ".csv";                                                                           // Extension of output file
     const char *ext_info = ".txt";        
-    snprintf(output_poinc_name, sizeof(output_poinc_name), "%s%s_poinc", dir, funcname);                      // Assign name for output rk4 without extension
-    snprintf(output_info_name, sizeof(output_info_name), "%s%s_info", dir, funcname);                   // Assign name for output info without extension
+    snprintf(output_poinc_name, sizeof(output_poinc_name), "%s%s_poinc", dir, outputname);                      // Assign name for output rk4 without extension
+    snprintf(output_info_name, sizeof(output_info_name), "%s%s_info", dir, outputname);                   // Assign name for output info without extension
     FILE *output_poinc = create_output_file(output_poinc_name, ext, dir);    // Create rk4 output file 
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);  // Create info output file
     
     // Print information in screen and info output file
-    poinc_print_info(output_info, DIM, nPar, nP, nDiv, h, t, x, par, funcname, "screen");
-    poinc_print_info(output_info, DIM, nPar, nP, nDiv, h, t, x, par, funcname, "file");
+    poinc_print_info(output_info, DIM, nPar, nP, nDiv, trans, h, t, x, par, funcname, "screen");
+    poinc_print_info(output_info, DIM, nPar, nP, nDiv, trans, h, t, x, par, funcname, "file");
     
     // Call solution
     poincare_solution(output_poinc, DIM, nP, nDiv, trans, t, x, h, par, edosys, write_results);
@@ -94,63 +94,62 @@ void poinc_read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndi
     /* The user is responsible to free (x) and (par) after the function call */
 }
 
-void poinc_print_info(FILE *info ,int dim, int npar, int np, int ndiv, double h, double t, double *x, double *par, char* edosys, char* mode) {
+void poinc_print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, double h, double t, double *x, double *par, char* funcname, char* mode) {
     //Get time and date
     time_t tm;
     time(&tm);
 
     if (strcmp(mode, "screen") == 0) {   
-        printf("\n===================================\n");
-        printf("Poincaré Map: %s\n", edosys);
-        printf("===================================\n\n");
-        printf("Program Parameters\n");
-        printf("-----------------------------------\n");
-        printf("%-24s%-12d\n", "Dimension: ", dim);
-        printf("%-24s%-12d\n", "Number of Parameters: ", npar);
-        printf("%-24s%-12d\n", "Forcing Periods: ", np);
-        printf("%-24s%-12d\n", "Timesteps per Period: ", ndiv);
-        printf("%-24s%-12g\n", "Timestep value: ", h);
-        printf("-----------------------------------\n");
-        printf("Initial Conditions\n");
-        printf("-----------------------------------\n");
-        printf("%-24s%-12lf\n", "Initial Time (t): ", t);
+        printf("\n  Program Parameters\n");
+        printf("  -------------------------------------------------\n");
+        printf("%-30s%s%-20d\n", "  Dimension:", " ", dim);
+        printf("%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
+        printf("%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
+        printf("%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
+        printf("%-30s%s%-20d\n", "  Transient considered:", " ", trans);
+        printf("%-30s%s%-20g\n", "  Timestep value:", " ", h);
+        printf("  -------------------------------------------------\n");
+        printf("  Initial Conditions\n");
+        printf("  -------------------------------------------------\n");
+        printf("%-30s%s%-20lf\n", "  Initial Time (t):", " ",  t);
         for (int i = 0; i < dim; i++) {
-            printf("%-2s%-1d%-21s%-12g\n", "x[", i, "]: ", x[i]);
+            printf("%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
         }
-        printf("-----------------------------------\n");
-        printf("System Parameters\n");
-        printf("-----------------------------------\n");
+        printf("  -------------------------------------------------\n");
+        printf("  System Parameters\n");
+        printf("  -------------------------------------------------\n");
         for (int i = 0; i < npar; i++) {
-            printf("%-4s%-1d%-19s%-12g\n", "par[", i, "]: ", par[i]);
+            printf("%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
-        printf("-----------------------------------\n");
+        printf("  -------------------------------------------------\n");
     } 
     else if (strcmp(mode, "file") == 0) {
-        fprintf(info, "Date/Time:  %s", ctime(&tm)); 
-        fprintf(info, "\n===================================\n");
-        fprintf(info, "Poincaré Map: %s\n", edosys);
-        fprintf(info, "===================================\n\n");
-        fprintf(info, "Program Parameters\n");
-        fprintf(info, "-----------------------------------\n");
-        fprintf(info, "%-24s%-12d\n", "Dimension: ", dim);
-        fprintf(info, "%-24s%-12d\n", "Number of Parameters: ", npar);
-        fprintf(info, "%-24s%-12d\n", "Forcing Periods: ", np);
-        fprintf(info, "%-24s%-12d\n", "Timesteps per Period: ", ndiv);
-        fprintf(info, "%-24s%-12.10lf\n", "Timestep value: ", h);
-        fprintf(info, "-----------------------------------\n");
-        fprintf(info, "Initial Conditions\n");
-        fprintf(info, "-----------------------------------\n");
-        fprintf(info, "%-24s%-12.10lf\n", "Initial Time (t): ", t);
+        fprintf(info, "  Date/Time:  %s", ctime(&tm)); 
+        fprintf(info, "\n  =================================================\n");
+        fprintf(info, "  Poincare Map: %s\n", funcname);
+        fprintf(info, "  =================================================\n\n");
+        fprintf(info, "  Program Parameters\n");
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "%-30s%s%-20d\n", "  Dimension:", " ", dim);
+        fprintf(info, "%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
+        fprintf(info, "%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
+        fprintf(info, "%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
+        fprintf(info, "%-30s%s%-20d\n", "  Transient considered:", " ", trans);
+        fprintf(info, "%-30s%s%-20g\n", "  Timestep value:", " ", h);
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "  Initial Conditions\n");
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "%-30s%s%-20lf\n", "  Initial Time (t):", " ",  t);
         for (int i = 0; i < dim; i++) {
-            fprintf(info, "%-2s%-1d%-21s%-12.10lf\n", "x[", i, "]: ", x[i]);
+            fprintf(info, "%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
         }
-        fprintf(info, "-----------------------------------\n");
-        fprintf(info, "System Parameters\n");
-        fprintf(info, "-----------------------------------\n");
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "  System Parameters\n");
+        fprintf(info, "  -------------------------------------------------\n");
         for (int i = 0; i < npar; i++) {
-            fprintf(info, "%-4s%-1d%-19s%-12g\n", "par[", i, "]: ", par[i]);
+            fprintf(info, "%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
-        fprintf(info, "-----------------------------------\n");
+        fprintf(info, "  -------------------------------------------------\n");
     }
     else {
         printf("Information could not be printed using mode (%s)...\n", mode);

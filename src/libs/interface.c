@@ -14,28 +14,28 @@ void clear_screen() {
 void partition(int mode, size_t maxlength) {
     if (mode == 1) {
         printf("%c", 218);
-        for (int i = 0; i < maxlength-2; i++) {
+        for (size_t i = 0; i < maxlength-2; i++) {
             printf("%c", 196);
         }
         printf("%c", 191);
     }
     else if (mode == 2) {
         printf("%c", 192);
-        for (int i = 0; i < maxlength-2; i++) {
+        for (size_t i = 0; i < maxlength-2; i++) {
             printf("%c", 196);
         }
         printf("%c", 217);
     }
     else if (mode == 3) {
         printf("%c",195);
-        for (int i = 0; i < maxlength-2; i++) {
+        for (size_t i = 0; i < maxlength-2; i++) {
             printf("%c", 196);
         }
         printf("%c",180);
     }
     else if (mode == 4) {
         printf(" ");
-        for (int i = 0; i < maxlength-2; i++) {
+        for (size_t i = 0; i < maxlength-2; i++) {
             printf("%c", 196);
         }
         printf(" ");
@@ -87,8 +87,8 @@ void mixed_header(char *names1, char *names2, size_t maxlength) {
 }
 
 void invalid_option(unsigned int option, char* category, size_t maxlength) {
-    printf("%s%s%u%s", category, " ", option, " : Invalid option. Press any key to exit program...\n");
-    partition(1, maxlength);
+    printf("%s%s%s%u%s", "  ", category, " ", option, " : Invalid option. Press any key to exit program...\n");
+    partition(2, maxlength);
     while(getchar()!='\n'){}
     getchar(); // wait for ENTER
     exit(0);
