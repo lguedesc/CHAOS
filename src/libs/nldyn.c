@@ -343,7 +343,7 @@ void progress_bar(double var, double var_i, double var_f) {
     double perc = (var/(var_f - var_i))*100;
     // Filled Part of the progress bar
     int fill = (perc * 50) / 100;  // 50 is the bar length
-    printf("\rProgress: |");
+    printf("\r  Progress: |");
     for(int i = 0; i < fill; i++) {
         printf("#");
     }
@@ -358,18 +358,30 @@ void progress_bar(double var, double var_i, double var_f) {
     fflush(stdout);
 }
 
-void print_equilibrium_points(double **attrac, size_t rows, size_t cols, int dim) {
-    printf("\n");
-    printf("Possible Stable Equilibrium Points: \n");
+void print_equilibrium_points(FILE* info, double **attrac, size_t rows, size_t cols, int dim) {
+    printf("\n\n  Possible Stable Equilibrium Points: \n");
+    fprintf(info, "\n  Possible Stable Equilibrium Points: \n");
     for (int j = 0; j < dim; j++) {
+        if (j == 0) {
+            printf("  ");
+            fprintf(info, "  ");
+        }
         printf("%-2s%-1d%-8s", "x[", j, "]");
+        fprintf(info, "%-2s%-1d%-8s", "x[", j, "]");
     }
     printf("%-11s\n", "Attractor");
+    fprintf(info, "%-11s\n", "Attractor");
     for (int i = 0; i < rows; ++i) { 
 		for (int j = 0; j < cols; ++j) { 
-            printf("%-10lf ", attrac[i][j]); 
+            if (j == 0) {
+                printf("  ");
+                fprintf(info, "  ");
+            }
+            printf("%-10lf ", attrac[i][j]);
+            fprintf(info, "%-10lf ", attrac[i][j]); 
         } 
-		printf("\n"); 
+		printf("\n");
+        fprintf(info, "\n"); 
     }
 }
 
@@ -584,7 +596,7 @@ void full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poinc_
     // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
     store_LE(dim, lambda, s_lambda, LE);
     for (int i = 0; i< dim; i++) {
-        printf("LE[%i] = %.10lf\n", i, LE[i]);
+        printf("  LE[%i] = %.10lf\n", i, LE[i]);
     }
     // Declare vector for temporary storage of periodicity values to check if all directions are equal
     int *tmp_attrac = malloc(dim * sizeof *tmp_attrac);
@@ -592,7 +604,7 @@ void full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poinc_
     int diffAttrac = -1;
     // Verify the type of motion of the system
     (*attrac) = get_attractor(poinc, LE, dim, np, trans, tmp_attrac, &diffAttrac, maxper);
-    printf("diffAttrac = %i\n", diffAttrac);
+    printf("  diffAttrac = %i\n", diffAttrac);
     // Free memory    
     free(f); free(cum); free(s_cum); free(lambda); free(s_lambda);
     free(znorm); free(gsc); free(LE); free(tmp_attrac);
@@ -967,7 +979,7 @@ void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
     } // End of Parallel Block
     
     // Write results in file
-    printf("\nWriting Results in Output File...\n");
+    printf("\n\n  Writing Results in Output File...\n");
     write_results(output_file, dim, results, pixels);
 
     // Free memory
@@ -977,7 +989,7 @@ void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
     free(results);
 } 
 
-void ep_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv, double t, double **x, int indexX, int indexY, double *icrange, double *par,
+void ep_basin_of_attraction_2D(FILE *output_file, FILE *info_file, int dim, int np, int ndiv, double t, double **x, int indexX, int indexY, double *icrange, double *par,
                                int npar, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, double **results, int pixels, int dim)) {
     // Declare matrix do store results
     int pixels = icrange[2]*icrange[5];  // Number of results
@@ -1081,9 +1093,9 @@ void ep_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv, dou
     } // End of Parallel Block
     
     //Print matrix containing the found attractors
-    print_equilibrium_points(attrac, rows, cols, dim);
+    print_equilibrium_points(info_file, attrac, rows, cols, dim);
     // Write results in file
-    printf("\nWriting Results in Output File...\n");
+    printf("\n  Writing Results in Output File...\n");
     write_results(output_file, results, pixels, dim);
 
     // Free memory
@@ -1226,7 +1238,7 @@ void forced_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv,
     } // End of Parallel Block
     
     // Write results in file
-    printf("\nWriting Results in Output File...\n");
+    printf("\n\n  Writing Results in Output File...\n");
     write_results(output_file, dim, results, pixels);
 
     // Free memory

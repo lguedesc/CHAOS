@@ -17,8 +17,8 @@ void store_equilibrium_point(size_t *rows, size_t cols, double ***attrac, double
 
 // Misc
 void progress_bar(double var, double var_i, double var_f);
-void print_equilibrium_points(double **attrac, size_t rows, size_t cols, int dim);
-
+//void print_equilibrium_points(double **attrac, size_t rows, size_t cols, int dim);
+void print_equilibrium_points(FILE* info, double **attrac, size_t rows, size_t cols, int dim);
 // Solutions
 void rk4_solution(FILE *output_file, int dim, int np, int ndiv, double t, double *x, double h, double *par, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, int dim, double t, double *x, int mode));
 void poincare_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double *x, double h, double *par, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, int dim, double t, double *x, int mode));
@@ -28,8 +28,11 @@ void bifurc_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
 void full_bifurcation_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x, int parindex, double *parrange, double *par, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, int dim, int np, int trans, double varpar, double *x, int attractor, double **poinc, int diffattrac, int mode), int bifmode);
 void dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x, int indexX, int indexY, double *parrange, double *par, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, int dim, double varparX, double varparY, int attractor, double *LE, int diffattrac, int mode), int bifmode);
 void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x, int indexX, int indexY, double *parrange, double *par, int npar, void (*edosys)(int, double *, double, double *, double *), int bifmode, void (*write_results)(FILE *output_file, int dim, double **results, int pixels));
-void ep_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv, double t, double **x, int indexX, int indexY, double *icrange, double *par,
+/*void ep_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv, double t, double **x, int indexX, int indexY, double *icrange, double *par,
                                 int npar, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, double **results, int pixels, int dim));
+*/
+void ep_basin_of_attraction_2D(FILE *output_file, FILE *info_file, int dim, int np, int ndiv, double t, double **x, int indexX, int indexY, double *icrange, double *par,
+                               int npar, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, double **results, int pixels, int dim));
 void forced_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
                                          int indexX, int indexY, double *icrange, double *par, int npar,
                                          void (*edosys)(int, double *, double, double *, double *), 

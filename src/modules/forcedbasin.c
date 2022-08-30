@@ -41,8 +41,8 @@ void forcedbasin(char *funcname, char* outputname, void (*edosys)(int, double *,
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);                            // Create info output file
     
     // Print information in screen and info output file
-    forcedbasin_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, t, x, par, icRange, indexX, indexY, funcname, "screen");
-    forcedbasin_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, t, x, par, icRange, indexX, indexY, funcname, "file");
+    forcedbasin_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, icRange, indexX, indexY, funcname, "screen");
+    forcedbasin_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, icRange, indexX, indexY, funcname, "file");
     // To store the runtime of the program
     //double time_spent = 0.0;
     //clock_t time_i = clock();
@@ -116,91 +116,94 @@ void forcedbasin_read_params_and_IC(char *name, int *dim, int *npar, int *maxper
     /* The user is responsible to free (x), (par) or (parrange) after the function call */
 }
 
-void forcedbasin_print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, double t, double *x, double *par, double *icrange, int indexX, int indexY, char* edosys, char* mode) {
+void forcedbasin_print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *icrange, int indexX, int indexY, char* funcname, char* mode) {
     //Get time and date
     time_t tm;
     time(&tm);
 
-    if (strcmp(mode, "screen") == 0) {   
-        printf("\n==================================================\n");
-        printf("%-30s%-20s\n", "Basin of Attraction (Forced): ", edosys);
-        printf("%-30s%-4.0lf%-3s%-4.0lf\n", "Resolution: ", icrange[2], " x ", icrange[5]);
-        printf("==================================================\n\n");
-        printf("Program Parameters\n");
-        printf("--------------------------------------------------\n");
-        printf("%-30s%-12d\n", "Dimension: ", dim);
-        printf("%-30s%-12d\n", "Number of Parameters: ", npar);
-        printf("%-30s%-12d\n", "Max Periodicity Class: ", maxper);
-        printf("%-30s%-12d\n", "Forcing Periods: ", np);
-        printf("%-30s%-12d\n", "Timesteps per Period: ", ndiv);
-        printf("%-30s%-20s\n", "Timestep value: ", "(2*pi)/(nDiv*par[0])");
-        printf("--------------------------------------------------\n");
-        printf("Initial Conditions\n");
-        printf("--------------------------------------------------\n");
-        printf("%-30s%-12.10lf\n", "Initial Time (t): ", t);
+    if (strcmp(mode, "screen") == 0) {
+        printf("\n%-30s%s%-4g%-3s%-4g\n", "  Resolution:", " ", icrange[2], " x ", icrange[5]);
+        printf("  -------------------------------------------------\n");
+        printf("  Program Parameters\n");
+        printf("  -------------------------------------------------\n");
+        printf("%-30s%s%-20d\n", "  Dimension:", " ", dim);
+        printf("%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
+        printf("%-30s%s%-20d\n", "  Max Periodicity Class:", " ", maxper);
+        printf("%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
+        printf("%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
+        printf("%-30s%s%-20d\n", "  Transient Considered:", " ", trans);
+        printf("%-30s%s%-20s\n", "  Timestep value:", " ", "(2*pi)/(nDiv*par[0])");
+        printf("  -------------------------------------------------\n");
+        printf("  Initial Conditions\n");
+        printf("  -------------------------------------------------\n");
+        printf("%-30s%s%-20g\n", "  Initial Time (t):", " ",  t);
         for (int i = 0; i < dim; i++) {
-            printf("x[%d]:%-25s%.10lf\n", i, "", x[i]);
+            printf("%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
         }
-        printf("--------------------------------------------------\n");
-        printf("System Parameters\n");
-        printf("--------------------------------------------------\n");
+        printf("  -------------------------------------------------\n");
+        printf("  System Parameters\n");
+        printf("  -------------------------------------------------\n");
         for (int i = 0; i < npar; i++) {
-            printf("par[%d]:%-23s%-12g\n", i, "", par[i]);
+            printf("%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
-        printf("--------------------------------------------------\n");
-        printf("%-30s%-12d\n", "Parameter Index (x): ", indexX);
-        printf("%-30s%-12g\n", "Initial Parameter (x): ", icrange[0]);
-        printf("%-30s%-12g\n", "Final Parameter (x): ", icrange[1]);
-        printf("%-30s%-12g\n", "Increment Parameter (x): ", (icrange[1] - icrange[0])/(icrange[2] - 1));
-        printf("--------------------------------------------------\n");
-        printf("%-30s%-12d\n", "Parameter Index (y): ", indexY);
-        printf("%-30s%-12g\n", "Initial Parameter (y): ", icrange[3]);
-        printf("%-30s%-12g\n", "Final Parameter (y): ", icrange[4]);
-        printf("%-30s%-12g\n", "Increment Parameter (y): ", (icrange[4] - icrange[3])/(icrange[5] - 1));
-        printf("--------------------------------------------------\n");
-        
+        printf("  -------------------------------------------------\n");
+        printf("%-30s%s%-20g\n", "  Parameter Index (x):", " ", indexX);
+        printf("%-30s%s%-20g\n", "  Intial Parameter (x):", " ", icrange[0]);
+        printf("%-30s%s%-20g\n", "  Final Parameter (x):", " ", icrange[1]);
+        printf("%-30s%s%-20g\n", "  Increment Parameter (x):", " ", (icrange[1] - icrange[0]) / (icrange[2] - 1));
+        printf("%-30s%s%-20g\n", "  Number of Steps (x):", " ", icrange[2]);
+        printf("  -------------------------------------------------\n");
+        printf("%-30s%s%-20g\n", "  Parameter Index (y):", " ", indexY);
+        printf("%-30s%s%-20g\n", "  Intial Parameter (y):", " ", icrange[3]);
+        printf("%-30s%s%-20g\n", "  Final Parameter (y):", " ", icrange[4]);
+        printf("%-30s%s%-20g\n", "  Increment Parameter (y):", " ", (icrange[4] - icrange[3]) / (icrange[5] - 1));
+        printf("%-30s%s%-20g\n", "  Number of Steps (y):", " ", icrange[5]);
+        printf("  -------------------------------------------------\n");          
     } 
     else if (strcmp(mode, "file") == 0) {
-        fprintf(info, "Date/Time:  %s", ctime(&tm)); 
-        fprintf(info, "\n==================================================\n");
-        fprintf(info, "%-30s%-20s\n", "Basin of Attraction (Forced): ", edosys);
-        fprintf(info, "%-30s%-4.0lf%-3s%-4.0lf\n", "Resolution: ", icrange[2], " x ", icrange[5]);
-        fprintf(info, "==================================================\n\n");
-        fprintf(info, "Program Parameters\n");
-        fprintf(info, "--------------------------------------------------\n");
-        fprintf(info, "%-30s%-20d\n", "Dimension: ", dim);
-        fprintf(info, "%-30s%-20d\n", "Number of Parameters: ", npar);
-        fprintf(info, "%-30s%-20d\n", "Max Periodicity Class: ", maxper);
-        fprintf(info, "%-30s%-20d\n", "Forcing Periods: ", np);
-        fprintf(info, "%-30s%-20d\n", "Timesteps per Period: ", ndiv);
-        fprintf(info, "%-30s%-20s\n", "Timestep value: ", "(2*pi)/(nDiv*par[0])");
-        fprintf(info, "--------------------------------------------------\n");
-        fprintf(info, "Initial Conditions\n");
-        fprintf(info, "--------------------------------------------------\n");
-        fprintf(info, "%-30s%-20.10lf\n", "Initial Time (t): ", t);
+        fprintf(info, "  Date/Time:  %s", ctime(&tm)); 
+        fprintf(info, "\n  =================================================\n");
+        fprintf(info, "%-30s%s%-20s\n", "  Basin of Attraction (Forced):", " ", funcname);
+        fprintf(info, "%-30s%s%-4g%-3s%-4g\n", "  Resolution:", " ", icrange[2], " x ", icrange[5]);
+        fprintf(info, "  =================================================\n\n");
+        fprintf(info, "  Program Parameters\n");
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "%-30s%s%-20d\n", "  Dimension:", " ", dim);
+        fprintf(info, "%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
+        fprintf(info, "%-30s%s%-20d\n", "  Max Periodicity Class:", " ", maxper);
+        fprintf(info, "%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
+        fprintf(info, "%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
+        fprintf(info, "%-30s%s%-20d\n", "  Transient Considered:", " ", trans);
+        fprintf(info, "%-30s%s%-20s\n", "  Timestep value:", " ", "(2*pi)/(nDiv*par[0])");
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "  Initial Conditions\n");
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "%-30s%s%-20g\n", "  Initial Time (t):", " ",  t);
         for (int i = 0; i < dim; i++) {
-            fprintf(info, "x[%d]:%-25s%.10lf\n", i, "", x[i]);
+            fprintf(info, "%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
         }
-        fprintf(info, "--------------------------------------------------\n");
-        fprintf(info, "System Parameters\n");
-        fprintf(info, "--------------------------------------------------\n");
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "  System Parameters\n");
+        fprintf(info, "  -------------------------------------------------\n");
         for (int i = 0; i < npar; i++) {
-            fprintf(info, "par[%d]:%-23s%-12g\n", i, "", par[i]);
+            fprintf(info, "%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
-        fprintf(info, "--------------------------------------------------\n");
-        fprintf(info, "%-30s%-12d\n", "Parameter Index (x): ", indexX);
-        fprintf(info, "%-30s%-12g\n", "Initial Parameter (x): ", icrange[0]);
-        fprintf(info, "%-30s%-12g\n", "Final Parameter (x): ", icrange[1]);
-        fprintf(info, "%-30s%-12g\n", "Increment Parameter (x): ", (icrange[1] - icrange[0])/(icrange[2] - 1));
-        fprintf(info, "--------------------------------------------------\n");
-        fprintf(info, "%-30s%-12d\n", "Parameter Index (y): ", indexY);
-        fprintf(info, "%-30s%-12g\n", "Initial Parameter (y): ", icrange[3]);
-        fprintf(info, "%-30s%-12g\n", "Final Parameter (y): ", icrange[4]);
-        fprintf(info, "%-30s%-12g\n", "Increment Parameter (y): ", (icrange[4] - icrange[3])/(icrange[5] - 1));
-        fprintf(info, "--------------------------------------------------\n");
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "%-30s%s%-20g\n", "  Parameter Index (x):", " ", indexX);
+        fprintf(info, "%-30s%s%-20g\n", "  Intial Parameter (x):", " ", icrange[0]);
+        fprintf(info, "%-30s%s%-20g\n", "  Final Parameter (x):", " ", icrange[1]);
+        fprintf(info, "%-30s%s%-20g\n", "  Increment Parameter (x):", " ", (icrange[1] - icrange[0]) / (icrange[2] - 1));
+        fprintf(info, "%-30s%s%-20g\n", "  Number of Steps (x):", " ", icrange[2]);
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "%-30s%s%-20g\n", "  Parameter Index (y):", " ", indexY);
+        fprintf(info, "%-30s%s%-20g\n", "  Intial Parameter (y):", " ", icrange[3]);
+        fprintf(info, "%-30s%s%-20g\n", "  Final Parameter (y):", " ", icrange[4]);
+        fprintf(info, "%-30s%s%-20g\n", "  Increment Parameter (y):", " ", (icrange[4] - icrange[3]) / (icrange[5] - 1));
+        fprintf(info, "%-30s%s%-20g\n", "  Number of Steps (y):", " ", icrange[5]);
+        fprintf(info, "  -------------------------------------------------\n"); 
     }
     else {
-        printf("Information could not be printed in file using mode (%s)...\n", mode);
+        printf("  Information could not be printed in file using mode (%s)...\n", mode);
         return;
     }
 

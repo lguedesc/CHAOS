@@ -13,30 +13,16 @@ void clear_screen() {
 
 void partition(int mode, size_t maxlength) {
     if (mode == 1) {
-        printf("%c", 218);
-        for (size_t i = 0; i < maxlength-2; i++) {
-            printf("%c", 196);
-        }
-        printf("%c", 191);
-    }
-    else if (mode == 2) {
-        printf("%c", 192);
-        for (size_t i = 0; i < maxlength-2; i++) {
-            printf("%c", 196);
-        }
-        printf("%c", 217);
-    }
-    else if (mode == 3) {
-        printf("%c",195);
-        for (size_t i = 0; i < maxlength-2; i++) {
-            printf("%c", 196);
-        }
-        printf("%c",180);
-    }
-    else if (mode == 4) {
         printf(" ");
         for (size_t i = 0; i < maxlength-2; i++) {
-            printf("%c", 196);
+            printf("=");
+        }
+        printf(" ");
+    }
+    else if (mode == 2) {
+        printf(" ");
+        for (size_t i = 0; i < maxlength-2; i++) {
+            printf("-");
         }
         printf(" ");
     }
@@ -52,15 +38,15 @@ void welcome_header(size_t maxlength) {
     char *message = "Welcome to CHAOS, a Nonlinear Dynamics Package for Harmonically Forced Systems";
     partition(1, maxlength);
     int padlen = (maxlength - strlen(message)) / 2;
-    printf("%c%*s%s%*c\n", 179, padlen-1, "", message, padlen, 179);
-    partition(2, maxlength);
+    printf("%*s%s%*s\n", padlen-1, "", message, padlen, "");
+    partition(1, maxlength);
 }
 
 void option_header(char *names, size_t maxlength) {
     int padlen = (maxlength - strlen(names)) / 2;
-    partition(1, maxlength);
+    //partition(1, maxlength);
     printf("%*s%s%*s\n", padlen, "", names, padlen, "");
-    partition(3, maxlength);
+    partition(1, maxlength);
 }
 
 unsigned int choose_option(char **options, size_t n, size_t maxlength, char *category) {
@@ -69,34 +55,30 @@ unsigned int choose_option(char **options, size_t n, size_t maxlength, char *cat
         printf("%s%-3d%s%s\n", "  ", i+1, "- ", options[i]);
     }
     printf("%s%-3d%s\n", "  ", 0, "- EXIT");
-    partition(2, maxlength);
+    partition(1, maxlength);
     printf("%s%s%s","  Choose a ", category, " for the Analysis: ");
-    //scanf("%u", &choice);
-    if (scanf(" %u",&choice) == 1){
-        return choice;
-    }
-    else {
-        return choice;
-    }
+    scanf(" %u",&choice);
+    
+    return choice;
 }
 
 void mixed_header(char *names1, char *names2, size_t maxlength) {
     int padlen = (maxlength - strlen(names1) - strlen(names2)) / 2;
     printf("%*s%s%s%s%*s\n", padlen, "", names1, " - ", names2 , padlen, "");
-    partition(2, maxlength);
+    partition(1, maxlength);
 }
 
 void invalid_option(unsigned int option, char* category, size_t maxlength) {
     printf("%s%s%s%u%s", "  ", category, " ", option, " : Invalid option. Press any key to exit program...\n");
-    partition(2, maxlength);
+    partition(1, maxlength);
     while(getchar()!='\n'){}
     getchar(); // wait for ENTER
     exit(0);
 }
 
 void end_of_execution(size_t maxlength) {
-    printf("%s", "\n  Execution ended successfully! Press any key to exit program...\n");
-    partition(4, maxlength);
+    printf("%s", "\n\n  Execution ended successfully! Press any key to exit program...\n");
+    partition(1, maxlength);
     while(getchar()!='\n'){}
     getchar(); // wait for ENTER
 }

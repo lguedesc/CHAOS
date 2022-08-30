@@ -44,8 +44,8 @@ void ftime_series(char *funcname, char* outputname, void (*edosys)(int, double *
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);                                     // Create info output file
     
     // Print information in screen and in info file
-    fts_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, h, t, x, par, funcname, "screen");
-    fts_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, h, t, x, par, funcname, "file");
+    fts_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, h, t, x, par, funcname, "screen");
+    fts_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, h, t, x, par, funcname, "file");
     // Call solution
     full_timeseries_solution(output_ftimeseries, output_poinc, DIM, nP, nDiv, trans, &attractor, maxPer, t, &x, h, par, edosys, write_results_ftimeseries);
     // Print attractor in screen and in info file
@@ -72,11 +72,11 @@ void fts_read_params_and_IC(char *name, int *dim, int *npar, int *maxper, int *n
         exit(1);
     }
     // Read and assign system constants
-    fscanf(input, "%i", dim);
-    fscanf(input, "%i", npar);
-    fscanf(input, "%i", maxper);
+    fscanf(input, "%d", dim);
+    fscanf(input, "%d", npar);
+    fscanf(input, "%d", maxper);
     // Read and assign program parameters
-    fscanf(input, "%i %i %i", np, ndiv, trans); 
+    fscanf(input, "%d %d %d", np, ndiv, trans); 
     // Read and assign initial time
     fscanf(input, "%lf", t);
     // Allocate memory for x[dim] and par[npar] vectors
@@ -104,106 +104,105 @@ void fts_read_params_and_IC(char *name, int *dim, int *npar, int *maxper, int *n
 void fts_print_attractor(FILE* info, int attrac, int maxper, char *mode) {
     if (strcmp(mode, "file") == 0) {
         if (attrac < maxper) { 
-            fprintf(info, "%-24s%-7s%-5i\n", "Type of Motion: ", "Period-", attrac); 
+            fprintf(info, "%-30s%s%-7s%d\n", "  Type of Motion: ", " ", "Period-", attrac); 
         }
         else if (attrac == maxper) {
-            fprintf(info, "%-24s%-7s%-1i%-4s\n", "Type of Motion: ", "Period-", attrac, "+");
+            fprintf(info, "%-30s%s%-20s\n", "  Type of Motion: ", " ", "Many Periods");
         }
         else if (attrac == maxper + 1) {
-            fprintf(info, "%-24s%-13s\n", "Type of Motion: ", "Chaotic");
+            fprintf(info, "%-30s%s%-20s\n", "  Type of Motion: ", " ", "Chaotic");
         }
         else if (attrac == maxper + 2) {
-            fprintf(info, "%-24s%-13s\n", "Type of Motion: ", "Hyperchaotic");
+            fprintf(info, "%-30s%s%-20s\n", "  Type of Motion: ", " ", "Hyperchaotic");
         }
         else if (attrac == maxper + 3) {
-            fprintf(info, "%-24s%-13s\n", "Type of Motion: ", "Undefined Periodicity");
+            fprintf(info, "%-30s%s%-20s\n", "  Type of Motion: ", " ", "Undefined");
         }
         else {
-            fprintf(info, "%-24s%-13s\n", "Type of Motion: ", "Undefined (Escape)");
+            fprintf(info, "%-30s%s%-20s\n", "  Type of Motion: ", " ", "Undefined (Escape)");
         }
     }
     else if (strcmp(mode, "screen") == 0) {
         if (attrac < maxper) { 
-            printf("%-24s%-7s%-5i\n", "Type of Motion: ", "Period-", attrac); 
+            printf("%-30s%s%-7s%d\n", "  Type of Motion: ", " ", "Period-", attrac); 
         }
         else if (attrac == maxper) {
-            printf("%-24s%-7s%-1i%-4s\n", "Type of Motion: ", "Period-", attrac, "+");
+            printf("%-30s%s%-20s\n", "  Type of Motion: ", " ", "Many Periods");
         }
         else if (attrac == maxper + 1) {
-            printf("%-24s%-13s\n", "Type of Motion: ", "Chaotic");
+            printf("%-30s%s%-20s\n", "  Type of Motion: ", " ", "Chaotic");
         }
         else if (attrac == maxper + 2) {
-            printf("%-24s%-13s\n", "Type of Motion: ", "Hyperchaotic");
+            printf("%-30s%s%-20s\n", "  Type of Motion: ", " ", "Hyperchaotic");
         }
         else if (attrac == maxper + 3) {
-            printf("%-24s%-13s\n", "Type of Motion: ", "Undefined Periodicity");
+            printf("%-30s%s%-20s\n", "  Type of Motion: ", " ", "Undefined");
         }
         else {
-            printf("%-24s%-13s\n", "Type of Motion: ", "Undefined (Escape)");
+            printf("%-30s%s%-20s\n", "  Type of Motion: ", " ", "Undefined (Escape)");
         }
     }
     
 }
 
-void fts_print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, double h, double t, double *x, double *par, char* edosys, char* mode) {
+void fts_print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double h, double t, double *x, double *par, char* funcname, char* mode) {
     //Get time and date
     time_t tm;
     time(&tm);
     
     if (strcmp(mode, "screen") == 0) {   
-        printf("\n====================================\n");
-        printf("Full Time series: %s\n", edosys);
-        printf("====================================\n\n");
-        printf("Program Parameters\n");
-        printf("------------------------------------\n");
-        printf("%-24s%-13d\n", "Dimension: ", dim);
-        printf("%-24s%-13d\n", "Number of Parameters: ", npar);
-        printf("%-24s%-13d\n", "Max Periodicity Class: ", maxper);
-        printf("%-24s%-13d\n", "Forcing Periods: ", np);
-        printf("%-24s%-13d\n", "Timesteps per Period: ", ndiv);
-        printf("%-24s%-13g\n", "Timestep value: ", h);
-        printf("------------------------------------\n");
-        printf("Initial Conditions\n");
-        printf("------------------------------------\n");
-        printf("%-24s%-13lf\n", "Initial Time (t): ", t);
+        printf("\n  Program Parameters\n");
+        printf("  -------------------------------------------------\n");
+        printf("%-30s%s%-20d\n", "  Dimension:", " ", dim);
+        printf("%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
+        printf("%-30s%s%-20d\n", "  Max Periodicity Class:", " ", maxper);
+        printf("%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
+        printf("%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
+        printf("%-30s%s%-20d\n", "  Transient considered:", " ", trans);
+        printf("%-30s%s%-20g\n", "  Timestep value:", " ", h);
+        printf("  -------------------------------------------------\n");
+        printf("  Initial Conditions\n");
+        printf("  -------------------------------------------------\n");
+        printf("%-30s%s%-20lf\n", "  Initial Time (t):", " ",  t);
         for (int i = 0; i < dim; i++) {
-            printf("%-2s%-1d%-21s%-13g\n", "x[", i, "]: ", x[i]);
+            printf("%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
         }
-        printf("------------------------------------\n");
-        printf("System Parameters\n");
-        printf("------------------------------------\n");
+        printf("  -------------------------------------------------\n");
+        printf("  System Parameters\n");
+        printf("  -------------------------------------------------\n");
         for (int i = 0; i < npar; i++) {
-            printf("%-4s%-1d%-19s%-13g\n", "par[", i, "]: ", par[i]);
+            printf("%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
-        printf("------------------------------------\n");
+        printf("  -------------------------------------------------\n");
     } 
     else if (strcmp(mode, "file") == 0) {
-        fprintf(info, "Date/Time:  %s", ctime(&tm)); 
-        fprintf(info, "\n====================================\n");
-        fprintf(info, "Full Time series: %s\n", edosys);
-        fprintf(info, "====================================\n\n");
-        fprintf(info, "Program Parameters\n");
-        fprintf(info, "------------------------------------\n");
-        fprintf(info, "%-24s%-13d\n", "Dimension: ", dim);
-        fprintf(info, "%-24s%-13d\n", "Number of Parameters: ", npar);
-        fprintf(info, "%-24s%-13d\n", "Max Periodicity Class: ", maxper);
-        fprintf(info, "%-24s%-13d\n", "Forcing Periods: ", np);
-        fprintf(info, "%-24s%-13d\n", "Timesteps per Period: ", ndiv);
-        fprintf(info, "%-24s%-13.10lf\n", "Timestep value: ", h);
-        fprintf(info, "------------------------------------\n");
-        fprintf(info, "Initial Conditions\n");
-        fprintf(info, "------------------------------------\n");
-        fprintf(info, "%-24s%-13.10lf\n", "Initial Time (t): ", t);
+        fprintf(info, "  Date/Time:  %s", ctime(&tm)); 
+        fprintf(info, "\n  ===================================================\n");
+        fprintf(info, "  Full Time Series: %s\n", funcname);
+        fprintf(info, "  ===================================================\n\n");
+        fprintf(info, "\n  Program Parameters\n");
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "%-30s%s%-20d\n", "  Dimension:", " ", dim);
+        fprintf(info, "%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
+        fprintf(info, "%-30s%s%-20d\n", "  Max Periodicity Class:", " ", maxper);
+        fprintf(info, "%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
+        fprintf(info, "%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
+        fprintf(info, "%-30s%s%-20d\n", "  Transient considered:", " ", trans);
+        fprintf(info, "%-30s%s%-20g\n", "  Timestep value:", " ", h);
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "  Initial Conditions\n");
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "%-30s%s%-20lf\n", "  Initial Time (t):", " ",  t);
         for (int i = 0; i < dim; i++) {
-            fprintf(info, "%-2s%-1d%-21s%-13.10lf\n", "x[", i, "]: ", x[i]);
+            fprintf(info, "%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
         }
-        fprintf(info, "------------------------------------\n");
-        fprintf(info, "System Parameters\n");
-        fprintf(info, "------------------------------------\n");
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "  System Parameters\n");
+        fprintf(info, "  -------------------------------------------------\n");
         for (int i = 0; i < npar; i++) {
-            fprintf(info, "%-4s%-1d%-19s%-13g\n", "par[", i, "]: ", par[i]);
+            fprintf(info, "%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
-        fprintf(info, "------------------------------------\n");
+        fprintf(info, "  -------------------------------------------------\n");
     }
     else {
         printf("Information could not be printed using mode (%s)...\n", mode);
