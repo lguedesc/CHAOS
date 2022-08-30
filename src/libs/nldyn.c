@@ -337,6 +337,18 @@ void store_equilibrium_point(size_t *rows, size_t cols, double ***attrac, double
     }
 }
 
+void max_value(double newvalue, double *oldvalue) {
+    if (newvalue > (*oldvalue)) {
+        (*oldvalue) = newvalue;
+    }
+}
+
+void min_value(double newvalue, double *oldvalue) {
+    if (newvalue < (*oldvalue)) {
+        (*oldvalue) = newvalue;
+    }
+}
+
 // Misc
 void progress_bar(int mode, double var, double var_i, double var_f) {
     double perc;
@@ -477,9 +489,9 @@ void lyap_wolf_solution(FILE *output_file, int dim, int np, int ndiv, int trans,
     free(znorm); free(gsc); 
 }
 
-void bifurc_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double *x, int parindex, 
+void bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, double t, double *x, int parindex, 
                      double *parrange, double *par, void (*edosys)(int, double *, double, double *, double *), 
-                     void (*write_results)(FILE *output_file, int dim, double varpar, double *x, int mode), int bifmode) {
+                     void (*write_results)(FILE *output_file, int dim, double varpar, double *x, double *xmin, double *xmax, int mode), int bifmode) {
     // Allocate x` = f(x)
     double *f = malloc(dim * sizeof *f);
     // Store Initial Conditions
@@ -488,6 +500,9 @@ void bifurc_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
     for (int i = 0; i < dim; i++) {
         IC[i] = x[i];
     }
+    // Declare memory to store min and max values
+    double *xmax = malloc(dim * sizeof *xmax);
+    double *xmin = malloc(dim * sizeof *xmin);
     // Declare timestep and pi
     double h;
     const double pi = 4 * atan(1);  // Pi number definition
@@ -495,7 +510,8 @@ void bifurc_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
     double varstep;        
     varstep = (parrange[1] - parrange[0])/(parrange[2] - 1); // -1 in the denominator ensures the input resolution
     // Make the header of the output file
-    write_results(output_file, dim, par[parindex], x, 0);
+    write_results(output_poinc_file, dim, par[parindex], x, xmin, xmax, 0);
+    write_results(output_file, dim, par[parindex], x, xmin, xmax, 2);
     // Starts sweep the control parameter
     for (int k = 0; k < (int)parrange[2]; k++) {
         par[parindex] = parrange[0] + k*varstep; // Increment value
@@ -508,6 +524,11 @@ void bifurc_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
                 x[i] = IC[i];
             }
         }
+        // Reset initial values to xmax and xmin based on initial values of x
+        for (int i = 0; i < dim; i++) {
+            xmax[i] = x[i];
+            xmin[i] = x[i];
+        }
         // Vary timestep if varpar = par[0]
         h = (2 * pi) / (ndiv * par[0]);         // par[0] = OMEGA
         // Call Runge-Kutta 4th order integrator n = np * ndiv times
@@ -517,14 +538,20 @@ void bifurc_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
                 t = t + h;
                 // Apply poincare map at permanent regime
                 if (i > trans) {
+                    // Get max and min values at permanent regime
+                    for (int q = 0; q < dim; q++) {
+                        max_value(x[q], &xmax[q]);
+                        min_value(x[q], &xmin[q]);
+                    }
                     // Choose any point in the trajectory for plane placement
                     if (j == 1) {
                         // Print the result in output file
-                        write_results(output_file, dim, par[parindex], x, 1);
+                        write_results(output_poinc_file, dim, par[parindex], x, xmin, xmax, 1);
                     }
                 }
             }
         }
+        write_results(output_file, dim, par[parindex], x, xmin, xmax, 3);
         // Progress Monitor
         if (parrange[2] > 100) {
             if (k % 50 == 0) {
@@ -539,7 +566,7 @@ void bifurc_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
         
     }
     // Free Memory
-    free(f); free(IC);
+    free(f); free(IC); free(xmax); free(xmin);
 }
 
 void full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int *attrac, int maxper, double t, double **x, double h, double *par, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, int dim, double t, double *x, double *lambda, double *s_lambda, int mode)) {
@@ -620,9 +647,9 @@ void full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poinc_
     free(poinc);
 }
 
-void full_bifurcation_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t,
+void full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int maxper, double t,
                                double **x, int parindex, double *parrange, double *par, void (*edosys)(int, double *, double, double *, double *),
-                               void (*write_results)(FILE *output_file, int dim, int np, int trans, double varpar, double *x, int attractor, double **poinc, int diffattrac, int mode), int bifmode) {
+                               void (*write_results)(FILE *output_file, int dim, int np, int trans, double varpar, double *x, double *xmin, double *xmax, double *LE, int attractor, double **poinc, int diffattrac, int mode), int bifmode) {
     // Allocate memory for x` = f(x)
     double *f = malloc(dim * sizeof *f);
     // Allocate memory for vectors necessary for lyapunov exponents calculation
@@ -638,6 +665,9 @@ void full_bifurcation_solution(FILE *output_file, int dim, int np, int ndiv, int
     for (int i = 0; i < dim; i++) {
         IC[i] = (*x)[i];
     }
+    // Declare memory to store min and max values
+    double *xmax = malloc(dim * sizeof *xmax);
+    double *xmin = malloc(dim * sizeof *xmin);
     // Declare timestep, final time, short initial time and pi
     double h, tf, s_T0;
     const double pi = 4 * atan(1);  // Pi number definition
@@ -662,7 +692,8 @@ void full_bifurcation_solution(FILE *output_file, int dim, int np, int ndiv, int
     // Prepare x vector to include perturbed values
     realloc_vector(x, ndim);
     // Make the header of output files
-    write_results(output_file, dim, np, trans, par[parindex], (*x), attrac, poinc, diffAttrac, 0);
+    write_results(output_poinc_file, dim, np, trans, par[parindex], (*x), xmin, xmax, LE, attrac, poinc, diffAttrac, 0);
+    write_results(output_file, dim, np, trans, par[parindex], (*x), xmin, xmax, LE, attrac, poinc, diffAttrac, 2);
     // Starts to increment bifurcation control parameter
     for (int k = 0; k < (int)parrange[2]; k++) {
         par[parindex] = parrange[0] + k*varstep; // Increment value
@@ -680,6 +711,11 @@ void full_bifurcation_solution(FILE *output_file, int dim, int np, int ndiv, int
                 (*x)[i] = IC[i];
             }
         }
+        // Reset initial values to xmax and xmin based on initial values of x
+        for (int i = 0; i < dim; i++) {
+            xmax[i] = (*x)[i];
+            xmin[i] = (*x)[i];
+        }
         // Vary timestep if varpar = par[0], varying also final time and short initial time
         h = (2 * pi) / (ndiv * par[0]);              // par[0] = OMEGA
         tf = h*np*ndiv;                              // Final time
@@ -694,6 +730,11 @@ void full_bifurcation_solution(FILE *output_file, int dim, int np, int ndiv, int
                 t = t + h;
                 // Apply poincare map at permanent regime
                 if (i >= trans) {
+                    // Get max and min values at permanent regime
+                    for (int q = 0; q < dim; q++) {
+                        max_value((*x)[q], &xmax[q]);
+                        min_value((*x)[q], &xmin[q]);
+                    }
                     // Choose any point in the trajectory for poincare section placement
                     if (j == 1) {
                         // Stores poincare values in poinc[np - trans][dim] vector
@@ -709,7 +750,8 @@ void full_bifurcation_solution(FILE *output_file, int dim, int np, int ndiv, int
         // Verify the type of motion of the system
         attrac = get_attractor(poinc, LE, dim, np, trans, tmp_attrac, &diffAttrac, maxper);
         // Write results in file
-        write_results(output_file, dim, np, trans, par[parindex], (*x), attrac, poinc, diffAttrac, 1);
+        write_results(output_poinc_file, dim, np, trans, par[parindex], (*x), xmin, xmax, LE, attrac, poinc, diffAttrac, 1);
+        write_results(output_file, dim, np, trans, par[parindex], (*x), xmin, xmax, LE, attrac, poinc, diffAttrac, 3);
         // Progress Monitor
         if (parrange[2] > 100) {
             if (k % 50 == 0) {
@@ -725,6 +767,7 @@ void full_bifurcation_solution(FILE *output_file, int dim, int np, int ndiv, int
     // Free memory    
     free(f); free(cum); free(s_cum); free(lambda); free(s_lambda);
     free(znorm); free(gsc); free(LE); free(tmp_attrac); free(IC);
+    free(xmax); free(xmin);
     for (int i = 0; i < np - trans; i++) {
         free(poinc[i]);
     }

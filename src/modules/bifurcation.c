@@ -30,14 +30,17 @@ void bifurcation(char *funcname, char* outputname, void (*edosys)(int, double *,
     // Create output files to store results
     char output_bifurc_name[200];
     char output_info_name[200];
+    char output_poinc_name[200];
     const char *rawdir = "Bifurcation/out/";                                                            // Directory of output file
     char *dir = convert_dir(rawdir);
     const char *ext = ".csv";                                                                           // Extension of output file
     const char *ext_info = ".txt";                                                                      // Extension of info file
-    snprintf(output_bifurc_name, sizeof(output_bifurc_name), "%s%s_bifurc", dir, outputname);             // Assign name for output rk4 without extension
-    snprintf(output_info_name, sizeof(output_info_name), "%s%s_info", dir, outputname);                   // Assign name for output info without extension
-    FILE *output_bifurc = create_output_file(output_bifurc_name, ext, dir);                             // Create bifurc output file 
-    FILE *output_info = create_output_file(output_info_name, ext_info, dir);                                 // Create info output file
+    snprintf(output_poinc_name, sizeof(output_poinc_name), "%s%s_bifurc_poinc", dir, outputname);     // Assign name for output rk4 without extension
+    snprintf(output_info_name, sizeof(output_info_name), "%s%s_info", dir, outputname);                 // Assign name for output info without extension
+    snprintf(output_bifurc_name, sizeof(output_bifurc_name), "%s%s_bifurc", dir, outputname);           // Assign name for output rk4 without extension
+    FILE *output_bifurc_poinc = create_output_file(output_poinc_name, ext, dir);                        // Create poincare bifurc output file 
+    FILE *output_bifurc = create_output_file(output_bifurc_name, ext, dir);                             // Create bifurc output file
+    FILE *output_info = create_output_file(output_info_name, ext_info, dir);                            // Create info output file
     
     // Print information in screen and info output file
     bifurc_print_info(output_info, DIM, nPar, nP, nDiv, trans, t, x, par, parRange, parIndex, bMode, funcname, "screen");
@@ -46,7 +49,7 @@ void bifurcation(char *funcname, char* outputname, void (*edosys)(int, double *,
     //double time_spent = 0.0;
     //clock_t time_i = clock();
     // Call solution
-    bifurc_solution(output_bifurc, DIM, nP, nDiv, trans, t, x, parIndex, parRange, par, edosys, write_bifurc_results, bMode);
+    bifurc_solution(output_bifurc, output_bifurc_poinc, DIM, nP, nDiv, trans, t, x, parIndex, parRange, par, edosys, write_bifurc_results, bMode);
     // Close output file
     fclose(output_bifurc);
     fclose(output_info);

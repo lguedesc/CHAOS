@@ -4,11 +4,7 @@
 #include "iofiles.h"
 #include "nldyn.h"
 
-double dimensionless_inst_out_power(double chi, double varphi, double kappa, double v) {
-    return (((chi * varphi)/kappa)*v*v);
-}
-
-double dimensionless_RMS(double *cum, double measure, int N, int mode) {
+double RMS(double *cum, double measure, int N, int mode) {
     if (mode == 0) {
         // accumulate the value of the square of the measure 
         (*cum) = (*cum) + (measure * measure);
@@ -21,7 +17,7 @@ double dimensionless_RMS(double *cum, double measure, int N, int mode) {
         return RMS;
     }
     else {
-        printf("Failed to compute dimensionless RMS using mode (%i)\n", mode);
+        printf("Failed to compute dimensionless RMS using mode (%d)\n", mode);
         return;
     }
 }

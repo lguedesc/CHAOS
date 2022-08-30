@@ -295,7 +295,7 @@ void write_results_ftimeseries(FILE *output_file, int dim, double t, double *x, 
     }
 }
 
-void write_bifurc_results(FILE *output_file, int dim, double varpar, double *x, int mode) {
+void write_bifurc_results(FILE *output_file, int dim, double varpar, double *x, double *xmin, double *xmax, int mode) {
     // Check the mode of the function
     if (mode == 0) {
         fprintf(output_file, "%s ", "Cpar");
@@ -311,15 +311,31 @@ void write_bifurc_results(FILE *output_file, int dim, double varpar, double *x, 
         }
         fprintf(output_file, "\n");
     }
+    else if (mode == 2) {
+        fprintf(output_file, "%s ", "Cpar");
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "xmax[%i] ", i);
+            fprintf(output_file, "xmin[%i] ", i);
+        }
+        fprintf(output_file, "\n");
+    }
+    else if (mode == 3) {
+        fprintf(output_file, "%.10f ", varpar);
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", xmax[i]);
+            fprintf(output_file, "%.10lf ", xmin[i]);
+        }
+        fprintf(output_file, "\n");
+    }
     else {
         printf("Failed to write results in output file using mode (%d)...\n", mode);
         return;
     }
 }
 
-void write_fbifurc_results(FILE *output_file, int dim, int np, int trans, double varpar, double *x, int attractor, double **poinc, int diffattrac, int mode) {
+void write_fbifurc_results(FILE *output_file, int dim, int np, int trans, double varpar, double *x, double *xmin, double *xmax, double *LE, int attractor, double **poinc, int diffattrac, int mode) {
     // Check the mode of the function
-    // Header
+    // Header for poincare bifurc
     if (mode == 0) {
         fprintf(output_file, "%s ", "Cpar");
         for (int i = 0; i < dim; i++) {
@@ -327,15 +343,38 @@ void write_fbifurc_results(FILE *output_file, int dim, int np, int trans, double
         }
         fprintf(output_file, "Attractor DiffAttrac\n");
     } 
-    // Write Results
+    // Write Results for poincare bifurc
     else if (mode == 1) {
         for(int q = 0; q < np - trans; q ++) {
             fprintf(output_file, "%.10lf ", varpar);
             for (int i = 0; i < dim; i++) {
                 fprintf(output_file, "%.10lf ", poinc[q][i]);
             }
-            fprintf(output_file, "%i %i\n", attractor, diffattrac);
+            fprintf(output_file, "%d %d\n", attractor, diffattrac);
         }
+    }
+    // Header for lyapunov, min, max values
+    else if (mode == 2) {
+        fprintf(output_file, "%s ", "Cpar");
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "xmin[%d] ", i);
+            fprintf(output_file, "xmax[%d] ", i);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "LE[%d] ", i);
+        }
+        fprintf(output_file, "Attractor DiffAttrac\n");
+    }
+    else if (mode == 3) {
+        fprintf(output_file, "%.10f ", varpar);
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", xmax[i]);
+            fprintf(output_file, "%.10lf ", xmin[i]);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", LE[i]);
+        }
+        fprintf(output_file, "%d %d\n", attractor, diffattrac);
     }
     // Error
     else {
