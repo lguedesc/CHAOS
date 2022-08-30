@@ -1,45 +1,49 @@
-2
-5
-6
+4
+9
 
-1000 1000 750
-
-0.0
-1.0 0.0
+400 1000
 
 0.0
+0.0 0.0 0.0 0.0
+
+1.0
 0.0
 0.025
--0.5
-0.5
+0.025
+-1.0
+-1.0
+1.0
+1.0
+1.0
 
 0
-0.01
-2.0
-31  
+-3.0
+3.0
+51  
 
-1
-0.01
-1.0
-31
-
-1
+2
+-3.0
+3.0
+51
 
 /* Variables */
 DIM
 nPar
-maxPer
 
-nP nDiv trans
+nP nDiv
 
 t0
 IC: x[0] x[1] x[2] ...
 
 par[0] = OMEGA
 par[1] = gamma
-par[2] = zeta
-par[3] = alpha
-par[4] = beta
+par[2] = zeta1
+par[3] = zeta2
+par[4] = alpha1
+par[5] = alpha2
+par[6] = beta1
+par[7] = beta2
+par[8] = rho
 
 Index of control parameter in X
 varparX_i
@@ -50,5 +54,3 @@ Index of control parameter in Y
 varparY_i
 varparY_f
 pixels_Y
-
-Bifurcation Mode (0 for "follow attractor", 1 for "reset IC")

@@ -338,9 +338,15 @@ void store_equilibrium_point(size_t *rows, size_t cols, double ***attrac, double
 }
 
 // Misc
-void progress_bar(double var, double var_i, double var_f) {
+void progress_bar(int mode, double var, double var_i, double var_f) {
+    double perc;
     // Actual percentage
-    double perc = (var/(var_f - var_i))*100;
+    if (mode == 1) {
+        perc = 100;
+    }
+    else {
+        perc = (var/(var_f - var_i))*100;
+    }
     // Filled Part of the progress bar
     int fill = (perc * 50) / 100;  // 50 is the bar length
     printf("\r  Progress: |");
@@ -522,13 +528,13 @@ void bifurc_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
         // Progress Monitor
         if (parrange[2] > 100) {
             if (k % 50 == 0) {
-                progress_bar(par[parindex], parrange[0], parrange[1]);
+                progress_bar(0, par[parindex], parrange[0], parrange[1]);
             }
             if (k == parrange[2] - 1) {
-                progress_bar(par[parindex], parrange[0], parrange[1]);
+                progress_bar(9, par[parindex], parrange[0], parrange[1]);
             }
         } else {
-            progress_bar(par[parindex], parrange[0], parrange[1]);
+            progress_bar(0, par[parindex], parrange[0], parrange[1]);
         }
         
     }
@@ -707,13 +713,13 @@ void full_bifurcation_solution(FILE *output_file, int dim, int np, int ndiv, int
         // Progress Monitor
         if (parrange[2] > 100) {
             if (k % 50 == 0) {
-                progress_bar(par[parindex], parrange[0], parrange[1]);
+                progress_bar(0, par[parindex], parrange[0], parrange[1]);
             }
             if (k == parrange[2] - 1) {
-                progress_bar(par[parindex], parrange[0], parrange[1]);
+                progress_bar(0, par[parindex], parrange[0], parrange[1]);
             }
         } else {
-            progress_bar(par[parindex], parrange[0], parrange[1]);
+            progress_bar(0, par[parindex], parrange[0], parrange[1]);
         }
     }
     // Free memory    
@@ -823,7 +829,7 @@ void dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, in
             write_results(output_file, dim, par[indexX], par[indexY], attrac, LE, diffAttrac, 1);
         }
         // Progress Monitor
-        progress_bar(par[indexY], parrange[3], parrange[4]);
+        progress_bar(0, par[indexY], parrange[3], parrange[4]);
     }
 
     // Free memory    
@@ -960,14 +966,16 @@ void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
                 for (int r = 4; r < dim + 4; r++) {
                     results[index][r] = LE[r-4];
                 }
-                // Progress Monitor
-                if (ID == 0) {
-                    //printf("PAR[%d] = %lf\n", indexX, PAR[indexX]);
-                    //printf("%-5s%-3d%-7s%-3d%-12s%-11lf%-11s%-12lf%-14s%-2d%-15s%-2d%-10s%-11lf%-10s%-11lf\n", "[k = ", k, "] [m = ", m, "]: parY = ", PAR[indexY], ", parX = ", PAR[indexX], ", Attractor = ", attrac, ", diffAttrac = ", diffAttrac, ", LE[0] = ", LE[0], ", LE[1] = ", LE[1]);
-                    progress_bar(PAR[indexY], parrange[3], parrange[4]/omp_get_num_threads());
+            }
+            // Progress Monitor
+            if (ID == 0) {
+                //printf("PAR[%d] = %lf\n", indexX, PAR[indexX]);
+                //printf("%-5s%-3d%-7s%-3d%-12s%-11lf%-11s%-12lf%-14s%-2d%-15s%-2d%-10s%-11lf%-10s%-11lf\n", "[k = ", k, "] [m = ", m, "]: parY = ", PAR[indexY], ", parX = ", PAR[indexX], ", Attractor = ", attrac, ", diffAttrac = ", diffAttrac, ", LE[0] = ", LE[0], ", LE[1] = ", LE[1]);
+                progress_bar(0, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
+                if (k == ((int)parrange[5] - 1)/omp_get_num_threads() ) {
+                    progress_bar(1, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
                 }
             }
-
         }
         // Free memory    
         free(f); free(cum); free(s_cum); free(lambda); free(s_lambda);
@@ -1084,9 +1092,13 @@ void ep_basin_of_attraction_2D(FILE *output_file, FILE *info_file, int dim, int 
             }   
             // Progress Monitor
             if (ID == 0) {
-                progress_bar((double)k, 0, (icrange[5]-3)/omp_get_num_threads());
-                
+                progress_bar(0, (double)k, 0, (icrange[5]-1)/omp_get_num_threads());
+                if (k == ((int)icrange[5] - 1)/omp_get_num_threads() ) {
+                    progress_bar(1, (double)k, 0, (icrange[5]-1)/omp_get_num_threads());
+                }
             }
+
+            
         }
         // Free memory    
         free(f); 
@@ -1223,7 +1235,10 @@ void forced_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv,
                 if (ID == 0) {
                     //printf("PAR[%d] = %lf\n", indexX, PAR[indexX]);
                     //printf("%-5s%-3d%-7s%-3d%-12s%-11lf%-11s%-12lf%-14s%-2d%-15s%-2d%-10s%-11lf%-10s%-11lf\n", "[k = ", k, "] [m = ", m, "]: parY = ", PAR[indexY], ", parX = ", PAR[indexX], ", Attractor = ", attrac, ", diffAttrac = ", diffAttrac, ", LE[0] = ", LE[0], ", LE[1] = ", LE[1]);
-                    progress_bar((double)k, 0, (icrange[5] - 3)/omp_get_num_threads());
+                    progress_bar(0, (double)k, 0, (icrange[5]-1)/omp_get_num_threads());
+                    if (k == ((int)icrange[5] - 1)/omp_get_num_threads() ) {
+                        progress_bar(1, (double)k, 0, (icrange[5]-1)/omp_get_num_threads());
+                    }
                 }
             }
 
