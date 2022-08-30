@@ -414,12 +414,24 @@ void p_write_dyndiag_results(FILE *output_file, int dim, double **results, int p
     for (int i = 0; i < dim; i++) {
         fprintf(output_file, "LE[%d] ", i);
     }
+    for (int i = 0; i < dim; i++) {
+        fprintf(output_file, "xmax[%d] ", i);
+    }
+    for (int i = 0; i < dim; i++) {
+        fprintf(output_file, "xmin[%d] ", i);
+    }
     fprintf(output_file, "\n");
     // Write Results
     for (int i = 0; i < pixels; i++) {
         fprintf(output_file, "%.10lf %.10lf %d %d ", results[i][0], results[i][1], (int)results[i][2], (int)results[i][3]);
         for (int j = 0; j < dim; j++) {
             fprintf(output_file, "%.10lf ", results[i][j+4]);
+        }
+        for (int j = 0; j < dim; j++) {
+            fprintf(output_file, "%.10lf ", results[i][j+4+dim]);
+        }
+        for (int j = 0; j < dim; j++) {
+            fprintf(output_file, "%.10lf ", results[i][j+4+(2*dim)]);
         }
         fprintf(output_file, "\n");
     }

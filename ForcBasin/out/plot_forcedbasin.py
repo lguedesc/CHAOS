@@ -134,7 +134,7 @@ save = False
 system = "duffing"
 ext = ".pdf"
 
-readpath = "ForcBasin/out/" + system + "_forcedbasin.csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "ForcBasin/out/" + system + "_forcedbasin(4).csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "ForcBasin/figs"; savepath = pltconf.convert_dir(savepath)
 
 raw_data = pd.read_csv(readpath, delimiter = " ")
@@ -186,8 +186,8 @@ ax3 = fig.add_subplot(lin,col,4)
 #                               Plot Data  
 # =========================================================================== #
 plot_maps(ax1, x1, y1, z1, colormap1, norm3, custom = 'attractors')
-plot_maps(ax2, x2, y2, z2, colormap2, norm2, custom = 'lyapunov')
-plot_maps(ax3, x3, y3, z3, colormap3, norm3, custom = 'lyapunov')
+plot_maps(ax2, x2, y2, z2, colormap2, norm2)
+plot_maps(ax3, x3, y3, z3, colormap3, norm3)
 plot_maps(ax4, x4, y4, z4, colormap1, norm3)
 # =========================================================================== #
 #                          Customize titles and labels                        #

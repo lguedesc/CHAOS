@@ -892,7 +892,7 @@ void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
     int pixels = parrange[2]*parrange[5];  // Number of results
     double **results = malloc(pixels * sizeof **results);
     for (int i = 0; i < pixels; i++) {
-        results[i] = malloc((4 + dim) * sizeof **results); 
+        results[i] = malloc((4 + (3*dim)) * sizeof **results);  // 4 for params, attrac, diffratac/ dim for xmax/ dim for xmin / dim for LE
     }
     // Declare rk4 timestep, final time, short initial time, pi and varstep
     double h, tf, s_T0;
@@ -940,6 +940,9 @@ void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
         for (int i = 0; i < dim; i++) {
             IC[i] = (*x)[i];
         }
+        // Declare memory to store min and max values
+        double *xmax = malloc(dim * sizeof *xmax);
+        double *xmin = malloc(dim * sizeof *xmin);
         // Convert function arguments as local (private) variables
         double *X = convert_argument_to_private(*x, ndim);
         double *PAR = convert_argument_to_private(par, npar);
@@ -972,6 +975,11 @@ void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
                         X[i] = IC[i];
                     }
                 }
+                // Reset initial values to xmax and xmin based on initial values of x
+                for (int i = 0; i < dim; i++) {
+                    xmax[i] = X[i];
+                    xmin[i] = X[i];
+                }
                 // Vary timestep if varpar = par[0], varying also final time and short initial time
                 h = (2 * pi) / (ndiv * PAR[0]);              // par[0] = OMEGA
                 tf = h*np*ndiv;                              // Final time
@@ -986,6 +994,11 @@ void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
                         t = t + h;
                         // Apply poincare map at permanent regime
                         if (i >= trans) {
+                            // Get max and min values at permanent regime
+                            for (int q = 0; q < dim; q++) {
+                                max_value(X[q], &xmax[q]);
+                                min_value(X[q], &xmin[q]);
+                            }
                             // Choose any point in the trajectory for poincare section placement
                             if (j == 1) {
                                 // Stores poincare values in poinc[np - trans][dim] vector
@@ -1009,6 +1022,12 @@ void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
                 for (int r = 4; r < dim + 4; r++) {
                     results[index][r] = LE[r-4];
                 }
+                for (int r = dim + 4; r < 4 + (2*dim); r++) {
+                    results[index][r] = xmax[r - 4 - dim];
+                }
+                for (int r = 4 + (2*dim); r < 4 + (3*dim); r++) {
+                    results[index][r] = xmin[r - 4 - (2*dim)];
+                }
             }
             // Progress Monitor
             if (ID == 0) {
@@ -1023,6 +1042,7 @@ void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
         // Free memory    
         free(f); free(cum); free(s_cum); free(lambda); free(s_lambda);
         free(znorm); free(gsc); free(LE); free(tmp_attrac); free(IC);
+        free(xmax); free(xmin);
         for (int i = 0; i < np - trans; i++) {
             free(poinc[i]);
         }
@@ -1071,12 +1091,15 @@ void ep_basin_of_attraction_2D(FILE *output_file, FILE *info_file, int dim, int 
         // Allocate memory for x` = f(x)
         double *f = malloc(dim * sizeof *f);
         // Allocate memory to store IC values
-        double *IC = malloc(2 * sizeof *IC);
-        // Store Initial Conditions
-        double t0 = t;
+        double *IC = malloc(dim * sizeof *IC);
         // Convert function arguments as local (private) variables
         double *X = convert_argument_to_private(*x, dim);
         double *PAR = convert_argument_to_private(par, npar);
+        // Store Initial Conditions
+        double t0 = t;
+        for (int i = 0; i < dim; i++) {
+            IC[i] = X[i];
+        }
         // Index to identify position to write results
         int index;
         // Declare flag and tolerance to identify attractor
@@ -1089,12 +1112,16 @@ void ep_basin_of_attraction_2D(FILE *output_file, FILE *info_file, int dim, int 
         for (k = 0; k < (int)icrange[5]; k++) { 
             // Starts the loop for X control parameter
             for (m = 0; m < (int)icrange[2]; m++) {
-                X[indexY] = icrange[3] + k*icstep[1]; // Increment value
-                IC[1] = X[indexY];                    // Update IC value to write in result matrix
-                X[indexX] = icrange[0] + m*icstep[0]; // Increment Value
-                IC[0] = X[indexX];                    // Update IC value to write in result matrix                
+                X[indexY] = icrange[3] + k*icstep[1];       // Increment value
+                IC[indexY] = X[indexY];                     // Update IC value to write in result matrix
+                X[indexX] = icrange[0] + m*icstep[0];       // Increment Value
+                IC[indexX] = X[indexX];                     // Update IC value to write in result matrix                
                 // Reset Variables
                 t = t0;
+                // Reset Initial conditions in each basin step
+                for (int i = 0; i < dim; i++) {
+                    X[i] = IC[i];
+                }
                 // Vary timestep if varpar = par[0], varying also final time and short initial time
                 h = (2 * pi) / (ndiv * PAR[0]);              // par[0] = OMEGA
                 // Call Runge-Kutta 4th order integrator N = nP * nDiv times
@@ -1112,8 +1139,8 @@ void ep_basin_of_attraction_2D(FILE *output_file, FILE *info_file, int dim, int 
                 }
                 // Write corresponding results in matrix
                 index = (int)icrange[2]*k + m;
-                results[index][0] = IC[1];
-                results[index][1] = IC[0];
+                results[index][0] = IC[indexY];
+                results[index][1] = IC[indexX];
                 for (int i = 2; i < 2 + dim; i++) {
                     results[index][i] = X[i - 2];    
                 }
@@ -1168,7 +1195,7 @@ void forced_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv,
     int pixels = icrange[2]*icrange[5];  // Number of results
     double **results = malloc(pixels * sizeof **results);
     for (int i = 0; i < pixels; i++) {
-        results[i] = malloc((4 + dim) * sizeof **results); 
+        results[i] = malloc((4 + (3*dim)) * sizeof **results); 
     }
     // Declare rk4 timestep, final time, short initial time and pi 
     double h, tf, s_T0;
@@ -1210,13 +1237,19 @@ void forced_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv,
         double *LE = malloc(dim * sizeof *LE);
         // Declare vector for temporary storage of periodicity values to check if all directions are equal
         int *tmp_attrac = malloc(dim * sizeof *tmp_attrac);
-        // Store Initial Conditions
-        double t0 = t;
+        // Declare memory to store min and max values
+        double *xmax = malloc(dim * sizeof *xmax);
+        double *xmin = malloc(dim * sizeof *xmin);
         // Allocate memory to store IC values
-        double *IC = malloc(2 * sizeof *IC);
+        double *IC = malloc(dim * sizeof *IC);
         // Convert function arguments as local (private) variables
         double *X = convert_argument_to_private(*x, ndim);
         double *PAR = convert_argument_to_private(par, npar);
+        // Store Initial Conditions
+        double t0 = t;
+        for (int i = 0; i < dim; i++) {
+            IC[i] = X[i];
+        }
         // Index to identify position to write results
         int index;                                          
         // Declare counter for parallelized loop
@@ -1227,15 +1260,24 @@ void forced_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv,
             // Starts the loop for X control parameter
             for (m = 0; m < (int)icrange[2]; m++) {
                 X[indexY] = icrange[3] + k*icstep[1]; // Increment value
-                IC[1] = X[indexY];                    // Update IC value to write in result matrix
+                IC[indexY] = X[indexY];                    // Update IC value to write in result matrix
                 X[indexX] = icrange[0] + m*icstep[0]; // Increment Value
-                IC[0] = X[indexX];                    // Update IC value to write in result matrix
-                // Reset Variables
+                IC[indexX] = X[indexX];                    // Update IC value to write in result matrix
+                // Reset Initial conditions in each basin step
                 t = t0;
+                for (int i = 0; i < dim; i++) {
+                    X[i] = IC[i];
+                }
+                // Reset Variables
                 for (int i = 0; i < dim; i++) {
                     lambda[i] = 0.0;
                     s_lambda[i] = 0.0;
                     LE[i] = 0.0;
+                }
+                // Reset initial values to xmax and xmin based on initial values of x
+                for (int i = 0; i < dim; i++) {
+                    xmax[i] = X[i];
+                    xmin[i] = X[i];
                 }
                 // Vary timestep if varpar = par[0], varying also final time and short initial time
                 h = (2 * pi) / (ndiv * PAR[0]);              // par[0] = OMEGA
@@ -1267,12 +1309,18 @@ void forced_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv,
                 attrac = get_attractor(poinc, LE, dim, np, trans, tmp_attrac, &diffAttrac, maxper);
                 // Write results in matrix
                 index = (int)icrange[2]*k + m;
-                results[index][0] = IC[1];
-                results[index][1] = IC[0];
+                results[index][0] = IC[indexY];
+                results[index][1] = IC[indexX];
                 results[index][2] = (double)attrac;
                 results[index][3] = (double)diffAttrac;
                 for (int r = 4; r < dim + 4; r++) {
                     results[index][r] = LE[r-4];
+                }
+                for (int r = dim + 4; r < 4 + (2*dim); r++) {
+                    results[index][r] = xmax[r - 4 - dim];
+                }
+                for (int r = 4 + (2*dim); r < 4 + (3*dim); r++) {
+                    results[index][r] = xmin[r - 4 - (2*dim)];
                 }
                 // Progress Monitor
                 if (ID == 0) {
@@ -1289,6 +1337,7 @@ void forced_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv,
         // Free memory    
         free(f); free(cum); free(s_cum); free(lambda); free(s_lambda);
         free(znorm); free(gsc); free(LE); free(tmp_attrac); free(IC);
+        free(xmax); free(xmin);
         for (int i = 0; i < np - trans; i++) {
             free(poinc[i]);
         }

@@ -7,7 +7,7 @@ from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib.ticker import FormatStrFormatter
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import os
-from libs import plotconfig as pltconf
+from src.libs import plotconfig as pltconf
 
 pltconf.plot_params(True, 10, 0.5)
 
@@ -30,10 +30,10 @@ def process_data(data, y_axis, x_axis, z_axis):
 #               Function to Configure Attractors Colorbar 
 # =========================================================================== #
 def configure_colormap_motion():
-    c_list = ['#404040', 'orange', 'red', 'yellow']
-    colormap = ListedColormap([c_list[0],c_list[1],c_list[2],c_list[3]])
+    c_list = ['#404040', 'orange', 'red', 'yellow', 'cyan', 'green']
+    colormap = ListedColormap([c_list[0],c_list[1],c_list[2],c_list[3], c_list[4], c_list[5]])
     cmap_min = 1
-    cmap_max = 4
+    cmap_max = 6
     return colormap, cmap_min, cmap_max, c_list
 # =========================================================================== #
 #                           Function to change axis labels 
@@ -56,7 +56,7 @@ def plot_maps(ax, x, y, z, colormap):
     cax = divider.append_axes('right', size = '2.5%', pad = 0.05)    
     lsize = 7.5
     plot = ax.pcolormesh(x, y, z, shading = 'nearest', rasterized = raster, cmap = colormap, vmin = cmap1_min - 0.5, vmax=cmap1_max + 0.5)
-    ticks = [1, 2, 3, 4]
+    ticks = [1, 2, 3, 4, 5, 6]
     #labels = ['EP1','EP2','EP3','EP4','EP5']
     cbar = plt.colorbar(plot, ax=ax, cax = cax, orientation = 'vertical', ticks = ticks, drawedges = True)
     #cax.set_yticklabels(labels)
@@ -69,12 +69,12 @@ def plot_maps(ax, x, y, z, colormap):
 # =========================================================================== #
 #                                    Read Data                                #
 # =========================================================================== #
-save = True
+save = False
 system = "duffing_2DoF"
 ext = ".pdf"
 
-readpath = "EPBasinOfAttraction/out/" + system + "_epbasin(5).csv"; readpath = pltconf.convert_dir(readpath)
-savepath = "EPBasinOfAttraction/figs"; savepath = pltconf.convert_dir(savepath)
+readpath = "EPBasin/out/" + system + "_epbasin(13).csv"; readpath = pltconf.convert_dir(readpath)
+savepath = "EPBasin/figs"; savepath = pltconf.convert_dir(savepath)
 
 raw_data = pd.read_csv(readpath, delimiter = " ")
 

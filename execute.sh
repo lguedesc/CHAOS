@@ -66,10 +66,10 @@ then
         python -B -m DynDiagram.out.plot_dyndiag
     elif [[ $plt -eq 8 ]]
     then
-        python -B -m EPBasinOfAttraction.out.plot_epbasin
+        python -B -m EPBasin.out.plot_epbasin
     elif [[ $plt -eq 9 ]]
     then
-        python -B -m ForcBasinOfAttraction.out.plot_forcedbasin
+        python -B -m ForcBasin.out.plot_forcedbasin
     elif [[ $plt -eq 0 ]]
     then
         exit 0
