@@ -1,3 +1,6 @@
+void falksma(int dim, double *x, double t, double *par, double *f);
+void vanderpol(int dim, double *x, double t, double *par, double *f);
+void pendulum(int dim, double *x, double t, double *par, double *f);
 void duffing(int dim, double *x, double t, double *par, double *f);
 void halvorsen(int dim, double *x, double t, double *par, double *f);
 void linear_oscillator(int dim, double *x, double t, double *par, double *f);

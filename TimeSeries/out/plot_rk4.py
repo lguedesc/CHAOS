@@ -14,10 +14,10 @@ plot_i = nP*trans
 
 save = False
 
-system = "duffing"
+system = "vanderpol"
 ext = ".pdf"
 
-readpath = "TimeSeries/out/" + system + "_rk4(1).csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "TimeSeries/out/" + system + "_rk4.csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "TimeSeries/figs"; savepath = pltconf.convert_dir(savepath)
         
 df = pd.read_csv(readpath, delimiter = " ")

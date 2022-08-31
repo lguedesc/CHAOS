@@ -20,18 +20,27 @@ void execute_modules(unsigned int module, void (*edosys)(int, double *, double, 
 #define OUTPUTNAME_1 "duffing"
 #define FUNC_2 duffing_2DoF                 
 #define OUTPUTNAME_2 "duffing_2DoF"
+#define FUNC_3 vanderpol
+#define OUTPUTNAME_3 "vanderpol"
+#define FUNC_4 pendulum
+#define OUTPUTNAME_4 "pendulum"
+#define FUNC_5 falksma
+#define OUTPUTNAME_5 "falk_sma"
 
 #define EH_FUNC_1 bistable_EH               
 #define EH_OUTPUTNAME_1 "bistable_EH"
 
 #define MAX_NAMELENGTH 100
-#define NUM_OF_SYSTEMS 2
+#define NUM_OF_SYSTEMS 5
 #define NUM_OF_EH_SYSTEMS 1
 #define NUM_OF_TOOLBOXES 2
 #define NUM_OF_MODULES 9 
 
 char *systemNames[NUM_OF_SYSTEMS] = {"Duffing Oscillator",
-                                     "2 DoF Duffing Oscillator"};
+                                     "2 DoF Duffing Oscillator",
+                                     "Van Der Pol Oscillator",
+                                     "Simple Pendulum",
+                                     "Falk Shape Memory Alloy Oscillator"};
  
 char *EHsystemNames[NUM_OF_EH_SYSTEMS] = {"Bistable Energy Harvester"};
 
@@ -55,6 +64,15 @@ void call_system(unsigned int system, unsigned int module) {
             break;
         case 2:
             execute_modules(module, FUNC_2, OUTPUTNAME_2, systemNames[1]);
+            break;
+        case 3:
+            execute_modules(module, FUNC_3, OUTPUTNAME_3, systemNames[2]);
+            break;
+        case 4:
+            execute_modules(module, FUNC_4, OUTPUTNAME_4, systemNames[3]);
+            break;
+        case 5:
+            execute_modules(module, FUNC_5, OUTPUTNAME_5, systemNames[4]);
             break;
         default:
             printf("Invalid...\n");

@@ -1167,8 +1167,6 @@ void ep_basin_of_attraction_2D(FILE *output_file, FILE *info_file, int dim, int 
                     progress_bar(1, (double)k, 0, (icrange[5]-1)/omp_get_num_threads());
                 }
             }
-
-            
         }
         // Free memory    
         free(f); 

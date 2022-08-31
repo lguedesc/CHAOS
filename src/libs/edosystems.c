@@ -3,6 +3,89 @@
 #include <math.h>
 #include <stdio.h>
 
+/* To be added */
+
+// Double Pendulum
+// Falk SMA 2DoF Oscillator
+// Nonsmooth Oscillator
+
+/* To be added EH */
+// Tristable EH
+// Nonsmooth EH
+// 2 Nonlinear DoF EH
+// Oscillator-Pendulum Energy Harvester
+
+void falksma(int dim, double *x, double t, double *par, double *f) {
+    // OMEGA   = par[0]
+    // gamma   = par[1]
+    // zeta    = par[2]
+    // theta   = par[3]
+    // beta    = par[4]
+    // theta_A = par[5]
+    if (dim == 2) {
+        f[0] = x[1];
+        f[1] = par[1]*sin(par[0] * t) - par[2]*x[1] - (par[3] - 1)*x[0] + par[4]*x[0]*x[0]*x[0] - (par[4]*par[4] / (4*(par[5] - 1)))*x[0]*x[0]*x[0]*x[0]*x[0];
+    }
+    else if (dim == 6) {
+        f[0] = x[1];
+        f[1] = f[1] = par[1]*sin(par[0] * t) - par[2]*x[1] - (par[3] - 1)*x[0] + par[4]*x[0]*x[0]*x[0] - (par[4]*par[4] / (4*(par[5] - 1)))*x[0]*x[0]*x[0]*x[0]*x[0];
+        for (int i = 0; i < 2; i++) {
+            f[2 + i] = x[4 + i];
+            f[4 + i] = -par[2]*x[4 + i] - (1 + 3*par[4]*x[0]*x[0] - par[3] -  (5/4)*(par[4]*par[4]/(4*(1 - par[5])))*x[0]*x[0]*x[0]*x[0])*x[2 + i];
+        }
+    }
+    else {
+        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
+        exit(1);
+    }
+}
+
+void vanderpol(int dim, double *x, double t, double *par, double *f) {
+    // OMEGA = par[0]
+    // gamma = par[1]
+    // mu    = par[2]
+    if (dim == 2) {
+        f[0] = x[1];
+        f[1] = par[1]*sin(par[0] * t) + par[2]*(1 - x[0]*x[0])*x[1] - x[0];
+    }
+    else if (dim == 6) {
+        f[0] = x[1];
+        f[1] = par[1]*sin(par[0] * t) + par[2]*(1 - x[0]*x[0])*x[1] - x[0];
+        for (int i = 0; i < 2; i++) {
+            f[2 + i] = x[4 + i];
+            f[4 + i] = (-1 - 2*par[2]*x[0]*x[1])*x[2 + i] + par[2]*(1 - x[0]*x[0])*x[4 + i];
+        }
+    }
+    else {
+        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
+        exit(1);
+    }
+}
+
+void pendulum(int dim, double *x, double t, double *par, double *f) {
+    // OMEGA = par[0]
+    // gamma = par[1]
+    // zeta  = par[2]
+    // g     = par[3]
+    // L     = par[4]
+    if (dim == 2) {
+        f[0] = x[1];
+        f[1] = par[1]*sin(par[0] * t) - par[2]*x[1] - (par[3]/par[4])*sin(x[0]);
+    }
+    else if (dim == 6) {
+        f[0] = x[1];
+        f[1] = par[1]*sin(par[0] * t) - par[2]*x[1] - (par[3]/par[4])*sin(x[0]);
+        for (int i = 0; i < 2; i++) {
+            f[2 + i] = x[4 + i];
+            f[4 + i] = -par[2]*x[4 + i] - (par[3]/par[4])*cos(x[0])*x[2 + i];
+        } 
+    }
+    else {
+        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
+        exit(1);
+    }
+}
+
 void duffing(int dim, double *x, double t, double *par, double *f) {
     // OMEGA = par[0]
     // gamma = par[1]
