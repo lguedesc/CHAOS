@@ -122,7 +122,7 @@ void tseries_print_info(FILE *info ,int dim, int npar, int np, int ndiv, double 
         printf("  -------------------------------------------------\n");
         printf("  Initial Conditions\n");
         printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20lf\n", "  Initial Time (t):", " ",  t);
+        printf("%-30s%s%-20g\n", "  Initial Time (t):", " ",  t);
         for (int i = 0; i < dim; i++) {
             printf("%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
         }
@@ -149,7 +149,7 @@ void tseries_print_info(FILE *info ,int dim, int npar, int np, int ndiv, double 
         fprintf(info, "  -------------------------------------------------\n");
         fprintf(info, "  Initial Conditions\n");
         fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20lf\n", "  Initial Time (t):", " ",  t);
+        fprintf(info, "%-30s%s%-20g\n", "  Initial Time (t):", " ",  t);
         for (int i = 0; i < dim; i++) {
             fprintf(info, "%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
         }

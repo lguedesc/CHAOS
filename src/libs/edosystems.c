@@ -149,8 +149,8 @@ void linear_oscillator(int dim, double *x, double t, double *par, double *f) {
         f[0] = x[1];
         f[1] = par[1]*sin(par[0] * t) - 2*par[2]*par[3]*x[1] - par[3]*par[3]*x[0];
         for (int i = 0; i < 2; i++) {
-            f[2 + i] = 0;       // Insert later
-            f[4 + i] = 0;       // Insert later
+            f[2 + i] = x[4 + i];               
+            f[4 + i] = -2*par[2]*par[3]*x[4 + i] - par[3]*par[3]*x[2 + i];       
         }
     }
     else {
