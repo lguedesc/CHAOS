@@ -158,7 +158,7 @@ char *get_input_filename(void) {
     /* The user is responsible to free (filename) after the function call */
 }
 
-// Write Results
+// Write Results for Nonlinear Dynamics Toolbox
 
 void write_results(FILE *output_file, int dim, double t, double *x, int mode) {
     // Check the mode of the function
@@ -454,3 +454,116 @@ void p_write_epbasin_results(FILE *output_file, double **results, int pixels, in
     }
 }
 
+// Write results for Energy Harvesting Toolbox
+
+void EH_write_bifurc_results(FILE *output_file, int dim, double varpar, double *x, double *xmin, double *xmax, int nrms, int *rmsindex, double *xrms, double *overallxrms, int mode) {
+    // Check the mode of the function
+    if (mode == 0) {
+        fprintf(output_file, "%s ", "Cpar");
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "x[%i] ", i);
+        }
+        fprintf(output_file, "\n");
+    } 
+    else if (mode == 1) {
+        fprintf(output_file, "%.10f ", varpar);
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", x[i]);
+        }
+        fprintf(output_file, "\n");
+    }
+    else if (mode == 2) {
+        fprintf(output_file, "%s ", "Cpar");
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "xmax[%d] ", i);
+            fprintf(output_file, "xmin[%d] ", i);
+        }
+        for (int i = 0; i < nrms; i++) {
+            fprintf(output_file, "xRMS[%d] ", rmsindex[i]);
+        }
+        for (int i = 0; i < nrms; i++) {
+            fprintf(output_file, "OverallxRMS[%d] ", rmsindex[i]);
+        }
+        fprintf(output_file, "\n");
+    }
+    else if (mode == 3) {
+        fprintf(output_file, "%.10f ", varpar);
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", xmax[i]);
+            fprintf(output_file, "%.10lf ", xmin[i]);
+        }
+        for (int i = 0; i < nrms; i++) {
+            fprintf(output_file, "%.10lf ", xrms[rmsindex[i]]);
+        }
+        for (int i = 0; i < nrms; i++) {
+            fprintf(output_file, "%.10lf ", overallxrms[rmsindex[i]]);
+        }
+        fprintf(output_file, "\n");
+    }
+    else {
+        printf("Failed to write results in output file using mode (%d)...\n", mode);
+        return;
+    }
+}
+
+void EH_write_fbifurc_results(FILE *output_file, int dim, int np, int trans, double varpar, double *x, double *xmin, double *xmax, double *LE, int attractor, double **poinc, int diffattrac, int nrms, int *rmsindex, double *xrms, double *overallxrms, int mode) {
+    // Check the mode of the function
+    // Header for poincare bifurc
+    if (mode == 0) {
+        fprintf(output_file, "%s ", "Cpar");
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "x[%i] ", i);
+        }
+        fprintf(output_file, "Attractor DiffAttrac\n");
+    } 
+    // Write Results for poincare bifurc
+    else if (mode == 1) {
+        for(int q = 0; q < np - trans; q ++) {
+            fprintf(output_file, "%.10lf ", varpar);
+            for (int i = 0; i < dim; i++) {
+                fprintf(output_file, "%.10lf ", poinc[q][i]);
+            }
+            fprintf(output_file, "%d %d\n", attractor, diffattrac);
+        }
+    }
+    // Header for lyapunov, min, max values
+    else if (mode == 2) {
+        fprintf(output_file, "%s ", "Cpar");
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "xmin[%d] ", i);
+            fprintf(output_file, "xmax[%d] ", i);
+        }
+        for (int i = 0; i < nrms; i++) {
+            fprintf(output_file, "xRMS[%d] ", rmsindex[i]);
+        }
+        for (int i = 0; i < nrms; i++) {
+            fprintf(output_file, "OverallxRMS[%d] ", rmsindex[i]);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "LE[%d] ", i);
+        }
+        fprintf(output_file, "Attractor DiffAttrac\n");
+    }
+    else if (mode == 3) {
+        fprintf(output_file, "%.10f ", varpar);
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", xmax[i]);
+            fprintf(output_file, "%.10lf ", xmin[i]);
+        }
+        for (int i = 0; i < nrms; i++) {
+            fprintf(output_file, "%.10lf ", xrms[rmsindex[i]]);
+        }
+        for (int i = 0; i < nrms; i++) {
+            fprintf(output_file, "%.10lf ", overallxrms[rmsindex[i]]);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", LE[i]);
+        }
+        fprintf(output_file, "%d %d\n", attractor, diffattrac);
+    }
+    // Error
+    else {
+        printf("Failed to write results in output file using mode (%d)...\n", mode);
+        return;
+    }
+}

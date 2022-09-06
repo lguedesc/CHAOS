@@ -15,6 +15,8 @@
 #include "modules/forcedbasin.h"
 #include "modules/EH_time_series.h"
 #include "modules/EH_ftime_series.h"
+#include "modules/EH_bifurcation.h"
+#include "modules/EH_fbifurcation.h"
 
 void execute_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
 void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
@@ -186,10 +188,10 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
             EH_ftime_series(funcname, outputname, edosys);
             break;
         case 5:
-            //bifurcation(funcname, outputname, edosys);
+            EH_bifurcation(funcname, outputname, edosys);
             break;
         case 6:
-            //fbifurcation(funcname, outputname, edosys);
+            EH_fbifurcation(funcname, outputname, edosys);
             break;
         case 7:
             //dyndiag(funcname, outputname, edosys);

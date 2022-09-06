@@ -21,3 +21,7 @@ void write_fbifurc_results(FILE *output_file, int dim, int np, int trans, double
 void write_dyndiag_results(FILE *output_file, int dim, double varparX, double varparY, int attractor, double *LE, int diffattrac, int mode);
 void p_write_dyndiag_results(FILE *output_file, int dim, double **results, int pixels);
 void p_write_epbasin_results(FILE *output_file, double **results, int pixels, int dim);
+
+// Write results in file for Energy Harvesting Toolbox
+void EH_write_bifurc_results(FILE *output_file, int dim, double varpar, double *x, double *xmin, double *xmax, int nrms, int *rmsindex, double *xrms, double *overallxrms, int mode);
+void EH_write_fbifurc_results(FILE *output_file, int dim, int np, int trans, double varpar, double *x, double *xmin, double *xmax, double *LE, int attractor, double **poinc, int diffattrac, int nrms, int *rmsindex, double *xrms, double *overallxrms, int mode);

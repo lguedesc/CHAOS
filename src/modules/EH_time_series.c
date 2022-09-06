@@ -64,18 +64,9 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     printf("The elapsed time is %f seconds\n", time_spent);
     */
 
-    // Print RMS calculations on screen and in file
-    for (int q = 0; q < nRMS; q++) {
-        printf("%s%d%-22s%s%-20g\n", "  xRMS[", rmsindex[q], "]:", " ", xRMS[rmsindex[q]]);
-        fprintf(output_info, "%s%d%-22s%s%-20g\n", "  xRMS[", rmsindex[q], "]:", " ", xRMS[rmsindex[q]]);
-    }
-    for (int q = 0; q < nRMS; q++) {
-        printf("%s%d%-14s%s%-20g\n", "  Overall xRMS[", rmsindex[q], "]:", " ", overallxRMS[rmsindex[q]]);
-        fprintf(output_info, "%s%d%-14s%s%-20g\n", "  Overall xRMS[", rmsindex[q], "]:", " ", overallxRMS[rmsindex[q]]);
-    }
-    printf("  -------------------------------------------------\n");
-    fprintf(output_info, "  -------------------------------------------------\n");
-
+   // Print RMS calculations in screen and in info file
+    EH_print_RMS(output_info, nRMS, rmsindex, xRMS, overallxRMS);
+    
     // Close output file
     fclose(output_rk4);
     fclose(output_info);
@@ -206,5 +197,4 @@ void EH_tseries_print_info(FILE *info ,int dim, int npar, int np, int ndiv, int 
         printf("Information could not be printed using mode (%s)...\n", mode);
         return;
     }
-
 }

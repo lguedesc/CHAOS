@@ -10,7 +10,7 @@ from src.libs import plotconfig as pltconf
 pltconf.plot_params(True, 10, 0.5)
 
 save = False
-system = "bistable_EH"
+system = "duffing"
 ext = ".pdf"
 
 readpath = "FBifurcation/out/" + system + "_fbifurc.csv"; readpath = pltconf.convert_dir(readpath)
@@ -38,8 +38,7 @@ ax1 = fig.add_subplot(grid[0,:-2])
 ax2 = fig.add_subplot(grid[1,:-2])
 ax3 = fig.add_subplot(grid[2,:-2])
 ax4 = fig.add_subplot(grid[3,:-2])
-ax5 = fig.add_subplot(grid[0,2:4])
-ax6 = fig.add_subplot(grid[1,2:4])
+ax5 = fig.add_subplot(grid[:,2:4])
 
 size = 0.5
 
@@ -69,17 +68,9 @@ ax4.set_ylabel(r'$\lambda_2$')
 ax4.set_xlabel(r'$\Omega$')
 ax4.set_xlim(df['Cpar'].min(), df['Cpar'].max())
 
-ax5.scatter(dfpoinc['Cpar'], dfpoinc['x[2]'], c = dfpoinc['Attractor'], cmap = colormap, rasterized = True, s = size, linewidths = 0, marker = 'o', zorder = 2)
-ax5.plot(df['Cpar'], df['xmax[2]'], rasterized = True, color = fillcolor, zorder = 1)
-ax5.plot(df['Cpar'], df['xmin[2]'], rasterized = True, color = fillcolor, zorder = 1)
-ax5.fill_between(df['Cpar'], df['xmax[2]'], df['xmin[2]'], color = fillcolor, zorder = 0)
-ax5.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
-ax5.set_ylabel(r'$\nu$')
-
-ax6.plot(df['Cpar'], df['xRMS[2]'], rasterized = True, color = 'red', zorder = 1)
-ax6.plot(df['Cpar'], df['OverallxRMS[2]'], rasterized = True, color = 'blue', zorder = 1)
-ax6.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
-ax6.set_ylabel(r'$\nu_{rms}$')
+ax5.scatter(dfpoinc['x[0]'], dfpoinc['x[1]'], c = dfpoinc['Attractor'], cmap = colormap, rasterized = True, s = size, linewidths = 0, marker = 'o', zorder = 1)
+ax5.set_ylabel(r'$\dot{x}$')
+ax5.set_xlabel(r'$x$')
 
 #========================================================================#
 # Show and Save Figure                                                   #

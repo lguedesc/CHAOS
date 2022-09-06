@@ -12,8 +12,8 @@ save = False
 system = "bistable_EH"
 ext = ".pdf"
 
-readpath = "Bifurcation/out/" + system + "_bifurc(1).csv"; readpath = pltconf.convert_dir(readpath)
-readpathpoinc = "Bifurcation/out/" + system + "_bifurc_poinc(1).csv"; readpathpoinc = pltconf.convert_dir(readpathpoinc)
+readpath = "Bifurcation/out/" + system + "_bifurc.csv"; readpath = pltconf.convert_dir(readpath)
+readpathpoinc = "Bifurcation/out/" + system + "_bifurc_poinc.csv"; readpathpoinc = pltconf.convert_dir(readpathpoinc)
 savepath = "Bifurcation/figs"; savepath = pltconf.convert_dir(savepath)
         
 dfpoinc = pd.read_csv(readpathpoinc, delimiter = " ")
@@ -36,8 +36,7 @@ grid = fig.add_gridspec(2, 4)
 
 ax1 = fig.add_subplot(grid[0,:-2])
 ax2 = fig.add_subplot(grid[1,:-2])
-ax3 = fig.add_subplot(grid[0,2:4])
-ax4 = fig.add_subplot(grid[1,2:4])
+ax3 = fig.add_subplot(grid[:,2:4])
 
 size = 0.5
 
@@ -57,20 +56,9 @@ ax2.set_ylabel(r'$\dot{x}$')
 ax2.set_xlabel(r'$\Omega$')
 ax2.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
 
-ax3.scatter(dfpoinc['Cpar'], dfpoinc['x[2]'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)
-ax3.plot(df['Cpar'], df['xmax[2]'], rasterized = True, color = 'cyan', zorder = 1)
-ax3.plot(df['Cpar'], df['xmin[2]'], rasterized = True, color = 'cyan', zorder = 1)
-ax3.fill_between(df['Cpar'], df['xmax[2]'], df['xmin[2]'], color = "cyan", zorder = 0)
-ax3.set_ylabel(r'$\nu$')
-ax3.set_xlabel(r'$\Omega$')
-ax3.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
-
-ax4.plot(df['Cpar'], df['xRMS[2]'], rasterized = True, color = 'red', zorder = 1, label = "RMS")
-ax4.plot(df['Cpar'], df['OverallxRMS[2]'], rasterized = True, color = 'blue', zorder = 1, label = "Overall RMS")
-ax4.set_ylabel(r'$\nu_{rms}$')
-ax4.set_xlabel(r'$\Omega$')
-ax4.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
-#ax4.legend()
+ax3.scatter(dfpoinc['x[0]'], dfpoinc['x[1]'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 1)
+ax3.set_ylabel(r'$\dot{x}$')
+ax3.set_xlabel(r'$x$')
 
 #========================================================================#
 # Show and Save Figure                                                   #
