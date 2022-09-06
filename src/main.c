@@ -13,8 +13,11 @@
 #include "modules/dyndiag.h"
 #include "modules/epbasin.h"
 #include "modules/forcedbasin.h"
+#include "modules/EH_time_series.h"
+#include "modules/EH_ftime_series.h"
 
 void execute_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
+void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
 
 #define FUNC_1 duffing
 #define OUTPUTNAME_1 "duffing"
@@ -33,7 +36,7 @@ void execute_modules(unsigned int module, void (*edosys)(int, double *, double, 
 #define EH_OUTPUTNAME_1 "bistable_EH"
 
 #define MAX_NAMELENGTH 100
-#define NUM_OF_SYSTEMS 6
+#define NUM_OF_SYSTEMS 7
 #define NUM_OF_EH_SYSTEMS 1
 #define NUM_OF_TOOLBOXES 2
 #define NUM_OF_MODULES 9 
@@ -43,7 +46,8 @@ char *systemNames[NUM_OF_SYSTEMS] = {"Duffing Oscillator",
                                      "Van Der Pol Oscillator",
                                      "Simple Pendulum",
                                      "Falk Shape Memory Alloy Oscillator",
-                                     "Linear Oscillator"};
+                                     "Linear Oscillator",
+                                     "Bistable Energy Harvester"};
  
 char *EHsystemNames[NUM_OF_EH_SYSTEMS] = {"Bistable Energy Harvester"};
 
@@ -80,6 +84,9 @@ void call_system(unsigned int system, unsigned int module) {
         case 6:
             execute_modules(module, FUNC_6, OUTPUTNAME_6, systemNames[5]);
             break;
+        case 7:
+            execute_modules(module, EH_FUNC_1, EH_OUTPUTNAME_1, systemNames[6]);
+            break;
         default:
             printf("Invalid...\n");
             exit(0);
@@ -89,7 +96,7 @@ void call_system(unsigned int system, unsigned int module) {
 void call_EH_system(unsigned int system, unsigned int module) {
     switch(system) {
         case 1:
-            execute_modules(module, EH_FUNC_1, EH_OUTPUTNAME_1, EHsystemNames[0]);
+            execute_EH_modules(module, EH_FUNC_1, EH_OUTPUTNAME_1, EHsystemNames[0]);
             break;
         default:
             printf("Invalid...\n");
@@ -157,6 +164,41 @@ void execute_modules(unsigned int module, void (*edosys)(int, double *, double, 
             break;
         case 9:
             forcedbasin(funcname, outputname, edosys);
+            break;    
+        default:
+            printf("Invalid Module\n");
+            exit(0);
+    }
+}
+
+void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname) {
+    switch (module) {
+        case 1:
+            EH_timeseries(funcname, outputname, edosys);
+            break;
+        case 2:
+            poincaremap(funcname, outputname, edosys);
+            break;
+        case 3:
+            lyapunov_exp_wolf(funcname, outputname, edosys);
+            break;
+        case 4:
+            EH_ftime_series(funcname, outputname, edosys);
+            break;
+        case 5:
+            //bifurcation(funcname, outputname, edosys);
+            break;
+        case 6:
+            //fbifurcation(funcname, outputname, edosys);
+            break;
+        case 7:
+            //dyndiag(funcname, outputname, edosys);
+            break;
+        case 8:
+            //epbasin(funcname, outputname, edosys);
+            break;
+        case 9:
+            //forcedbasin(funcname, outputname, edosys);
             break;    
         default:
             printf("Invalid Module\n");

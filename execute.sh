@@ -16,10 +16,10 @@ echo
 
 if [[ $option -eq 1 ]]
 then 
-    icc -std=c17 -qopenmp -o CHAOS -O3 src/main.c src/libs/edosystems.c src/libs/interface.c src/libs/iofiles.c src/libs/nldyn.c src/modules/time_series.c src/modules/poinc_map.c src/modules/lyap_exp_wolf.c src/modules/ftime_series.c src/modules/bifurcation.c src/modules/fbifurcation.c src/modules/dyndiag.c src/modules/epbasin.c src/modules/forcedbasin.c  
+    icc -std=c17 -qopenmp -o CHAOS -O3 src/main.c src/libs/edosystems.c src/libs/interface.c src/libs/iofiles.c src/libs/nldyn.c src/libs/energyharvest.c src/modules/time_series.c src/modules/poinc_map.c src/modules/lyap_exp_wolf.c src/modules/ftime_series.c src/modules/bifurcation.c src/modules/fbifurcation.c src/modules/dyndiag.c src/modules/epbasin.c src/modules/forcedbasin.c src/modules/EH_time_series.c src/modules/EH_ftime_series.c 
 elif [[ $option -eq 2 ]]
 then 
-    icc -std=c17 -qopenmp -o CHAOS -O3 src/main.c src/libs/edosystems.c src/libs/interface.c src/libs/iofiles.c src/libs/nldyn.c src/modules/time_series.c src/modules/poinc_map.c src/modules/lyap_exp_wolf.c src/modules/ftime_series.c src/modules/bifurcation.c src/modules/fbifurcation.c src/modules/dyndiag.c src/modules/epbasin.c src/modules/forcedbasin.c  
+    icc -std=c17 -qopenmp -o CHAOS -O3 src/main.c src/libs/edosystems.c src/libs/interface.c src/libs/iofiles.c src/libs/nldyn.c src/libs/energyharvest.c src/modules/time_series.c src/modules/poinc_map.c src/modules/lyap_exp_wolf.c src/modules/ftime_series.c src/modules/bifurcation.c src/modules/fbifurcation.c src/modules/dyndiag.c src/modules/epbasin.c src/modules/forcedbasin.c src/modules/EH_time_series.c src/modules/EH_ftime_series.c
     ./CHAOS
 elif [[ $option -eq 3 ]]
 then 

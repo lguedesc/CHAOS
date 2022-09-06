@@ -14,10 +14,10 @@ plot_i = nP*trans
 
 save = False
 
-system = "vanderpol"
+system = "bistable_EH"
 ext = ".pdf"
 
-readpath = "TimeSeries/out/" + system + "_rk4.csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "TimeSeries/out/" + system + "_rk4(3).csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "TimeSeries/figs"; savepath = pltconf.convert_dir(savepath)
         
 df = pd.read_csv(readpath, delimiter = " ")
@@ -46,7 +46,10 @@ ax1.set_ylabel(r'$x$')
 ax1.set_xlabel(r'$\tau$')
 ax1.set_xlim(df['Time'].min(), df['Time'].max())
 
-ax2.plot(df['Time'], df['x[1]'], rasterized = True, color = "blue", linewidth = 0.5, zorder = 1)
+ax2.plot(df['Time'], df['x[2]'], rasterized = True, color = "blue", linewidth = 0.5, zorder = 1)
+ax2.hlines(0.0805274, df['Time'].max()*0.75, df['Time'].max(), color = 'pink', lw = 0.5)
+ax2.hlines(0, df['Time'].min(), df['Time'].max(), color = 'black', lw = 0.5)
+ax2.hlines(0.256864, df['Time'].min(), df['Time'].max(), color = 'red', lw = 0.5)
 ax2.set_ylabel(r'$\dot{x}$')
 ax2.set_xlabel(r'$\tau$')
 ax2.set_xlim(df['Time'].min(), df['Time'].max())

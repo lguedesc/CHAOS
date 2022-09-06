@@ -7,9 +7,10 @@
 #include "../libs/edosystems.h"
 #include "../libs/nldyn.h"
 #include "../libs/iofiles.h"
-#include "time_series.h"
+#include "../libs/energyharvest.h"
+#include "EH_time_series.h"
 
-void timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
+void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     
     // Declare Program Parameters
     const double pi = 4 * atan(1);  // Pi number definition
@@ -17,13 +18,18 @@ void timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, 
     int nP;                         // Number of forcing periods analyzed
     int nDiv;                       // Number of divisions in each forcing period
     int nPar;                       // Number of parameters of the system
-
+    int trans;                      // Number of forcing periods considered transient
+    int nRMS;                       // Number of state variables that will be submitted to RMS calculation
     // Assign values for program parameters, system parameters and initial conditions
     char *input_filename = get_input_filename();
-    double t;
-    double *x = NULL;
-    double *par = NULL;
-    tseries_read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &t, &par, &x);
+    double t;                       // Time
+    double *x = NULL;               // State Variables
+    double *par = NULL;             // Parameters
+    int *rmsindex = NULL;           // Indexes of state variables that will be submitted to RMS calculation
+    double *xRMS = NULL;            // State Variables RMS values at permanent regime
+    double *overallxRMS = NULL;     // State Variables RMS values at transient + permanent regime
+    
+    EH_tseries_read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &trans, &nRMS, &t, &par, &x, &rmsindex);
     
     // Define Timestep
     double h = (2 * pi) / (nDiv * par[0]); // par[0] = OMEGA
@@ -41,8 +47,8 @@ void timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, 
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);  // Create info output file
     
     // Print information in screen and info output file
-    tseries_print_info(output_info, DIM, nPar, nP, nDiv, h, t, x, par, funcname, "screen");
-    tseries_print_info(output_info, DIM, nPar, nP, nDiv, h, t, x, par, funcname, "file");
+    EH_tseries_print_info(output_info, DIM, nPar, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname,"screen");
+    EH_tseries_print_info(output_info, DIM, nPar, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, "file");
     
     /*
     // Time variables
@@ -50,13 +56,26 @@ void timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, 
     clock_t time_i = clock();
     */
     // Call solution
-    rk4_solution(output_rk4, DIM, nP, nDiv, t, x, h, par, edosys, write_results);
+    EH_rk4_solution(output_rk4, DIM, nP, nDiv, trans, t, x, h, par, nRMS, rmsindex, &xRMS, &overallxRMS, edosys, write_results);
 
     /*
     clock_t time_f = clock();
     time_spent += (double)(time_f - time_i) / CLOCKS_PER_SEC; 
     printf("The elapsed time is %f seconds\n", time_spent);
     */
+
+    // Print RMS calculations on screen and in file
+    for (int q = 0; q < nRMS; q++) {
+        printf("%s%d%-22s%s%-20g\n", "  xRMS[", rmsindex[q], "]:", " ", xRMS[rmsindex[q]]);
+        fprintf(output_info, "%s%d%-22s%s%-20g\n", "  xRMS[", rmsindex[q], "]:", " ", xRMS[rmsindex[q]]);
+    }
+    for (int q = 0; q < nRMS; q++) {
+        printf("%s%d%-14s%s%-20g\n", "  Overall xRMS[", rmsindex[q], "]:", " ", overallxRMS[rmsindex[q]]);
+        fprintf(output_info, "%s%d%-14s%s%-20g\n", "  Overall xRMS[", rmsindex[q], "]:", " ", overallxRMS[rmsindex[q]]);
+    }
+    printf("  -------------------------------------------------\n");
+    fprintf(output_info, "  -------------------------------------------------\n");
+
     // Close output file
     fclose(output_rk4);
     fclose(output_info);
@@ -65,9 +84,10 @@ void timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, 
     free(dir);
     free(input_filename);
     free(x); free(par);
+    free(xRMS); free(overallxRMS);
 }
 
-void tseries_read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, double *t, double **par, double **x) {
+void EH_tseries_read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int *trans, int *nrms, double *t, double **par, double **x, int **rmsindex) {
    // Open input file
     FILE *input = fopen(name, "r");
     if (input == NULL) {
@@ -79,11 +99,10 @@ void tseries_read_params_and_IC(char *name, int *dim, int *npar, int *np, int *n
     fscanf(input, "%d", dim);
     fscanf(input, "%d", npar);
     // Read and assign program parameters
-    fscanf(input, "%d %d", np, ndiv); 
+    fscanf(input, "%d %d %d", np, ndiv, trans); 
     // Read and assign initial time
     fscanf(input, "%lf", t);
     // Allocate memory for x[dim] and par[npar] vectors
-    //*x = malloc((*dim) * sizeof(double));
     *x = malloc((*dim) * sizeof **x);
     *par = malloc((*npar) * sizeof **par);
     // Security check for pointers
@@ -100,16 +119,23 @@ void tseries_read_params_and_IC(char *name, int *dim, int *npar, int *np, int *n
     for (int i = 0; i < *npar; i++) {
             fscanf(input, "%lf\n", &(*par)[i]);
     }
+    // Assign number of state variables that will be submitted to RMS calculation
+    fscanf(input, "%d", nrms);
+    // Allocate memory for rmsindex[nrms]
+    *rmsindex = malloc((*nrms) * sizeof **rmsindex);
+    // Assign indexes to rmsindex[nrms] vector
+    for (int i = 0; i < *nrms; i++) {
+            fscanf(input, "%d\n", &(*rmsindex)[i]);
+    }
     // Close input file
     fclose(input);
     /* The user is responsible to free (x) and (par) after the function call */
 }
 
-void tseries_print_info(FILE *info ,int dim, int npar, int np, int ndiv, double h, double t, double *x, double *par, char* funcname, char* mode) {
+void EH_tseries_print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, int nrms, double h, double t, double *x, double *par, int *rmsindex, char* funcname, char* mode) {
     //Get time and date
     time_t tm;
     time(&tm);
-    size_t maxlen = 100;
 
     if (strcmp(mode, "screen") == 0) {   
         printf("\n  Program Parameters\n");
@@ -118,6 +144,7 @@ void tseries_print_info(FILE *info ,int dim, int npar, int np, int ndiv, double 
         printf("%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
         printf("%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
         printf("%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
+        printf("%-30s%s%-20d\n", "  Transient Considered:", " ", trans);
         printf("%-30s%s%-20g\n", "  Timestep value:", " ", h);
         printf("  -------------------------------------------------\n");
         printf("  Initial Conditions\n");
@@ -133,6 +160,12 @@ void tseries_print_info(FILE *info ,int dim, int npar, int np, int ndiv, double 
             printf("%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
         printf("  -------------------------------------------------\n");
+        printf("  RMS Calculation Parameters\n");
+        printf("  -------------------------------------------------\n");
+        printf("%-30s%s%-20d\n", "  Number of RMS calculations:", " ", nrms);
+        for (int i = 0; i < nrms; i++) {
+            printf("%s%d%-18s%s%-20d\n", "  rmsindex[", i, "]:", " ", rmsindex[i]);
+        }
     } 
     else if (strcmp(mode, "file") == 0) {
         fprintf(info, "  Date/Time:  %s", ctime(&tm)); 
@@ -145,6 +178,7 @@ void tseries_print_info(FILE *info ,int dim, int npar, int np, int ndiv, double 
         fprintf(info, "%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
         fprintf(info, "%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
         fprintf(info, "%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
+        fprintf(info, "%-30s%s%-20d\n", "  Transient Considered:", " ", trans);
         fprintf(info, "%-30s%s%-20g\n", "  Timestep value:", " ", h);
         fprintf(info, "  -------------------------------------------------\n");
         fprintf(info, "  Initial Conditions\n");
@@ -160,6 +194,13 @@ void tseries_print_info(FILE *info ,int dim, int npar, int np, int ndiv, double 
             fprintf(info, "%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
         fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "  RMS Calculation Parameters\n");
+        fprintf(info, "  -------------------------------------------------\n");
+        fprintf(info, "%-30s%s%-20d\n", "  Number of RMS calculations:", " ", nrms);
+        for (int i = 0; i < nrms; i++) {
+            fprintf(info, "%s%d%-18s%s%-20d\n", "  rmsindex[", i, "]:", " ", rmsindex[i]);
+        }
+
     }
     else {
         printf("Information could not be printed using mode (%s)...\n", mode);
