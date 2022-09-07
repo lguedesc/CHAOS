@@ -134,7 +134,7 @@ save = False
 system = "bistable_EH"
 ext = ".pdf"
 
-readpath = "DynDiagram/out/" + system + "_dyndiag(1).csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "DynDiagram/out/" + system + "_dyndiag(3).csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "DynDiagram/figs"; savepath = pltconf.convert_dir(savepath)
 
 raw_data = pd.read_csv(readpath, delimiter = " ")
@@ -206,12 +206,12 @@ plot_maps(ax8, x8, y8, z8, colormap1, norm2)
 # =========================================================================== #
 customize_labels(ax1, r'(a) Dynamical Attractors', custom = '(a)')
 customize_labels(ax2, r'(b) Largest Lyapunov Exponent ($\lambda_1$)', custom = '(b)')
-customize_labels(ax3, r'(d) 2nd Lyapunov Exponent ($\lambda_2$)',  custom = '(d)')
-customize_labels(ax4, r'(c) 3rd Lyapunov Exponent ($\lambda_2$)', custom = '(c)')
-customize_labels(ax5, r'(e) xRMS[2]', custom = '(c)')
-customize_labels(ax6, r'(f) Overall xRMS[2]', custom = '(c)')
-customize_labels(ax7, r'(f) xmax[0]', custom = '(c)')
-customize_labels(ax8, r'(f) xmin[0]', custom = '(c)')
+customize_labels(ax3, r'(d) 2nd Lyapunov Exponent ($\lambda_2$)',  custom = '(b)')
+customize_labels(ax4, r'(c) 3rd Lyapunov Exponent ($\lambda_2$)', custom = '(a)')
+customize_labels(ax5, r'(e) xRMS[2]', custom = '(a)')
+customize_labels(ax6, r'(f) Overall xRMS[2]', custom = '(b)')
+customize_labels(ax7, r'(g) xmax[0]', custom = '(c)')
+customize_labels(ax8, r'(h) xmin[0]', custom = '(d)')
 # =========================================================================== #
 #                                Save Figure                                  #
 # =========================================================================== #

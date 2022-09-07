@@ -12,8 +12,8 @@ save = False
 system = "bistable_EH"
 ext = ".pdf"
 
-readpath = "Bifurcation/out/" + system + "_bifurc(1).csv"; readpath = pltconf.convert_dir(readpath)
-readpathpoinc = "Bifurcation/out/" + system + "_bifurc_poinc(1).csv"; readpathpoinc = pltconf.convert_dir(readpathpoinc)
+readpath = "Bifurcation/out/" + system + "_bifurc(4).csv"; readpath = pltconf.convert_dir(readpath)
+readpathpoinc = "Bifurcation/out/" + system + "_bifurc_poinc(4).csv"; readpathpoinc = pltconf.convert_dir(readpathpoinc)
 savepath = "Bifurcation/figs"; savepath = pltconf.convert_dir(savepath)
         
 dfpoinc = pd.read_csv(readpathpoinc, delimiter = " ")

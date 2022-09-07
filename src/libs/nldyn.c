@@ -525,10 +525,10 @@ void bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np
             }
         }
         // Reset initial values to xmax and xmin based on initial values of x
-        for (int i = 0; i < dim; i++) {
+        /*for (int i = 0; i < dim; i++) {
             xmax[i] = x[i];
             xmin[i] = x[i];
-        }
+        }*/
         // Vary timestep if varpar = par[0]
         h = (2 * pi) / (ndiv * par[0]);         // par[0] = OMEGA
         // Call Runge-Kutta 4th order integrator n = np * ndiv times
@@ -537,9 +537,14 @@ void bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np
                 rk4(dim, x, t, h, par, f, edosys);
                 t = t + h;
                 // Apply poincare map at permanent regime
-                if (i > trans) {
+                if (i >= trans) {
                     // Get max and min values at permanent regime
                     for (int q = 0; q < dim; q++) {
+                        // Initialize xmax[dim] and xmin[dim] with first values of x[dim] at permanent regime
+                        if (i == trans && j == 0) {
+                            xmax[q] = x[q];
+                            xmin[q] = x[q];
+                        }
                         max_value(x[q], &xmax[q]);
                         min_value(x[q], &xmin[q]);
                     }
@@ -712,10 +717,10 @@ void full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, int d
             }
         }
         // Reset initial values to xmax and xmin based on initial values of x
-        for (int i = 0; i < dim; i++) {
+        /*for (int i = 0; i < dim; i++) {
             xmax[i] = (*x)[i];
             xmin[i] = (*x)[i];
-        }
+        }*/
         // Vary timestep if varpar = par[0], varying also final time and short initial time
         h = (2 * pi) / (ndiv * par[0]);              // par[0] = OMEGA
         tf = h*np*ndiv;                              // Final time
@@ -732,6 +737,11 @@ void full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, int d
                 if (i >= trans) {
                     // Get max and min values at permanent regime
                     for (int q = 0; q < dim; q++) {
+                        // Initialize xmax[dim] and xmin[dim] with first values of x[dim] at permanent regime
+                        if (i == trans && j == 0) {
+                            xmax[q] = (*x)[q];
+                            xmin[q] = (*x)[q];
+                        }
                         max_value((*x)[q], &xmax[q]);
                         min_value((*x)[q], &xmin[q]);
                     }
@@ -976,10 +986,10 @@ void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
                     }
                 }
                 // Reset initial values to xmax and xmin based on initial values of x
-                for (int i = 0; i < dim; i++) {
+                /*for (int i = 0; i < dim; i++) {
                     xmax[i] = X[i];
                     xmin[i] = X[i];
-                }
+                }*/
                 // Vary timestep if varpar = par[0], varying also final time and short initial time
                 h = (2 * pi) / (ndiv * PAR[0]);              // par[0] = OMEGA
                 tf = h*np*ndiv;                              // Final time
@@ -996,6 +1006,11 @@ void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
                         if (i >= trans) {
                             // Get max and min values at permanent regime
                             for (int q = 0; q < dim; q++) {
+                                // Initialize xmax[dim] and xmin[dim] with first values of x[dim] at permanent regime
+                                if (i == trans && j == 0) {
+                                    xmax[q] = X[q];
+                                    xmin[q] = X[q];
+                                }
                                 max_value(X[q], &xmax[q]);
                                 min_value(X[q], &xmin[q]);
                             }
@@ -1273,10 +1288,10 @@ void forced_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv,
                     LE[i] = 0.0;
                 }
                 // Reset initial values to xmax and xmin based on initial values of x
-                for (int i = 0; i < dim; i++) {
+                /*for (int i = 0; i < dim; i++) {
                     xmax[i] = X[i];
                     xmin[i] = X[i];
-                }
+                }*/
                 // Vary timestep if varpar = par[0], varying also final time and short initial time
                 h = (2 * pi) / (ndiv * PAR[0]);              // par[0] = OMEGA
                 tf = h*np*ndiv;                              // Final time
@@ -1293,6 +1308,11 @@ void forced_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv,
                         if (i >= trans) {
                             // Get max and min values at permanent regime
                             for (int q = 0; q < dim; q++) {
+                                // Initialize xmax[dim] and xmin[dim] with first values of x[dim] at permanent regime
+                                if (i == trans && j == 0) {
+                                    xmax[q] = X[q];
+                                    xmin[q] = X[q];
+                                }
                                 max_value(X[q], &xmax[q]);
                                 min_value(X[q], &xmin[q]);
                             }
