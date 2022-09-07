@@ -41,7 +41,7 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
 #define EH_FUNC_2 tristable_EH               
 #define EH_OUTPUTNAME_2 "tristable_EH"
 
-#define MAX_NAMELENGTH 100
+#define MAX_NAMELENGTH 120
 #define NUM_OF_SYSTEMS 6
 #define NUM_OF_EH_SYSTEMS 2
 #define NUM_OF_TOOLBOXES 2
@@ -54,8 +54,8 @@ char *systemNames[NUM_OF_SYSTEMS] = {"Duffing Oscillator",
                                      "Falk Shape Memory Alloy Oscillator",
                                      "Linear Oscillator"};
  
-char *EHsystemNames[NUM_OF_EH_SYSTEMS] = {"Bistable Energy Harvester",
-                                          "Tristable Energy Harvester"};
+char *EHsystemNames[NUM_OF_EH_SYSTEMS] = {"Polynomial Bistable Energy Harvester",
+                                          "Polynomial Tristable Energy Harvester"};
 
 char *toolboxesNames[NUM_OF_TOOLBOXES] = {"Nonlinear Dynamics Toolbox",
                                           "Energy Harvesting Toolbox"};
