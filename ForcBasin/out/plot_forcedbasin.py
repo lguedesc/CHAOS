@@ -106,8 +106,8 @@ def plot_maps(ax, x, y, z, colormap, norm, custom = False):
     lsize = 7.5
     if custom == 'attractors':
         plot = ax.pcolormesh(x, y, z, shading = 'nearest', rasterized = raster, cmap = colormap, vmin = cmap1_min - 0.5, vmax=cmap1_max + 0.5)
-        ticks = [1,2,3,4,5,6,7,8,9]
-        labels = ['P1','P2','P3','P4','P5','P6','MP','Ch','HCh']
+        ticks = [1,2,3,4,5,6,7,8]
+        labels = ['P1','P2','P3','P4','P5','MP','Ch','HCh']
         cbar = plt.colorbar(plot, ax=ax, cax = cax, orientation = 'vertical', ticks = ticks, drawedges = True)
         cax.set_yticklabels(labels)
         cbar.ax.tick_params(size = 0, labelsize = lsize)
@@ -131,10 +131,10 @@ def plot_maps(ax, x, y, z, colormap, norm, custom = False):
 #                                    Read Data                                #
 # =========================================================================== #
 save = False
-system = "duffing"
+system = "bistable_EH"
 ext = ".pdf"
 
-readpath = "ForcBasin/out/" + system + "_forcedbasin(4).csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "ForcBasin/out/" + system + "_forcedbasin(1).csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "ForcBasin/figs"; savepath = pltconf.convert_dir(savepath)
 
 raw_data = pd.read_csv(readpath, delimiter = " ")
@@ -142,20 +142,24 @@ raw_data = pd.read_csv(readpath, delimiter = " ")
 x1, y1, z1 = process_data(raw_data, 'CparY', 'CparX', 'Attractor')
 x2, y2, z2 = process_data(raw_data, 'CparY', 'CparX', 'LE[0]')
 x3, y3, z3 = process_data(raw_data, 'CparY', 'CparX', 'LE[1]')
-x4, y4, z4 = process_data(raw_data, 'CparY', 'CparX', 'DiffAttrac')
+x4, y4, z4 = process_data(raw_data, 'CparY', 'CparX', 'LE[2]')
+x5, y5, z5 = process_data(raw_data, 'CparY', 'CparX', 'xRMS[2]')
+x6, y6, z6 = process_data(raw_data, 'CparY', 'CparX', 'OverallxRMS[2]')
+x7, y7, z7 = process_data(raw_data, 'CparY', 'CparX', 'xmax[0]')
+x8, y8, z8 = process_data(raw_data, 'CparY', 'CparX', 'xmin[0]')
 # =========================================================================== #
 #                Create custom colormaps and define colormap parameters       #
 # =========================================================================== #
 N = 256
 colormap1, cmap1_min, cmap1_max, c_list = configure_colormap_motion()
 colormap2, norm2 = configure_colorbar_lyap(z2)
-colormap3, norm3 = configure_colorbar_lyap(z3)
+#colormap3, norm3 = configure_colorbar_lyap(z3)
 # =========================================================================== #
 #                           Define figure parameters                          #
 # =========================================================================== #
 cm = 1/2.54
 x_inches = 15     # [mm]*constant
-y_inches = x_inches*(1)
+y_inches = x_inches*(2)
 raster = True
 if save == True:
     dpi = 300
@@ -177,25 +181,37 @@ fig.subplots_adjust(top=1,
                     wspace=0.26)
 
 
-lin = 2; col = 2
+lin = 4; col = 2
 ax1 = fig.add_subplot(lin,col,1)
 ax2 = fig.add_subplot(lin,col,2)
 ax4 = fig.add_subplot(lin,col,3)
 ax3 = fig.add_subplot(lin,col,4)
+ax5 = fig.add_subplot(lin,col,5)
+ax6 = fig.add_subplot(lin,col,6)
+ax7 = fig.add_subplot(lin,col,7)
+ax8 = fig.add_subplot(lin,col,8)
 # =========================================================================== #
 #                               Plot Data  
 # =========================================================================== #
-plot_maps(ax1, x1, y1, z1, colormap1, norm3, custom = 'attractors')
+plot_maps(ax1, x1, y1, z1, colormap1, norm2, custom = 'attractors')
 plot_maps(ax2, x2, y2, z2, colormap2, norm2)
-plot_maps(ax3, x3, y3, z3, colormap3, norm3)
-plot_maps(ax4, x4, y4, z4, colormap1, norm3)
+plot_maps(ax3, x3, y3, z3, colormap1, norm2)
+plot_maps(ax4, x4, y4, z4, colormap1, norm2)
+plot_maps(ax5, x5, y5, z5, colormap1, norm2)
+plot_maps(ax6, x6, y6, z6, colormap1, norm2)
+plot_maps(ax7, x7, y7, z7, colormap1, norm2)
+plot_maps(ax8, x8, y8, z8, colormap1, norm2)
 # =========================================================================== #
 #                          Customize titles and labels                        #
 # =========================================================================== #
 customize_labels(ax1, r'(a) Dynamical Attractors', custom = '(a)')
 customize_labels(ax2, r'(b) Largest Lyapunov Exponent ($\lambda_1$)', custom = '(b)')
 customize_labels(ax3, r'(d) 2nd Lyapunov Exponent ($\lambda_2$)',  custom = '(d)')
-customize_labels(ax4, r'(c) Different Periodicity', custom = '(c)')
+customize_labels(ax4, r'(c) 3rd Lyapunov Exponent ($\lambda_2$)', custom = '(c)')
+customize_labels(ax5, r'(e) xRMS[2]', custom = '(c)')
+customize_labels(ax6, r'(f) Overall xRMS[2]', custom = '(c)')
+customize_labels(ax7, r'(f) xmax[0]', custom = '(c)')
+customize_labels(ax8, r'(f) xmin[0]', custom = '(c)')
 # =========================================================================== #
 #                                Save Figure                                  #
 # =========================================================================== #

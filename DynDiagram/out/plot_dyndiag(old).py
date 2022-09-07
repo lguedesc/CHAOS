@@ -142,12 +142,7 @@ raw_data = pd.read_csv(readpath, delimiter = " ")
 x1, y1, z1 = process_data(raw_data, 'CparY', 'CparX', 'Attractor')
 x2, y2, z2 = process_data(raw_data, 'CparY', 'CparX', 'LE[0]')
 x3, y3, z3 = process_data(raw_data, 'CparY', 'CparX', 'LE[1]')
-x4, y4, z4 = process_data(raw_data, 'CparY', 'CparX', 'LE[2]')
-x5, y5, z5 = process_data(raw_data, 'CparY', 'CparX', 'xRMS[2]')
-x6, y6, z6 = process_data(raw_data, 'CparY', 'CparX', 'OverallxRMS[2]')
-x7, y7, z7 = process_data(raw_data, 'CparY', 'CparX', 'xmax[0]')
-x8, y8, z8 = process_data(raw_data, 'CparY', 'CparX', 'xmin[0]')
-
+x4, y4, z4 = process_data(raw_data, 'CparY', 'CparX', 'DiffAttrac')
 # =========================================================================== #
 #                Create custom colormaps and define colormap parameters       #
 # =========================================================================== #
@@ -159,7 +154,7 @@ colormap2, norm2 = configure_colorbar_lyap(z2)
 # =========================================================================== #
 cm = 1/2.54
 x_inches = 15     # [mm]*constant
-y_inches = x_inches*(1.2)
+y_inches = x_inches*(0.6)
 raster = True
 if save == True:
     dpi = 300
@@ -181,15 +176,11 @@ fig.subplots_adjust(top=1,
                     wspace=0.26)
 
 
-lin = 4; col = 2
+lin = 2; col = 2
 ax1 = fig.add_subplot(lin,col,1)
 ax2 = fig.add_subplot(lin,col,2)
 ax4 = fig.add_subplot(lin,col,3)
 ax3 = fig.add_subplot(lin,col,4)
-ax5 = fig.add_subplot(lin,col,5)
-ax6 = fig.add_subplot(lin,col,6)
-ax7 = fig.add_subplot(lin,col,7)
-ax8 = fig.add_subplot(lin,col,8)
 # =========================================================================== #
 #                               Plot Data  
 # =========================================================================== #
@@ -197,21 +188,13 @@ plot_maps(ax1, x1, y1, z1, colormap1, norm2, custom = 'attractors')
 plot_maps(ax2, x2, y2, z2, colormap2, norm2, custom = 'lyapunov')
 plot_maps(ax3, x3, y3, z3, colormap1, norm2)
 plot_maps(ax4, x4, y4, z4, colormap1, norm2)
-plot_maps(ax5, x5, y5, z5, colormap1, norm2)
-plot_maps(ax6, x6, y6, z6, colormap1, norm2)
-plot_maps(ax7, x7, y7, z7, colormap1, norm2)
-plot_maps(ax8, x8, y8, z8, colormap1, norm2)
 # =========================================================================== #
 #                          Customize titles and labels                        #
 # =========================================================================== #
 customize_labels(ax1, r'(a) Dynamical Attractors', custom = '(a)')
 customize_labels(ax2, r'(b) Largest Lyapunov Exponent ($\lambda_1$)', custom = '(b)')
 customize_labels(ax3, r'(d) 2nd Lyapunov Exponent ($\lambda_2$)',  custom = '(d)')
-customize_labels(ax4, r'(c) 3rd Lyapunov Exponent ($\lambda_2$)', custom = '(c)')
-customize_labels(ax5, r'(e) xRMS[2]', custom = '(c)')
-customize_labels(ax6, r'(f) Overall xRMS[2]', custom = '(c)')
-customize_labels(ax7, r'(f) xmax[0]', custom = '(c)')
-customize_labels(ax8, r'(f) xmin[0]', custom = '(c)')
+customize_labels(ax4, r'(c) Different Periodicity', custom = '(c)')
 # =========================================================================== #
 #                                Save Figure                                  #
 # =========================================================================== #

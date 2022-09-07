@@ -17,6 +17,8 @@
 #include "modules/EH_ftime_series.h"
 #include "modules/EH_bifurcation.h"
 #include "modules/EH_fbifurcation.h"
+#include "modules/EH_dyndiag.h"
+#include "modules/EH_forcedbasin.h"
 
 void execute_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
 void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
@@ -36,10 +38,12 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
 
 #define EH_FUNC_1 bistable_EH               
 #define EH_OUTPUTNAME_1 "bistable_EH"
+#define EH_FUNC_2 tristable_EH               
+#define EH_OUTPUTNAME_2 "tristable_EH"
 
 #define MAX_NAMELENGTH 100
-#define NUM_OF_SYSTEMS 7
-#define NUM_OF_EH_SYSTEMS 1
+#define NUM_OF_SYSTEMS 6
+#define NUM_OF_EH_SYSTEMS 2
 #define NUM_OF_TOOLBOXES 2
 #define NUM_OF_MODULES 9 
 
@@ -48,10 +52,10 @@ char *systemNames[NUM_OF_SYSTEMS] = {"Duffing Oscillator",
                                      "Van Der Pol Oscillator",
                                      "Simple Pendulum",
                                      "Falk Shape Memory Alloy Oscillator",
-                                     "Linear Oscillator",
-                                     "Bistable Energy Harvester"};
+                                     "Linear Oscillator"};
  
-char *EHsystemNames[NUM_OF_EH_SYSTEMS] = {"Bistable Energy Harvester"};
+char *EHsystemNames[NUM_OF_EH_SYSTEMS] = {"Bistable Energy Harvester",
+                                          "Tristable Energy Harvester"};
 
 char *toolboxesNames[NUM_OF_TOOLBOXES] = {"Nonlinear Dynamics Toolbox",
                                           "Energy Harvesting Toolbox"};
@@ -86,9 +90,6 @@ void call_system(unsigned int system, unsigned int module) {
         case 6:
             execute_modules(module, FUNC_6, OUTPUTNAME_6, systemNames[5]);
             break;
-        case 7:
-            execute_modules(module, EH_FUNC_1, EH_OUTPUTNAME_1, systemNames[6]);
-            break;
         default:
             printf("Invalid...\n");
             exit(0);
@@ -99,6 +100,9 @@ void call_EH_system(unsigned int system, unsigned int module) {
     switch(system) {
         case 1:
             execute_EH_modules(module, EH_FUNC_1, EH_OUTPUTNAME_1, EHsystemNames[0]);
+            break;
+        case 2:
+            execute_EH_modules(module, EH_FUNC_2, EH_OUTPUTNAME_2, EHsystemNames[1]);
             break;
         default:
             printf("Invalid...\n");
@@ -194,13 +198,13 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
             EH_fbifurcation(funcname, outputname, edosys);
             break;
         case 7:
-            //dyndiag(funcname, outputname, edosys);
+            EH_dyndiag(funcname, outputname, edosys);
             break;
         case 8:
-            //epbasin(funcname, outputname, edosys);
+            epbasin(funcname, outputname, edosys);
             break;
         case 9:
-            //forcedbasin(funcname, outputname, edosys);
+            EH_forcedbasin(funcname, outputname, edosys);
             break;    
         default:
             printf("Invalid Module\n");

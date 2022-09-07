@@ -10,7 +10,6 @@
 // Nonsmooth Oscillator
 
 /* To be added EH */
-// Tristable EH
 // Nonsmooth EH
 // 2 Nonlinear DoF EH
 // Oscillator-Pendulum Energy Harvester
@@ -261,3 +260,25 @@ void duffing_2DoF(int dim, double *x, double t, double *par, double *f) {
     }    
 }
 
+void tristable_EH(int dim, double *x, double t, double *par, double *f) {
+    /* OMEGA = par[0]   |   sigma  = par[5]  
+       gamma = par[1]   |   chi    = par[6]
+       zeta  = par[2]   |   varphi = par[7]
+       alpha = par[3]   |   kappa  = par[8]
+       beta  = par[4]   |                */
+    if (dim == 3) {
+        f[0] = x[1];
+        f[1] = par[1]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] - par[5]*x[0]*x[0]*x[0]*x[0]*x[0] + par[6]*x[2];
+        f[2] = -par[7]*x[2] - par[8]*x[1];
+    }
+    else if (dim == 12) {
+        f[0] = x[1];
+        f[1] = par[1]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] - par[5]*x[0]*x[0]*x[0]*x[0]*x[0] + par[6]*x[2];
+        f[2] = -par[7]*x[2] - par[8]*x[1];
+        for (int i = 0; i < 3; i ++) {
+            f[3 + i] = x[6 + i];
+            f[6 + i] = - 2*par[2]*x[6 + i] + par[6]*x[9 + i] - (par[3] + 3*par[4]*x[0]*x[0] + 5*par[5]*x[0]*x[0]*x[0]*x[0])*x[3 + i];
+            f[9 + i] = -par[7]*x[9 + i] - par[8]*x[6 + i];
+        }
+    }
+}

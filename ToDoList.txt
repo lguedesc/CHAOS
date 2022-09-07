@@ -1,0 +1,1 @@
+1. Verify if max and min values are being calculated correctly, because they are being reset based on the initial conditions, so the max and min values can be misleaded to be the IC.

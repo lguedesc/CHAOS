@@ -1,0 +1,59 @@
+3
+8
+6
+
+1000 1000 750
+
+0.0
+0.0 0.0 0.0
+
+1.7
+0.3
+0.025
+-0.5
+0.5
+0.05
+0.05
+0.5
+
+0
+-2.0
+2.0
+100  
+
+1
+-2.0
+2.0
+100
+
+1
+2
+
+/* Variables */
+DIM
+nPar
+maxPer
+
+nP nDiv trans
+
+t0
+IC: x[0] x[1] x[2] ...
+
+par[0] = OMEGA
+par[1] = gamma
+par[2] = zeta
+par[3] = alpha
+par[4] = beta
+
+Index of control parameter in X
+varparX_i
+varparX_f
+pixels_X
+
+Index of control parameter in Y
+varparY_i
+varparY_f
+pixels_Y
+
+number of state variables that will be submitted to RMS calculation
+indexes of state variables submitted to RMS calculation

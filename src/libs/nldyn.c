@@ -1291,6 +1291,11 @@ void forced_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv,
                         t = t + h;
                         // Apply poincare map at permanent regime
                         if (i >= trans) {
+                            // Get max and min values at permanent regime
+                            for (int q = 0; q < dim; q++) {
+                                max_value(X[q], &xmax[q]);
+                                min_value(X[q], &xmin[q]);
+                            }
                             // Choose any point in the trajectory for poincare section placement
                             if (j == 1) {
                                 // Stores poincare values in poinc[np - trans][dim] vector
