@@ -17,7 +17,7 @@ save = False
 system = "bistable_EH"
 ext = ".pdf"
 
-readpath = "TimeSeries/out/" + system + "_rk4(3).csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "TimeSeries/out/" + system + "_rk4.csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "TimeSeries/figs"; savepath = pltconf.convert_dir(savepath)
         
 df = pd.read_csv(readpath, delimiter = " ")

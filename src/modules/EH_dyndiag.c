@@ -61,7 +61,6 @@ void EH_dyndiag(char *funcname, char* outputname, void (*edosys)(int, double *, 
     free(dir);
     free(input_filename);
     free(x); free(par); free(parRange);
-    free(rmsindex);
 
     // Calculate time of execution
     //clock_t time_f = clock();
@@ -97,11 +96,11 @@ void EH_dyndiag_read_params_and_IC(char *name, int *dim, int *npar, int *maxper,
         return;
     }
     // assign IC to x[dim] vector
-    for (int i = 0; i < *dim; i++) {
+    for (int i = 0; i < (*dim); i++) {
         fscanf(input, "%lf ", &(*x)[i]);     
     }
     // Assign parameter values to par[npar] vector
-    for (int i = 0; i < *npar; i++) {
+    for (int i = 0; i < (*npar); i++) {
         fscanf(input, "%lf\n", &(*par)[i]);
     }
     // Assign index of X control parameter of the diagram
@@ -121,7 +120,7 @@ void EH_dyndiag_read_params_and_IC(char *name, int *dim, int *npar, int *maxper,
     // Allocate memory for rmsindex[nrms]
     *rmsindex = malloc((*nrms) * sizeof **rmsindex);
     // Assign indexes to rmsindex[nrms] vector
-    for (int i = 0; i < *nrms; i++) {
+    for (int i = 0; i < (*nrms); i++) {
             fscanf(input, "%d\n", &(*rmsindex)[i]);
     }
     // Determine the mode of the bifurcation diagram: 0 to follow attractor, 1 to reset initial conditions in each step
@@ -171,13 +170,13 @@ void EH_dyndiag_print_info(FILE *info ,int dim, int npar, int maxper, int np, in
             printf("%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
         printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20g\n", "  Parameter Index (x):", " ", indexX);
+        printf("%-30s%s%-20d\n", "  Parameter Index (x):", " ", indexX);
         printf("%-30s%s%-20g\n", "  Intial Parameter (x):", " ", parrange[0]);
         printf("%-30s%s%-20g\n", "  Final Parameter (x):", " ", parrange[1]);
         printf("%-30s%s%-20g\n", "  Increment Parameter (x):", " ", (parrange[1] - parrange[0]) / (parrange[2] - 1));
         printf("%-30s%s%-20g\n", "  Number of Steps (x):", " ", parrange[2]);
         printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20g\n", "  Parameter Index (y):", " ", indexY);
+        printf("%-30s%s%-20d\n", "  Parameter Index (y):", " ", indexY);
         printf("%-30s%s%-20g\n", "  Intial Parameter (y):", " ", parrange[3]);
         printf("%-30s%s%-20g\n", "  Final Parameter (y):", " ", parrange[4]);
         printf("%-30s%s%-20g\n", "  Increment Parameter (y):", " ", (parrange[4] - parrange[3]) / (parrange[5] - 1));
@@ -229,13 +228,13 @@ void EH_dyndiag_print_info(FILE *info ,int dim, int npar, int maxper, int np, in
             fprintf(info, "%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
         fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20g\n", "  Parameter Index (x):", " ", indexX);
+        fprintf(info, "%-30s%s%-20d\n", "  Parameter Index (x):", " ", indexX);
         fprintf(info, "%-30s%s%-20g\n", "  Intial Parameter (x):", " ", parrange[0]);
         fprintf(info, "%-30s%s%-20g\n", "  Final Parameter (x):", " ", parrange[1]);
         fprintf(info, "%-30s%s%-20g\n", "  Increment Parameter (x):", " ", (parrange[1] - parrange[0]) / (parrange[2] - 1));
         fprintf(info, "%-30s%s%-20g\n", "  Number of Steps (x):", " ", parrange[2]);
         fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20g\n", "  Parameter Index (y):", " ", indexY);
+        fprintf(info, "%-30s%s%-20d\n", "  Parameter Index (y):", " ", indexY);
         fprintf(info, "%-30s%s%-20g\n", "  Intial Parameter (y):", " ", parrange[3]);
         fprintf(info, "%-30s%s%-20g\n", "  Final Parameter (y):", " ", parrange[4]);
         fprintf(info, "%-30s%s%-20g\n", "  Increment Parameter (y):", " ", (parrange[4] - parrange[3]) / (parrange[5] - 1));

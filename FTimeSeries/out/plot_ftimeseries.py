@@ -10,11 +10,11 @@ pltconf.plot_params(True, 10, 0.5)
 
 save = False
 
-system = "duffing"
+system = "tristable_EH"
 ext = ".pdf"
 
-readpath = "FTimeSeries/out/" + system + "_ftimeseries.csv"; readpath = pltconf.convert_dir(readpath)
-readpath_poinc = "FTimeSeries/out/" + system + "_poinc.csv"; readpath_poinc = pltconf.convert_dir(readpath_poinc)
+readpath = "FTimeSeries/out/" + system + "_ftimeseries(2).csv"; readpath = pltconf.convert_dir(readpath)
+readpath_poinc = "FTimeSeries/out/" + system + "_poinc(2).csv"; readpath_poinc = pltconf.convert_dir(readpath_poinc)
 savepath = "FTimeSeries/figs"; savepath = pltconf.convert_dir(savepath)
         
 df = pd.read_csv(readpath, delimiter = " ")

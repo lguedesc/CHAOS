@@ -70,10 +70,10 @@ def plot_maps(ax, x, y, z, colormap):
 #                                    Read Data                                #
 # =========================================================================== #
 save = False
-system = "duffing_2DoF"
+system = "tristable_EH"
 ext = ".pdf"
 
-readpath = "EPBasin/out/" + system + "_epbasin(13).csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "EPBasin/out/" + system + "_epbasin(3).csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "EPBasin/figs"; savepath = pltconf.convert_dir(savepath)
 
 raw_data = pd.read_csv(readpath, delimiter = " ")
@@ -93,7 +93,7 @@ raster = True
 if save == True:
     dpi = 300
 else:
-    dpi = 96
+    dpi = 300
 # =========================================================================== #
 #                               Create figure 
 # =========================================================================== #

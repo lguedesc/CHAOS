@@ -131,22 +131,22 @@ def plot_maps(ax, x, y, z, colormap, norm, custom = False):
 #                                    Read Data                                #
 # =========================================================================== #
 save = False
-system = "bistable_EH"
+system = "tristable_EH"
 ext = ".pdf"
 
-readpath = "DynDiagram/out/" + system + "_dyndiag(3).csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "DynDiagram/out/" + system + "_dyndiag(11).csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "DynDiagram/figs"; savepath = pltconf.convert_dir(savepath)
 
 raw_data = pd.read_csv(readpath, delimiter = " ")
 
 x1, y1, z1 = process_data(raw_data, 'CparY', 'CparX', 'Attractor')
 x2, y2, z2 = process_data(raw_data, 'CparY', 'CparX', 'LE[0]')
-x3, y3, z3 = process_data(raw_data, 'CparY', 'CparX', 'LE[1]')
-x4, y4, z4 = process_data(raw_data, 'CparY', 'CparX', 'LE[2]')
-x5, y5, z5 = process_data(raw_data, 'CparY', 'CparX', 'xRMS[2]')
-x6, y6, z6 = process_data(raw_data, 'CparY', 'CparX', 'OverallxRMS[2]')
-x7, y7, z7 = process_data(raw_data, 'CparY', 'CparX', 'xmax[0]')
-x8, y8, z8 = process_data(raw_data, 'CparY', 'CparX', 'xmin[0]')
+#x3, y3, z3 = process_data(raw_data, 'CparY', 'CparX', 'LE[1]')
+#x4, y4, z4 = process_data(raw_data, 'CparY', 'CparX', 'LE[2]')
+#x5, y5, z5 = process_data(raw_data, 'CparY', 'CparX', 'xRMS[2]')
+#x6, y6, z6 = process_data(raw_data, 'CparY', 'CparX', 'OverallxRMS[2]')
+#x7, y7, z7 = process_data(raw_data, 'CparY', 'CparX', 'xmax[0]')
+#x8, y8, z8 = process_data(raw_data, 'CparY', 'CparX', 'xmin[0]')
 
 # =========================================================================== #
 #                Create custom colormaps and define colormap parameters       #
@@ -194,13 +194,13 @@ ax8 = fig.add_subplot(lin,col,8)
 #                               Plot Data  
 # =========================================================================== #
 plot_maps(ax1, x1, y1, z1, colormap1, norm2, custom = 'attractors')
-plot_maps(ax2, x2, y2, z2, colormap2, norm2, custom = 'lyapunov')
-plot_maps(ax3, x3, y3, z3, colormap1, norm2)
-plot_maps(ax4, x4, y4, z4, colormap1, norm2)
-plot_maps(ax5, x5, y5, z5, colormap1, norm2)
-plot_maps(ax6, x6, y6, z6, colormap1, norm2)
-plot_maps(ax7, x7, y7, z7, colormap1, norm2)
-plot_maps(ax8, x8, y8, z8, colormap1, norm2)
+#plot_maps(ax2, x2, y2, z2, colormap2, norm2, custom = 'lyapunov')
+#plot_maps(ax3, x3, y3, z3, colormap1, norm2)
+#plot_maps(ax4, x4, y4, z4, colormap1, norm2)
+#plot_maps(ax5, x5, y5, z5, colormap1, norm2)
+##plot_maps(ax6, x6, y6, z6, colormap1, norm2)
+#plot_maps(ax7, x7, y7, z7, colormap1, norm2)
+#plot_maps(ax8, x8, y8, z8, colormap1, norm2)
 # =========================================================================== #
 #                          Customize titles and labels                        #
 # =========================================================================== #
