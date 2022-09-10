@@ -159,13 +159,13 @@ void dyndiag_print_info(FILE *info ,int dim, int npar, int maxper, int np, int n
             printf("%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
         printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20g\n", "  Parameter Index (x):", " ", indexX);
+        printf("%-30s%s%-20d\n", "  Parameter Index (x):", " ", indexX);
         printf("%-30s%s%-20g\n", "  Intial Parameter (x):", " ", parrange[0]);
         printf("%-30s%s%-20g\n", "  Final Parameter (x):", " ", parrange[1]);
         printf("%-30s%s%-20g\n", "  Increment Parameter (x):", " ", (parrange[1] - parrange[0]) / (parrange[2] - 1));
         printf("%-30s%s%-20g\n", "  Number of Steps (x):", " ", parrange[2]);
         printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20g\n", "  Parameter Index (y):", " ", indexY);
+        printf("%-30s%s%-20d\n", "  Parameter Index (y):", " ", indexY);
         printf("%-30s%s%-20g\n", "  Intial Parameter (y):", " ", parrange[3]);
         printf("%-30s%s%-20g\n", "  Final Parameter (y):", " ", parrange[4]);
         printf("%-30s%s%-20g\n", "  Increment Parameter (y):", " ", (parrange[4] - parrange[3]) / (parrange[5] - 1));
@@ -210,13 +210,13 @@ void dyndiag_print_info(FILE *info ,int dim, int npar, int maxper, int np, int n
             fprintf(info, "%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
         fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20g\n", "  Parameter Index (x):", " ", indexX);
+        fprintf(info, "%-30s%s%-20d\n", "  Parameter Index (x):", " ", indexX);
         fprintf(info, "%-30s%s%-20g\n", "  Intial Parameter (x):", " ", parrange[0]);
         fprintf(info, "%-30s%s%-20g\n", "  Final Parameter (x):", " ", parrange[1]);
         fprintf(info, "%-30s%s%-20g\n", "  Increment Parameter (x):", " ", (parrange[1] - parrange[0]) / (parrange[2] - 1));
         fprintf(info, "%-30s%s%-20g\n", "  Number of Steps (x):", " ", parrange[2]);
         fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20g\n", "  Parameter Index (y):", " ", indexY);
+        fprintf(info, "%-30s%s%-20d\n", "  Parameter Index (y):", " ", indexY);
         fprintf(info, "%-30s%s%-20g\n", "  Intial Parameter (y):", " ", parrange[3]);
         fprintf(info, "%-30s%s%-20g\n", "  Final Parameter (y):", " ", parrange[4]);
         fprintf(info, "%-30s%s%-20g\n", "  Increment Parameter (y):", " ", (parrange[4] - parrange[3]) / (parrange[5] - 1));

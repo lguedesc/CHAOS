@@ -367,12 +367,12 @@ void progress_bar(int mode, double var, double var_i, double var_f) {
     }
     // Unfilled part of the progress bar
     for (int i = 0; i < 50 - fill; i++) {
-        printf(" ");
+        printf(".");
     }
     if (perc > 100) {
         perc = 100;
     }
-    printf("| %.2lf %%  (var = %.3lf)", perc, var);
+    printf("| %.1lf %% ", perc);
     fflush(stdout);
 }
 

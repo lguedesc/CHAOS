@@ -131,10 +131,10 @@ def plot_maps(ax, x, y, z, colormap, norm, custom = False):
 #                                    Read Data                                #
 # =========================================================================== #
 save = False
-system = "tristable_EH"
+system = "vanderpol"
 ext = ".pdf"
 
-readpath = "DynDiagram/out/" + system + "_dyndiag(11).csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "DynDiagram/out/" + system + "_dyndiag(4).csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "DynDiagram/figs"; savepath = pltconf.convert_dir(savepath)
 
 raw_data = pd.read_csv(readpath, delimiter = " ")

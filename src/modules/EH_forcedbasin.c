@@ -160,13 +160,13 @@ void EH_forcedbasin_print_info(FILE *info ,int dim, int npar, int maxper, int np
             printf("%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
         printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20g\n", "  Parameter Index (x):", " ", indexX);
+        printf("%-30s%s%-20d\n", "  Parameter Index (x):", " ", indexX);
         printf("%-30s%s%-20g\n", "  Intial Parameter (x):", " ", icrange[0]);
         printf("%-30s%s%-20g\n", "  Final Parameter (x):", " ", icrange[1]);
         printf("%-30s%s%-20g\n", "  Increment Parameter (x):", " ", (icrange[1] - icrange[0]) / (icrange[2] - 1));
         printf("%-30s%s%-20g\n", "  Number of Steps (x):", " ", icrange[2]);
         printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20g\n", "  Parameter Index (y):", " ", indexY);
+        printf("%-30s%s%-20d\n", "  Parameter Index (y):", " ", indexY);
         printf("%-30s%s%-20g\n", "  Intial Parameter (y):", " ", icrange[3]);
         printf("%-30s%s%-20g\n", "  Final Parameter (y):", " ", icrange[4]);
         printf("%-30s%s%-20g\n", "  Increment Parameter (y):", " ", (icrange[4] - icrange[3]) / (icrange[5] - 1));
@@ -209,13 +209,13 @@ void EH_forcedbasin_print_info(FILE *info ,int dim, int npar, int maxper, int np
             fprintf(info, "%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
         fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20g\n", "  Parameter Index (x):", " ", indexX);
+        fprintf(info, "%-30s%s%-20d\n", "  Parameter Index (x):", " ", indexX);
         fprintf(info, "%-30s%s%-20g\n", "  Intial Parameter (x):", " ", icrange[0]);
         fprintf(info, "%-30s%s%-20g\n", "  Final Parameter (x):", " ", icrange[1]);
         fprintf(info, "%-30s%s%-20g\n", "  Increment Parameter (x):", " ", (icrange[1] - icrange[0]) / (icrange[2] - 1));
         fprintf(info, "%-30s%s%-20g\n", "  Number of Steps (x):", " ", icrange[2]);
         fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20g\n", "  Parameter Index (y):", " ", indexY);
+        fprintf(info, "%-30s%s%-20d\n", "  Parameter Index (y):", " ", indexY);
         fprintf(info, "%-30s%s%-20g\n", "  Intial Parameter (y):", " ", icrange[3]);
         fprintf(info, "%-30s%s%-20g\n", "  Final Parameter (y):", " ", icrange[4]);
         fprintf(info, "%-30s%s%-20g\n", "  Increment Parameter (y):", " ", (icrange[4] - icrange[3]) / (icrange[5] - 1));

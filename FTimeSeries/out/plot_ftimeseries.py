@@ -10,11 +10,11 @@ pltconf.plot_params(True, 10, 0.5)
 
 save = False
 
-system = "tristable_EH"
+system = "vanderpol"
 ext = ".pdf"
 
-readpath = "FTimeSeries/out/" + system + "_ftimeseries(2).csv"; readpath = pltconf.convert_dir(readpath)
-readpath_poinc = "FTimeSeries/out/" + system + "_poinc(2).csv"; readpath_poinc = pltconf.convert_dir(readpath_poinc)
+readpath = "FTimeSeries/out/" + system + "_ftimeseries(1).csv"; readpath = pltconf.convert_dir(readpath)
+readpath_poinc = "FTimeSeries/out/" + system + "_poinc(1).csv"; readpath_poinc = pltconf.convert_dir(readpath_poinc)
 savepath = "FTimeSeries/figs"; savepath = pltconf.convert_dir(savepath)
         
 df = pd.read_csv(readpath, delimiter = " ")
@@ -65,7 +65,7 @@ ax3.plot(df['x[0]'].iloc[plot_i:-1], df['x[1]'].iloc[plot_i:-1], rasterized = Tr
 ax3.scatter(df_poinc['x[0]'], df_poinc['x[1]'], rasterized = True, color = "orange", s = size, linewidths = 0, zorder = 2)
 ax3.set_ylabel(r'$\dot{x}$')
 ax3.set_xlabel(r'$x$')
-ax3.set_aspect('equal')
+#ax3.set_aspect('equal')
 
 ax4.plot(df['Time'], df['LE[0]'], rasterized = True, color = "green", linewidth = 1, zorder = 1, label = "$\lambda_1$")
 ax4.plot(df['Time'], df['LE[1]'], rasterized = True, color = "purple", linewidth = 1, zorder = 1, label = "$\lambda_2$")

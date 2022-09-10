@@ -164,7 +164,7 @@ void EH_fbifurc_print_info(FILE *info ,int dim, int npar, int maxper, int np, in
             printf("%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
         printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20g\n", "  Parameter Index:", " ", parindex);
+        printf("%-30s%s%-20d\n", "  Parameter Index:", " ", parindex);
         printf("%-30s%s%-20g\n", "  Intial Parameter:", " ", parrange[0]);
         printf("%-30s%s%-20g\n", "  Final Parameter:", " ", parrange[1]);
         printf("%-30s%s%-20g\n", "  Increment Parameter:", " ", (parrange[1] - parrange[0]) / (parrange[2] - 1));
@@ -215,7 +215,7 @@ void EH_fbifurc_print_info(FILE *info ,int dim, int npar, int maxper, int np, in
             fprintf(info, "%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
         }
         fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20g\n", "  Parameter Index:", " ", parindex);
+        fprintf(info, "%-30s%s%-20d\n", "  Parameter Index:", " ", parindex);
         fprintf(info, "%-30s%s%-20g\n", "  Intial Parameter:", " ", parrange[0]);
         fprintf(info, "%-30s%s%-20g\n", "  Final Parameter:", " ", parrange[1]);
         fprintf(info, "%-30s%s%-20g\n", "  Increment Parameter:", " ", (parrange[1] - parrange[0]) / (parrange[2] - 1));
