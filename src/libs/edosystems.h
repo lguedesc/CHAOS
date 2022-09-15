@@ -8,5 +8,6 @@ void lorenz(int dim, double *x, double t, double *par, double *f);
 void bistable_EH(int dim, double *x, double t, double *par, double *f);
 void duffing_2DoF(int dim, double *x, double t, double *par, double *f);
 void tristable_EH(int dim, double *x, double t, double *par, double *f);
+void pend_oscillator_EH(int dim, double *x, double t, double *par, double *f);
 
 void duffing_cldyn(int dim, double *x, double t, double *par, double *f);

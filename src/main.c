@@ -40,10 +40,12 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
 #define EH_OUTPUTNAME_1 "bistable_EH"
 #define EH_FUNC_2 tristable_EH               
 #define EH_OUTPUTNAME_2 "tristable_EH"
+#define EH_FUNC_3 pend_oscillator_EH               
+#define EH_OUTPUTNAME_3 "pend_oscillator_EH"
 
 #define MAX_NAMELENGTH 120
 #define NUM_OF_SYSTEMS 6
-#define NUM_OF_EH_SYSTEMS 2
+#define NUM_OF_EH_SYSTEMS 3
 #define NUM_OF_TOOLBOXES 2
 #define NUM_OF_MODULES 9 
 
@@ -55,7 +57,8 @@ char *systemNames[NUM_OF_SYSTEMS] = {"Duffing Oscillator",
                                      "Linear Oscillator"};
  
 char *EHsystemNames[NUM_OF_EH_SYSTEMS] = {"Polynomial Bistable Energy Harvester",
-                                          "Polynomial Tristable Energy Harvester"};
+                                          "Polynomial Tristable Energy Harvester",
+                                          "Pendulum-Oscillator Energy Harvester"};
 
 char *toolboxesNames[NUM_OF_TOOLBOXES] = {"Nonlinear Dynamics Toolbox",
                                           "Energy Harvesting Toolbox"};
@@ -103,6 +106,9 @@ void call_EH_system(unsigned int system, unsigned int module) {
             break;
         case 2:
             execute_EH_modules(module, EH_FUNC_2, EH_OUTPUTNAME_2, EHsystemNames[1]);
+            break;
+        case 3:
+            execute_EH_modules(module, EH_FUNC_3, EH_OUTPUTNAME_3, EHsystemNames[2]);
             break;
         default:
             printf("Invalid...\n");

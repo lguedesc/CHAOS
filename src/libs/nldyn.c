@@ -559,7 +559,7 @@ void bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np
         write_results(output_file, dim, par[parindex], x, xmin, xmax, 3);
         // Progress Monitor
         if (parrange[2] > 100) {
-            if (k % 50 == 0) {
+            if (k % 5 == 0) {
                 progress_bar(0, par[parindex], parrange[0], parrange[1]);
             }
             if (k == parrange[2] - 1) {

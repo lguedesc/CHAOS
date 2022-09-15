@@ -282,3 +282,42 @@ void tristable_EH(int dim, double *x, double t, double *par, double *f) {
         }
     }
 }
+
+void pend_oscillator_EH(int dim, double *x, double t, double *par, double *f) {
+    /* OMEGA   = par[0]   |   zeta_z    = par[5]   |   chi    = par[10]               |   x[0] = x       |   x[5] = dphi/dt
+       gamma   = par[1]   |   zeta_t    = par[6]   |   varphi = par[11]               |   x[1] = dx/dt   |   x[6] = v
+       mu      = par[2]   |   OMEGA_s   = par[7]   |   kappa  = par[12]               |   x[2] = z       |
+       rho     = par[3]   |   OMEGA_phi = par[8]   |                                  |   x[3] = dz/dt   |
+       zeta_x  = par[4]   |   OMEGA_t   = par[9]   |                                  |   x[4] = phi     |                   */       
+    if (dim == 7) {
+        f[0] = x[1];
+        f[1] = (1/(1 + par[3]))*(-(1 + par[3]*cos(x[4])*cos(x[4]))*(2*par[4]*x[1] + par[7]*par[7]*x[0]) + (par[3]/2)*(2*par[5]*x[3] + x[2] - par[10]*x[6])*sin(2*x[4]) + par[3]*x[5]*x[5]*sin(x[4]))
+                + (2*par[6]*x[5] + par[9]*par[9]*x[4])*par[3]*cos(x[4]) + (par[3]/2)*par[8]*par[8]*sin(2*x[4]) + par[1]*par[0]*par[0]*sin(par[0]*t)*sin(par[2]); 
+        f[2] = x[3];
+        f[3] = (1/(1 + par[3]))*((1 + par[3]*sin(x[4])*sin(x[4]))*(-2*par[5]*x[3] - x[2] + par[10]*x[6]) + (par[3]/2)*(2*par[4]*x[1] + par[7]*par[7]*x[0])*sin(2*x[4]) + par[3]*x[5]*x[5]*cos(x[4]))
+                - (2*par[6]*x[5] + par[9]*par[9]*x[4])*par[3]*sin(x[4]) - par[3]*par[8]*par[8]*sin(x[4])*sin(x[4]) + par[1]*par[0]*par[0]*sin(par[0]*t)*cos(par[2]);
+        f[4] = x[5];
+        f[5] = -(1 + par[3])*(2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4])) + (2*par[4]*x[1] + par[7]*par[7]*x[0])*cos(x[4]) - (2*par[5]*x[3] + x[2] - par[10]*x[6])*sin(x[4]);
+        f[6] = -par[12]*x[3] - par[11]*x[6];
+    }
+    else if (dim == 56) {
+        f[0] = x[1];
+        f[1] = (1/(1 + par[3]))*(-(1 + par[3]*cos(x[4])*cos(x[4]))*(2*par[4]*x[1] + par[7]*par[7]*x[0]) + (par[3]/2)*(2*par[5]*x[3] + x[2] - par[10]*x[6])*sin(2*x[4]) + par[3]*x[5]*x[5]*sin(x[4]))
+                + (2*par[6]*x[5] + par[9]*par[9]*x[4])*par[3]*cos(x[4]) + (par[3]/2)*par[8]*par[8]*sin(2*x[4]) + par[1]*par[0]*par[0]*sin(par[0]*t)*sin(par[2]); 
+        f[2] = x[3];
+        f[3] = (1/(1 + par[3]))*((1 + par[3]*sin(x[4])*sin(x[4]))*(-2*par[5]*x[3] - x[2] + par[10]*x[6]) + (par[3]/2)*(2*par[4]*x[1] + par[7]*par[7]*x[0])*sin(2*x[4]) + par[3]*x[5]*x[5]*cos(x[4]))
+                - (2*par[6]*x[5] + par[9]*par[9]*x[4])*par[3]*sin(x[4]) - par[3]*par[8]*par[8]*sin(x[4])*sin(x[4]) + par[1]*par[0]*par[0]*sin(par[0]*t)*cos(par[2]);
+        f[4] = x[5];
+        f[5] = -(1 + par[3])*(2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4])) + (2*par[4]*x[1] + par[7]*par[7]*x[0])*cos(x[4]) - (2*par[5]*x[3] + x[2] - par[10]*x[6])*sin(x[4]);
+        f[6] = -par[12]*x[3] - par[11]*x[6];
+        for (int i = 0; i < 7; i ++) {
+            f[7 + i] = x[14 + i];
+            f[14 + i] = 0;
+            f[21 + i] = x[28 + i];
+            f[28 + i] = 0;
+            f[35 + i] = x[42 + i];
+            f[42 + i] = 0;
+            f[49 + i] = 0;
+        }
+    }
+}
