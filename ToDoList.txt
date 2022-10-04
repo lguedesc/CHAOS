@@ -1,1 +1,7 @@
-1. Verify if max and min values are being calculated correctly, because they are being reset based on the initial conditions, so the max and min values can be misleaded to be the IC.
+1. Make a module to general dynamical systems (Lorenz, Lotk-Volterra, Halvorsen, Rossler, etc)
+2. Make a Simplified Version of the Dynamical Diagram based only on poincare map, without lyapunov.
+3. Make a Simplified Version of the Forced Basin of Attraction based only on poincare map, without lyapunov.
+4. Implement Runge-Kutta-Fehlberg (RK45) Method and integrate with the existing modules, letting the user decide which integrator he/she wants to use.
+5. Implement Lyapunov Exponents Cloned Dynamics method and integrate with the existing modules, letting the user decide which method he/she wants to use.
+6. Implement 0-1 Test for Chaos method and integrate with existing modules, letting the user decide which method he/she wants to use.
+7. Implement Geometric Poincaré Map for systems that don't have harmonic external forcing terms.

@@ -35,6 +35,8 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
 #define OUTPUTNAME_5 "falk_sma"
 #define FUNC_6 linear_oscillator
 #define OUTPUTNAME_6 "linear_oscillator"
+#define FUNC_7 lotka_volterra_predator_prey
+#define OUTPUTNAME_7 "predator_prey"
 
 #define EH_FUNC_1 bistable_EH               
 #define EH_OUTPUTNAME_1 "bistable_EH"
@@ -42,10 +44,12 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
 #define EH_OUTPUTNAME_2 "tristable_EH"
 #define EH_FUNC_3 pend_oscillator_EH               
 #define EH_OUTPUTNAME_3 "pend_oscillator_EH"
+#define EH_FUNC_4 pend_oscillator_wout_pend_EH               
+#define EH_OUTPUTNAME_4 "pend_oscillator_EH(without_pend)"
 
 #define MAX_NAMELENGTH 120
-#define NUM_OF_SYSTEMS 6
-#define NUM_OF_EH_SYSTEMS 3
+#define NUM_OF_SYSTEMS 7
+#define NUM_OF_EH_SYSTEMS 4
 #define NUM_OF_TOOLBOXES 2
 #define NUM_OF_MODULES 9 
 
@@ -54,11 +58,13 @@ char *systemNames[NUM_OF_SYSTEMS] = {"Duffing Oscillator",
                                      "Van Der Pol Oscillator",
                                      "Simple Pendulum",
                                      "Falk Shape Memory Alloy Oscillator",
-                                     "Linear Oscillator"};
+                                     "Linear Oscillator",
+                                     "Lotka-Volterra: Predator-Prey Model"};
  
 char *EHsystemNames[NUM_OF_EH_SYSTEMS] = {"Polynomial Bistable Energy Harvester",
                                           "Polynomial Tristable Energy Harvester",
-                                          "Pendulum-Oscillator Energy Harvester"};
+                                          "Pendulum-Oscillator Energy Harvester",
+                                          "Pendulum-Oscillator Energy Harvester (Without Pendulum)"};
 
 char *toolboxesNames[NUM_OF_TOOLBOXES] = {"Nonlinear Dynamics Toolbox",
                                           "Energy Harvesting Toolbox"};
@@ -93,6 +99,9 @@ void call_system(unsigned int system, unsigned int module) {
         case 6:
             execute_modules(module, FUNC_6, OUTPUTNAME_6, systemNames[5]);
             break;
+        case 7:
+            execute_modules(module, FUNC_7, OUTPUTNAME_7, systemNames[6]);
+            break;
         default:
             printf("Invalid...\n");
             exit(0);
@@ -109,6 +118,9 @@ void call_EH_system(unsigned int system, unsigned int module) {
             break;
         case 3:
             execute_EH_modules(module, EH_FUNC_3, EH_OUTPUTNAME_3, EHsystemNames[2]);
+            break;
+        case 4:
+            execute_EH_modules(module, EH_FUNC_4, EH_OUTPUTNAME_4, EHsystemNames[3]);
             break;
         default:
             printf("Invalid...\n");

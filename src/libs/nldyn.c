@@ -524,11 +524,6 @@ void bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np
                 x[i] = IC[i];
             }
         }
-        // Reset initial values to xmax and xmin based on initial values of x
-        /*for (int i = 0; i < dim; i++) {
-            xmax[i] = x[i];
-            xmin[i] = x[i];
-        }*/
         // Vary timestep if varpar = par[0]
         h = (2 * pi) / (ndiv * par[0]);         // par[0] = OMEGA
         // Call Runge-Kutta 4th order integrator n = np * ndiv times
@@ -716,11 +711,6 @@ void full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, int d
                 (*x)[i] = IC[i];
             }
         }
-        // Reset initial values to xmax and xmin based on initial values of x
-        /*for (int i = 0; i < dim; i++) {
-            xmax[i] = (*x)[i];
-            xmin[i] = (*x)[i];
-        }*/
         // Vary timestep if varpar = par[0], varying also final time and short initial time
         h = (2 * pi) / (ndiv * par[0]);              // par[0] = OMEGA
         tf = h*np*ndiv;                              // Final time
@@ -985,11 +975,6 @@ void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
                         X[i] = IC[i];
                     }
                 }
-                // Reset initial values to xmax and xmin based on initial values of x
-                /*for (int i = 0; i < dim; i++) {
-                    xmax[i] = X[i];
-                    xmin[i] = X[i];
-                }*/
                 // Vary timestep if varpar = par[0], varying also final time and short initial time
                 h = (2 * pi) / (ndiv * PAR[0]);              // par[0] = OMEGA
                 tf = h*np*ndiv;                              // Final time
@@ -1287,11 +1272,6 @@ void forced_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv,
                     s_lambda[i] = 0.0;
                     LE[i] = 0.0;
                 }
-                // Reset initial values to xmax and xmin based on initial values of x
-                /*for (int i = 0; i < dim; i++) {
-                    xmax[i] = X[i];
-                    xmin[i] = X[i];
-                }*/
                 // Vary timestep if varpar = par[0], varying also final time and short initial time
                 h = (2 * pi) / (ndiv * PAR[0]);              // par[0] = OMEGA
                 tf = h*np*ndiv;                              // Final time

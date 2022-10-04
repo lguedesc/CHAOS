@@ -284,40 +284,97 @@ void tristable_EH(int dim, double *x, double t, double *par, double *f) {
 }
 
 void pend_oscillator_EH(int dim, double *x, double t, double *par, double *f) {
-    /* OMEGA   = par[0]   |   zeta_z    = par[5]   |   chi    = par[10]               |   x[0] = x       |   x[5] = dphi/dt
-       gamma   = par[1]   |   zeta_t    = par[6]   |   varphi = par[11]               |   x[1] = dx/dt   |   x[6] = v
-       mu      = par[2]   |   OMEGA_s   = par[7]   |   kappa  = par[12]               |   x[2] = z       |
-       rho     = par[3]   |   OMEGA_phi = par[8]   |                                  |   x[3] = dz/dt   |
-       zeta_x  = par[4]   |   OMEGA_t   = par[9]   |                                  |   x[4] = phi     |                   */       
-    if (dim == 7) {
+    /* OMEGA   = par[0]   |   zeta_z    = par[5]   |   l         = par[10]   |   chi_PZ = par[15]       |   x[0] = x       |   x[5] = dphi/dt
+       gamma   = par[1]   |   zeta_t    = par[6]   |   varphi_PZ = par[11]   |   chi_EM = par[16]       |   x[1] = dx/dt   |   x[6] = v
+       mu      = par[2]   |   OMEGA_s   = par[7]   |   kappa_PZ  = par[12]   |                          |   x[2] = z       |   x[7] = i
+       rho     = par[3]   |   OMEGA_phi = par[8]   |   varphi_EM = par[13]   |                          |   x[3] = dz/dt   |
+       zeta_x  = par[4]   |   OMEGA_t   = par[9]   |   kappa_EM  = par[14]   |                          |   x[4] = phi     |                   */       
+    const double pi = 4 * atan(1);
+    if (dim == 8) { 
         f[0] = x[1];
-        f[1] = (1/(1 + par[3]))*(-(1 + par[3]*cos(x[4])*cos(x[4]))*(2*par[4]*x[1] + par[7]*par[7]*x[0]) + (par[3]/2)*(2*par[5]*x[3] + x[2] - par[10]*x[6])*sin(2*x[4]) + par[3]*x[5]*x[5]*sin(x[4]))
-                + (2*par[6]*x[5] + par[9]*par[9]*x[4])*par[3]*cos(x[4]) + (par[3]/2)*par[8]*par[8]*sin(2*x[4]) + par[1]*par[0]*par[0]*sin(par[0]*t)*sin(par[2]); 
+        f[1] = (1/(1 + par[3]))*(-(1 + par[3]*cos(x[4])*cos(x[4]))*(2*par[4]*x[1] + par[7]*par[7]*x[0]) + (par[3]/2)*(2*par[5]*x[3] + x[2] - par[15]*x[6])*sin(2*x[4]) + par[3]*par[10]*x[5]*x[5]*sin(x[4]))
+                + (2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7])*par[3]*par[10]*cos(x[4]) + par[1]*par[0]*par[0]*sin(par[0]*t)*sin((pi/180)*par[2]); 
         f[2] = x[3];
-        f[3] = (1/(1 + par[3]))*((1 + par[3]*sin(x[4])*sin(x[4]))*(-2*par[5]*x[3] - x[2] + par[10]*x[6]) + (par[3]/2)*(2*par[4]*x[1] + par[7]*par[7]*x[0])*sin(2*x[4]) + par[3]*x[5]*x[5]*cos(x[4]))
-                - (2*par[6]*x[5] + par[9]*par[9]*x[4])*par[3]*sin(x[4]) - par[3]*par[8]*par[8]*sin(x[4])*sin(x[4]) + par[1]*par[0]*par[0]*sin(par[0]*t)*cos(par[2]);
+        f[3] = (1/(1 + par[3]))*(-(1 + par[3]*sin(x[4])*sin(x[4]))*(2*par[5]*x[3] + x[2] - par[15]*x[6]) + (par[3]/2)*(2*par[4]*x[1] + par[7]*par[7]*x[0])*sin(2*x[4]) + par[3]*par[10]*x[5]*x[5]*cos(x[4]))
+                - (2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7])*par[3]*par[10]*sin(x[4]) + par[1]*par[0]*par[0]*sin(par[0]*t)*cos((pi/180)*par[2]);
         f[4] = x[5];
-        f[5] = -(1 + par[3])*(2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4])) + (2*par[4]*x[1] + par[7]*par[7]*x[0])*cos(x[4]) - (2*par[5]*x[3] + x[2] - par[10]*x[6])*sin(x[4]);
+        f[5] = -(1 + par[3])*(2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7]) + (1/par[10])*((2*par[4]*x[1] + par[7]*par[7]*x[0])*cos(x[4]) - (2*par[5]*x[3] + x[2] - par[15]*x[6])*sin(x[4]));
         f[6] = -par[12]*x[3] - par[11]*x[6];
+        f[7] = -par[14]*x[5] - par[13]*x[7];
+    } 
+    else if (dim == 72) {
+        f[0] = x[1];
+        f[1] = (1/(1 + par[3]))*(-(1 + par[3]*cos(x[4])*cos(x[4]))*(2*par[4]*x[1] + par[7]*par[7]*x[0]) + (par[3]/2)*(2*par[5]*x[3] + x[2] - par[15]*x[6])*sin(2*x[4]) + par[3]*par[10]*x[5]*x[5]*sin(x[4]))
+                + (2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7])*par[3]*par[10]*cos(x[4]) + par[1]*par[0]*par[0]*sin(par[0]*t)*sin((pi/180)*par[2]); 
+        f[2] = x[3];
+        f[3] = (1/(1 + par[3]))*(-(1 + par[3]*sin(x[4])*sin(x[4]))*(2*par[5]*x[3] + x[2] - par[15]*x[6]) + (par[3]/2)*(2*par[4]*x[1] + par[7]*par[7]*x[0])*sin(2*x[4]) + par[3]*par[10]*x[5]*x[5]*cos(x[4]))
+                - (2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7])*par[3]*par[10]*sin(x[4]) + par[1]*par[0]*par[0]*sin(par[0]*t)*cos((pi/180)*par[2]);
+        f[4] = x[5];
+        f[5] = -(1 + par[3])*(2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7]) + (1/par[10])*((2*par[4]*x[1] + par[7]*par[7]*x[0])*cos(x[4]) - (2*par[5]*x[3] + x[2] - par[15]*x[6])*sin(x[4]));
+        f[6] = -par[12]*x[3] - par[11]*x[6];
+        f[7] = -par[14]*x[5] - par[13]*x[7];
+        for (int i = 0; i < 8; i ++) {
+            f[8 + i] = x[16 + i];
+            f[16 + i] = 0;
+            f[24 + i] = x[32 + i];
+            f[32 + i] = 0;
+            f[40 + i] = x[48 + i];
+            f[48 + i] = 0;
+            f[56 + i] = 0;
+            f[64 + i] = 0;
+        }
     }
-    else if (dim == 56) {
+}
+
+void pend_oscillator_wout_pend_EH(int dim, double *x, double t, double *par, double *f) {
+    // OMEGA   = par[0]   |   zeta_z    = par[5]          |   x[0] = x       
+    // gamma   = par[1]   |   OMEGA_s   = par[6]          |   x[1] = dx/dt   
+    // mu      = par[2]   |   varphi    = par[7]          |   x[2] = z       
+    // rho     = par[3]   |   kappa     = par[8]          |   x[3] = dz/dt   
+    // zeta_x  = par[4]   |   chi       = par[9]          |   x[4] = v        
+    const double pi = 4 * atan(1);
+    
+    if (dim == 5) {
         f[0] = x[1];
-        f[1] = (1/(1 + par[3]))*(-(1 + par[3]*cos(x[4])*cos(x[4]))*(2*par[4]*x[1] + par[7]*par[7]*x[0]) + (par[3]/2)*(2*par[5]*x[3] + x[2] - par[10]*x[6])*sin(2*x[4]) + par[3]*x[5]*x[5]*sin(x[4]))
-                + (2*par[6]*x[5] + par[9]*par[9]*x[4])*par[3]*cos(x[4]) + (par[3]/2)*par[8]*par[8]*sin(2*x[4]) + par[1]*par[0]*par[0]*sin(par[0]*t)*sin(par[2]); 
+        f[1] = (1/(1 + par[3]))*(-2*par[4]*x[1] - par[6]*par[6]*x[0]) + par[1]*par[0]*par[0]*sin(par[0]*t)*sin((pi/180)*par[2]); 
         f[2] = x[3];
-        f[3] = (1/(1 + par[3]))*((1 + par[3]*sin(x[4])*sin(x[4]))*(-2*par[5]*x[3] - x[2] + par[10]*x[6]) + (par[3]/2)*(2*par[4]*x[1] + par[7]*par[7]*x[0])*sin(2*x[4]) + par[3]*x[5]*x[5]*cos(x[4]))
-                - (2*par[6]*x[5] + par[9]*par[9]*x[4])*par[3]*sin(x[4]) - par[3]*par[8]*par[8]*sin(x[4])*sin(x[4]) + par[1]*par[0]*par[0]*sin(par[0]*t)*cos(par[2]);
-        f[4] = x[5];
-        f[5] = -(1 + par[3])*(2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4])) + (2*par[4]*x[1] + par[7]*par[7]*x[0])*cos(x[4]) - (2*par[5]*x[3] + x[2] - par[10]*x[6])*sin(x[4]);
-        f[6] = -par[12]*x[3] - par[11]*x[6];
-        for (int i = 0; i < 7; i ++) {
-            f[7 + i] = x[14 + i];
-            f[14 + i] = 0;
-            f[21 + i] = x[28 + i];
-            f[28 + i] = 0;
-            f[35 + i] = x[42 + i];
-            f[42 + i] = 0;
-            f[49 + i] = 0;
+        f[3] = (1/(1 + par[3]))*(-2*par[5]*x[3] - x[2] + par[9]*x[4]) + par[1]*par[0]*par[0]*sin(par[0]*t)*cos((pi/180)*par[2]);
+        f[4] = -par[8]*x[3] - par[7]*x[4];
+    }
+    else if (dim == 30) {
+        f[0] = x[1];
+        f[1] = (1/(1 + par[3]))*(-2*par[4]*x[1] - par[6]*par[6]*x[0]) + par[1]*par[0]*par[0]*sin(par[0]*t)*sin((pi/180)*par[2]); 
+        f[2] = x[3];
+        f[3] = (1/(1 + par[3]))*(-2*par[5]*x[3] - x[2] + par[9]*x[4]) + par[1]*par[0]*par[0]*sin(par[0]*t)*cos((pi/180)*par[2]);
+        f[4] = -par[8]*x[3] - par[7]*x[4];
+        for (int i = 0; i < 5; i ++) {
+            f[5 + i] = x[10 + i];
+            f[10 + i] = 0;
+            f[15 + i] = x[20 + i];
+            f[20 + i] = 0;
+            f[25 + i] = 0;
+        }
+    }
+}
+
+void lotka_volterra_predator_prey(int dim, double *x, double t, double *par, double *f) {
+    // OMEGA   = par[0]   |   x[0] = x => number of prey      
+    // alpha   = par[1]   |   x[1] = y => number of predator  
+    // beta    = par[2]   |        
+    // delta   = par[3]   |      
+    // gamma   = par[4]   |           
+    
+    if (dim == 2) {
+        f[0] = par[1]*x[0] - par[2]*x[0]*x[1];
+        f[1] = par[3]*x[0]*x[1] - par[4]*x[1]; 
+    } 
+    else if (dim == 6) {
+        f[0] = par[1]*x[0] - par[2]*x[0]*x[1];
+        f[1] = par[3]*x[0]*x[1] - par[4]*x[1];
+        for (int i = 0; i < 2; i ++) {
+            // Add later
+            f[2 + i] = 0;
+            f[4 + i] = 0;
         }
     }
 }
