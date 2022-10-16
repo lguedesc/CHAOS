@@ -884,10 +884,10 @@ void dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, in
     free(poinc);
 }
 
-void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
-                                         int indexX, int indexY, double *parrange, double *par, int npar,
-                                         void (*edosys)(int, double *, double, double *, double *), int bifmode, 
-                                         void (*write_results)(FILE *output_file, int dim, double **results, int pixels)) {
+void parallel_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
+                                                int indexX, int indexY, double *parrange, double *par, int npar,
+                                                void (*edosys)(int, double *, double, double *, double *), int bifmode, 
+                                                void (*write_results)(FILE *output_file, int dim, double **results, int pixels)) {
     // Declare matrix do store results
     int pixels = parrange[2]*parrange[5];  // Number of results
     double **results = malloc(pixels * sizeof **results);
@@ -1492,3 +1492,148 @@ void lyap_cldyn_solution(FILE *output_file, int dim, int np, int ndiv, int trans
 }
 
 
+void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
+                                         int indexX, int indexY, double *parrange, double *par, int npar,
+                                         void (*edosys)(int, double *, double, double *, double *), int bifmode, 
+                                         void (*write_results)(FILE *output_file, int dim, double **results, int pixels)) {
+    // Declare matrix do store results
+    int pixels = parrange[2]*parrange[5];  // Number of results
+    double **results = malloc(pixels * sizeof **results);
+    for (int i = 0; i < pixels; i++) {
+        results[i] = malloc((4 + (2*dim)) * sizeof **results);  // 4 for params, attrac, diffratac/ dim for xmax/ dim for xmin
+    }
+    // Declare rk4 timestep, pi and varstep
+    double h;
+    const double pi = 4 * atan(1);  // Pi number definition
+    // Declare and define increment of control parameters
+    double varstep[2];        
+    varstep[0] = (parrange[1] - parrange[0])/(parrange[2] - 1); // -1 in the denominator ensures the input resolution
+    varstep[1] = (parrange[4] - parrange[3])/(parrange[5] - 1); // -1 in the denominator ensures the input resolution
+    // Declare variable to flag if all directions present same periodicity or not (0 = all the same, 1 = not the same)
+    int diffAttrac = -1;
+    // Declare variable to store attractor
+    int attrac;
+    // Start of Parallel Block
+    #pragma omp parallel default(none) shared(dim, bifmode, ndiv, np, trans, maxper, varstep, npar, results, edosys, pi) \
+                                       private(t, h, attrac) \
+                                       firstprivate(x, indexX, indexY, parrange, par, diffAttrac)
+    {   
+        //Get number of threads
+        int ID = omp_get_thread_num();
+        // Allocate memory for x` = f(x)
+        double *f = malloc(dim * sizeof *f);
+        // Declare vector and allocate memory to store poincare map values: poinc[number of permanent regime forcing periods][dimension original system]
+        double **poinc = malloc((np - trans) * sizeof **poinc);
+        for (int i = 0; i < np - trans; i++) {
+            poinc[i] = malloc(dim * sizeof **poinc);
+        }
+        // Declare vector for temporary storage of periodicity values to check if all directions are equal
+        int *tmp_attrac = malloc(dim * sizeof *tmp_attrac);
+        // Store Initial Conditions
+        double t0 = t;
+        double *IC = malloc(dim * sizeof *IC);
+        for (int i = 0; i < dim; i++) {
+            IC[i] = (*x)[i];
+        }
+        // Declare memory to store min and max values
+        double *xmax = malloc(dim * sizeof *xmax);
+        double *xmin = malloc(dim * sizeof *xmin);
+        // Convert function arguments as local (private) variables
+        double *X = convert_argument_to_private(*x, dim);
+        double *PAR = convert_argument_to_private(par, npar);
+        // Index to identify position to write results
+        int index;                                          
+        // Declare counter for parallelized loop
+        int k, m;
+        #pragma omp for schedule(static) private(k, m)
+        // Starts the parallel loop for Y control parameter
+        for (k = 0; k < (int)parrange[5]; k++) {
+            PAR[indexY] = parrange[3] + k*varstep[1]; // Increment value
+            // Reset Initial conditions for the beggining of a horizontal line
+            for (int i = 0; i < dim; i++) {
+                X[i] = IC[i];
+            }
+            // Starts the loop for X control parameter
+            for (m = 0; m < (int)parrange[2]; m++) {
+                PAR[indexX] = parrange[0] + m*varstep[0]; // Increment Value
+                // Reset Variables
+                t = t0;
+                // Check the mode of the diagram
+                if (bifmode == 1) {
+                    // Reset Initial conditions in each diagram step
+                    for (int i = 0; i < dim; i++) {
+                        X[i] = IC[i];
+                    }
+                }
+                // Vary timestep if varpar = par[0], varying also final time and short initial time
+                h = (2 * pi) / (ndiv * PAR[0]);              // par[0] = OMEGA
+                // Call Runge-Kutta 4th order integrator N = nP * nDiv times
+                for (int i = 0; i < np; i++) {
+                    for (int j = 0; j < ndiv; j++) {
+                        rk4(dim, X, t, h, PAR, f, edosys);
+                        t = t + h;
+                        // Apply poincare map at permanent regime
+                        if (i >= trans) {
+                            // Get max and min values at permanent regime
+                            for (int q = 0; q < dim; q++) {
+                                // Initialize xmax[dim] and xmin[dim] with first values of x[dim] at permanent regime
+                                if (i == trans && j == 0) {
+                                    xmax[q] = X[q];
+                                    xmin[q] = X[q];
+                                }
+                                max_value(X[q], &xmax[q]);
+                                min_value(X[q], &xmin[q]);
+                            }
+                            // Choose any point in the trajectory for poincare section placement
+                            if (j == 1) {
+                                // Stores poincare values in poinc[np - trans][dim] vector
+                                for (int p = 0; p < dim; p++) {
+                                    poinc[i - trans][p] = X[p];
+                                }
+                            }
+                        }
+                    }
+                }
+                // Verify the type of motion of the system
+                attrac = check_periodicity(dim, np, poinc, trans, tmp_attrac, &diffAttrac, maxper);
+                // Write results in matrix
+                index = (int)parrange[2]*k + m;
+                results[index][0] = PAR[indexY];
+                results[index][1] = PAR[indexX];
+                results[index][2] = (double)attrac;
+                results[index][3] = (double)diffAttrac;
+                for (int r = 4; r < dim + 4; r++) {
+                    results[index][r] = xmax[r-4];
+                }
+                for (int r = dim + 4; r < 4 + (2*dim); r++) {
+                    results[index][r] = xmin[r - 4 - dim];
+                }
+            }
+            // Progress Monitor
+            if (ID == 0) {
+                progress_bar(0, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
+                if (k == ((int)parrange[5] - 1)/omp_get_num_threads() ) {
+                    progress_bar(1, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
+                }
+            }
+        }
+        // Free memory    
+        free(f);
+        free(tmp_attrac); free(IC);
+        free(xmax); free(xmin);
+        for (int i = 0; i < np - trans; i++) {
+            free(poinc[i]);
+        }
+        free(poinc);
+    } // End of Parallel Block
+    
+    // Write results in file
+    printf("\n\n  Writing Results in Output File...\n");
+    write_results(output_file, dim, results, pixels);
+
+    // Free memory
+    for (int i = 0; i < pixels; i++) {
+        free(results[i]);
+    }
+    free(results);
+} 

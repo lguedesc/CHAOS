@@ -14,10 +14,15 @@ void EH_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, in
                                   double **x, int parindex, double *parrange, double *par, int nrms, int *rmsindex, void (*edosys)(int, double *, double, double *, double *),
                                   void (*write_results)(FILE *output_file, int dim, int np, int trans, double varpar, double *x, double *xmin, double *xmax, double *LE, int attractor, double **poinc, int diffattrac, int nrms, int *rmsindex, double *xrms, double *overallxrms, int mode), int bifmode);
 
-void EH_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
+void EH_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
                                    int indexX, int indexY, double *parrange, double *par, int npar, int nrms, int *rmsindex,
                                    void (*edosys)(int, double *, double, double *, double *), int bifmode, 
                                    void (*write_results)(FILE *output_file, int dim, int nrms, int *rmsindex, double **results, int pixels));
+
+void EH_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
+                                         int indexX, int indexY, double *parrange, double *par, int npar, int nrms, int *rmsindex,
+                                         void (*edosys)(int, double *, double, double *, double *), int bifmode, 
+                                         void (*write_results)(FILE *output_file, int dim, int nrms, int *rmsindex, double **results, int pixels));
 
 void EH_forced_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
                                          int indexX, int indexY, double *icrange, double *par, int npar, int nrms, int *rmsindex, 

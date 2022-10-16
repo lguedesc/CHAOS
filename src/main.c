@@ -11,6 +11,7 @@
 #include "modules/bifurcation.h"
 #include "modules/fbifurcation.h"
 #include "modules/dyndiag.h"
+#include "modules/fdyndiag.h"
 #include "modules/epbasin.h"
 #include "modules/forcedbasin.h"
 #include "modules/EH_time_series.h"
@@ -18,6 +19,7 @@
 #include "modules/EH_bifurcation.h"
 #include "modules/EH_fbifurcation.h"
 #include "modules/EH_dyndiag.h"
+#include "modules/EH_fdyndiag.h"
 #include "modules/EH_forcedbasin.h"
 
 void execute_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
@@ -51,7 +53,7 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
 #define NUM_OF_SYSTEMS 7
 #define NUM_OF_EH_SYSTEMS 4
 #define NUM_OF_TOOLBOXES 2
-#define NUM_OF_MODULES 9 
+#define NUM_OF_MODULES 10 
 
 char *systemNames[NUM_OF_SYSTEMS] = {"Duffing Oscillator",
                                      "2 DoF Duffing Oscillator",
@@ -74,8 +76,9 @@ char *moduleNames[NUM_OF_MODULES] = {"Time Series",
                                      "Lyapunov Exponents (Method from Wolf et al., 1985)", 
                                      "Full Time Series (Integrator + Poincare Map + Lyapunov Exponents)",
                                      "Bifurcation Diagram",
-                                     "Full Bifurcation Diagram (Automatic Identification of Attractors)",
+                                     "Full Bifurcation Diagram (With Lyapunov)",
                                      "Dynamical Diagram",
+                                     "Full Dynamical Diagram (With Lyapunov)",
                                      "Basin of Attraction (Fixed Points)",
                                      "Basin of Attraction (Forced)"};
 
@@ -184,9 +187,12 @@ void execute_modules(unsigned int module, void (*edosys)(int, double *, double, 
             dyndiag(funcname, outputname, edosys);
             break;
         case 8:
-            epbasin(funcname, outputname, edosys);
+            fdyndiag(funcname, outputname, edosys);
             break;
         case 9:
+            epbasin(funcname, outputname, edosys);
+            break;
+        case 10:
             forcedbasin(funcname, outputname, edosys);
             break;    
         default:
@@ -219,9 +225,12 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
             EH_dyndiag(funcname, outputname, edosys);
             break;
         case 8:
-            epbasin(funcname, outputname, edosys);
+            EH_fdyndiag(funcname, outputname, edosys);
             break;
         case 9:
+            epbasin(funcname, outputname, edosys);
+            break;
+        case 10:
             EH_forcedbasin(funcname, outputname, edosys);
             break;    
         default:

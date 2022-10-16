@@ -315,16 +315,26 @@ void pend_oscillator_EH(int dim, double *x, double t, double *par, double *f) {
         f[7] = -par[14]*x[5] - par[13]*x[7];
         for (int i = 0; i < 8; i ++) {
             f[8 + i] = x[16 + i];
-            f[16 + i] = 0;
+            f[16 + i] = (-(par[7]*par[7]*(1 + par[3]*cos(x[4])*cos(x[4]))*x[8 + i]) - 2*par[4]*(1 + par[3]*cos(x[4])*cos(x[4]))*x[16 + i] + par[3]*cos(x[4])*sin(x[4])*x[24 + i] + par[5]*par[3]*sin(2*x[4])*x[32 + i] + 
+                         par[3]*(sin(2*x[4])*(par[7]*par[7]*x[0] + 2*par[4]*x[1]) + par[10]*cos(x[4])*((1 + par[3])*par[9]*par[9] + x[5]*x[5]) + 
+                         cos(2*x[4])*(par[10]*(1 + par[3])*par[8]*par[8] + x[2] + 2*par[5]*x[3] - par[15]*x[6]) - par[10]*(1 + par[3])*sin(x[4])*(par[9]*par[9]*x[4] + 2*par[6]*x[5] - par[16]*x[7]))*x[40 + i] + 
+                         2*par[10]*par[3]*(par[6]*(1 + par[3])*cos(x[4]) + sin(x[4])*x[5])*x[48 + i] - par[3]*par[15]*cos(x[4])*sin(x[4])*x[56 + i] - par[10]*par[3]*(1 + par[3])*par[16]*cos(x[4])*x[64 + i])/(1 + par[3]);
             f[24 + i] = x[32 + i];
-            f[32 + i] = 0;
+            f[32 + i] = (par[3]*par[7]*par[7]*cos(x[4])*sin(x[4])*x[8 + i] + par[4]*par[3]*sin(2*x[4])*x[16 + i] - (1 + par[3]*sin(x[4])*sin(x[4]))*x[24 + i] - 2*par[5]*(1 + par[3]*sin(x[4])*sin(x[4]))*x[32 + i] + 
+                         par[3]*(cos(2*x[4])*(par[7]*par[7]*x[0] + 2*par[4]*x[1]) - sin(x[4])*(par[10]*((1 + par[3])*par[9]*par[9] + x[5]*x[5]) + 
+                         2*cos(x[4])*(par[10]*(1 + par[3])*par[8]*par[8] + x[2] + 2*par[5]*x[3] - par[15]*x[6])) - par[10]*(1 + par[3])*cos(x[4])*(par[9]*par[9]*x[4] + 2*par[6]*x[5] - par[16]*x[7]))*x[40 + i] - 
+                         2*par[10]*par[3]*(par[6]*(1 + par[3])*sin(x[4]) - cos(x[4])*x[5])*x[48 + i] + (par[15] + par[3]*par[15]*sin(x[4])*sin(x[4]))*x[56 + i] + par[10]*par[3]*(1 + par[3])*par[16]*sin(x[4])*x[64 + i])/(1 + par[3]);
             f[40 + i] = x[48 + i];
-            f[48 + i] = 0;
-            f[56 + i] = 0;
-            f[64 + i] = 0;
+            f[48 + i] = (cos(x[4])*(par[7]*par[7]*x[8 + i] + 2*par[4]*x[16 + i] - (par[10]*(1 + par[3])*par[8]*par[8] + x[2] + 2*par[5]*x[3] - par[15]*x[6])*x[40 + i]) - 
+                         sin(x[4])*(x[24 + i] + 2*par[5]*x[32 + i] + (par[7]*par[7]*x[0] + 2*par[4]*x[1])*x[40 + i] - par[15]*x[56 + i]) - 
+                         par[10]*(1 + par[3])*(par[9]*par[9]*x[40 + i] + 2*par[6]*x[48 + i] - par[16]*x[64 + i]))/par[10];
+            f[56 + i] = -(par[12]*x[32 + i]) - par[11]*x[56 + i];
+            f[64 + i] = -(par[14]*x[48 + i]) - par[13]*x[64 + i];
         }
     }
 }
+
+
 
 void pend_oscillator_wout_pend_EH(int dim, double *x, double t, double *par, double *f) {
     // OMEGA   = par[0]   |   zeta_z    = par[5]          |   x[0] = x       

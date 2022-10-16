@@ -16,6 +16,12 @@ def plot_params(tex, fontsize, lineweight):
         'axes.linewidth' : lineweight,
         'xtick.major.width': lineweight,
         'ytick.major.width': lineweight,
+        'xtick.major.size': 1.75,
+        'ytick.major.size': 1.75,
+        'xtick.top': True,
+        'ytick.right': True,
+        'xtick.direction': 'in',
+        'ytick.direction': 'in',
     })
 
 def convert_dir(dir):
