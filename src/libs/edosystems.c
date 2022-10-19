@@ -388,3 +388,25 @@ void lotka_volterra_predator_prey(int dim, double *x, double t, double *par, dou
         }
     }
 }
+
+void duffing_vanderpol(int dim, double *x, double t, double *par, double *f) {
+    // OMEGA   = par[0]   |   zeta = par[5]      
+    // gamma   = par[1]   |     
+    // epsilon = par[2]   |        
+    // alpha   = par[3]   |      
+    // beta    = par[4]   |           
+    
+    if (dim == 2) {
+        f[0] = x[1];
+        f[1] = par[1]*par[0]*par[0]*sin(par[0]*t) - par[2]*x[1]*(x[0]*x[0] - 1) - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] - par[5]*x[0]*x[0]*x[0]*x[0]*x[0]; 
+    } 
+    else if (dim == 6) {
+        f[0] = x[1];
+        f[1] = par[1]*par[0]*par[0]*sin(par[0]*t) - par[2]*x[1]*(x[0]*x[0] - 1) - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] - par[5]*x[0]*x[0]*x[0]*x[0]*x[0]; 
+        for (int i = 0; i < 2; i ++) {
+            // Add later
+            f[2 + i] = x[4 + i];
+            f[4 + i] = (-par[3] - 3*par[4]*x[0]*x[0] - 2*par[2]*x[0]*x[1] - 5*par[5]*x[0]*x[0]*x[0]*x[0])*x[2 + i] - par[2]*(x[0]*x[0] - 1)*x[4 + i];
+        }
+    }
+}
