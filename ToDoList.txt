@@ -5,3 +5,4 @@
 5. Implement 0-1 Test for Chaos method and integrate with existing modules, letting the user decide which method he/she wants to use.
 6. Implement Geometric Poincaré Map for systems that don't have harmonic external forcing terms.
 7. Implement Lyapunov Dimension (Kaplan-Yorke Dimension) and Kolmogorov-Sinai Entropy
+8. Implement Multiple Scales Method to find all solution branches of a parameter domain.
