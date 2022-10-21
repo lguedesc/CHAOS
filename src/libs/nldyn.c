@@ -1637,3 +1637,83 @@ void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
     }
     free(results);
 } 
+
+void convergence_test_solution(int dim, int N, double t, double tf, double *x, int ntries, double *par, 
+                                void (*edosys)(int, double *, double, double *, double *)) {
+    // Allocate x` = f(x)
+    double *f = malloc(dim * sizeof *f);
+    // Create a pointer to memory for the vector of timestep values
+    double *h = malloc(ntries * sizeof *h);
+    // Save initial time and initial conditions
+    double t0 = t;
+    double *IC = malloc(dim * sizeof *IC);
+    for (int i = 0; i < dim; i++) {
+        IC[i] = x[i];
+    }
+    // Create a pointer to memory to store result values
+    double *result = malloc(ntries * sizeof *result);
+    // Declare Analysis Variables
+    double *E = malloc((ntries - 2) * sizeof *E);
+    double ratio;
+    // Call the solution ntries times
+    for (int j = 0; j < ntries; j++) {
+        // Reset initial time and initial conditions
+        t = t0; 
+        for (int k = 0; k < dim; k++) {
+            x[k] = IC[k];
+        }
+        // Assign values to the timestep vector
+        if (j == 0) {
+            h[j] = (tf - t)/N;
+        }
+        else {
+            N = 2*N;
+            h[j] = (tf - t)/N;
+        }
+        if (j < 10) {
+            printf("%s%d%s%20.10d%s%d%s%-20.10lf%s", "  N[", j, "] = ", N, " | t0[", j, "] = ", t, " | ");
+        }
+        else {
+            printf("%s%d%s%19.10d%s%d%s%-19.10lf%s", "  N[", j, "] = ", N, " | t0[", j, "] = ", t, " | ");
+        }
+        // Call Runge-Kutta 4th order integrator n times
+        for (int i = 0; i < N; i++) {
+                rk4(dim, x, t, h[j], par, f, edosys);
+                t = t + h[j];
+        }
+        // Store the last result in the result vector
+        result[j] = x[0];
+        // Compute Error
+        if ((j > 0) && (j < ntries-1)) {
+            E[j] = fabs((result[j] - result[j-1])/(result[j+1] - result[j]));           
+            if (j < 10) {
+                printf("%s%d%s%-20.10lf%s%d%s%-20.10lf%s%d%s%-20.10lf%s%d%s%-20.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j], " | E[", j, "] = ", E[j]);
+            }
+            else if ((j >= 10) && (j < 100))  {
+                printf("%s%d%s%-19.10lf%s%d%s%-19.10lf%s%d%s%-19.10lf%s%d%s%-19.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j], " | E[", j, "] = ", E[j]);
+            }
+            else {
+                printf("%s%d%s%-18.10lf%s%d%s%-18.10lf%s%d%s%-18.10lf%s%d%s%-18.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j], " | E[", j, "] = ", E[j]);
+            }
+        }
+        else {
+            if (j < 10) {
+                printf("%s%d%s%-20.10lf%s%d%s%-20.10lf%s%d%s%-20.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j]);
+            }
+            else if ((j >= 10) && (j < 100)) {
+                printf("%s%d%s%-19.10lf%s%d%s%-19.10lf%s%d%s%-19.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j]);
+            }
+            else {
+                printf("%s%d%s%-18.10lf%s%d%s%-18.10lf%s%d%s%-18.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j]);
+            }
+        }
+    }
+
+    for (int j = 2; j < ntries-1; j++) {
+        ratio = E[j-1]/E[j];
+        printf("%s%d%s%.10lf\n", "  ratio[", j, "] = ", ratio);
+    }
+    
+    // Free Memory
+    free(f); free(h), free(IC), free(result), free(E);
+}

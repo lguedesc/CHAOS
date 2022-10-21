@@ -666,3 +666,39 @@ void EH_p_write_dyndiag_results(FILE *output_file, int dim, int nrms, int *rmsin
         fprintf(output_file, "\n");
     }
 }
+
+void write_convtest_results(FILE *output_file, int dim, double t, double *x, int mode) {
+    // Check the mode of the function
+    if (mode == 0) {
+        fprintf(output_file, "Time ");
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "x[%i] ", i);
+        }
+        fprintf(output_file, "\n");
+    }
+    else if (mode == 1) {
+        // Header
+        fprintf(output_file, "Time ");
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "x[%i] ", i);
+        }
+        fprintf(output_file, "\n");
+        // Initial Conditions
+        fprintf(output_file, "%.10f ", t);
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", x[i]);
+        }
+        fprintf(output_file, "\n");
+    } 
+    else if (mode == 2) {
+        fprintf(output_file, "%.10f ", t);
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", x[i]);
+        }
+        fprintf(output_file, "\n");
+    }
+    else {
+        printf("Failed to write results in output file using mode (%d)...\n", mode);
+        return;
+    }
+}

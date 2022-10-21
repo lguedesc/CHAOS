@@ -21,6 +21,7 @@
 #include "modules/EH_dyndiag.h"
 #include "modules/EH_fdyndiag.h"
 #include "modules/EH_forcedbasin.h"
+#include "modules/convergence_test.h"
 
 void execute_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
 void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
@@ -56,7 +57,7 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
 #define NUM_OF_SYSTEMS 8
 #define NUM_OF_EH_SYSTEMS 4
 #define NUM_OF_TOOLBOXES 2
-#define NUM_OF_MODULES 10 
+#define NUM_OF_MODULES 11 
 
 char *systemNames[NUM_OF_SYSTEMS] = {"Duffing Oscillator",
                                      "2 DoF Duffing Oscillator",
@@ -75,7 +76,8 @@ char *EHsystemNames[NUM_OF_EH_SYSTEMS] = {"Polynomial Bistable Energy Harvester"
 char *toolboxesNames[NUM_OF_TOOLBOXES] = {"Nonlinear Dynamics Toolbox",
                                           "Energy Harvesting Toolbox"};
                             
-char *moduleNames[NUM_OF_MODULES] = {"Time Series",
+char *moduleNames[NUM_OF_MODULES] = {"Convergence Test",
+                                     "Time Series",
                                      "Poincare Map",
                                      "Lyapunov Exponents (Method from Wolf et al., 1985)", 
                                      "Full Time Series (Integrator + Poincare Map + Lyapunov Exponents)",
@@ -173,33 +175,36 @@ int main (void) {
 void execute_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname) {
     switch (module) {
         case 1:
-            timeseries(funcname, outputname, edosys);
+            convergence_test(funcname, outputname, edosys);
             break;
         case 2:
-            poincaremap(funcname, outputname, edosys);
+            timeseries(funcname, outputname, edosys);
             break;
         case 3:
-            lyapunov_exp_wolf(funcname, outputname, edosys);
+            poincaremap(funcname, outputname, edosys);
             break;
         case 4:
-            ftime_series(funcname, outputname, edosys);
+            lyapunov_exp_wolf(funcname, outputname, edosys);
             break;
         case 5:
-            bifurcation(funcname, outputname, edosys);
+            ftime_series(funcname, outputname, edosys);
             break;
         case 6:
-            fbifurcation(funcname, outputname, edosys);
+            bifurcation(funcname, outputname, edosys);
             break;
         case 7:
-            dyndiag(funcname, outputname, edosys);
+            fbifurcation(funcname, outputname, edosys);
             break;
         case 8:
-            fdyndiag(funcname, outputname, edosys);
+            dyndiag(funcname, outputname, edosys);
             break;
         case 9:
-            epbasin(funcname, outputname, edosys);
+            fdyndiag(funcname, outputname, edosys);
             break;
         case 10:
+            epbasin(funcname, outputname, edosys);
+            break;
+        case 11:
             forcedbasin(funcname, outputname, edosys);
             break;    
         default:
@@ -211,33 +216,36 @@ void execute_modules(unsigned int module, void (*edosys)(int, double *, double, 
 void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname) {
     switch (module) {
         case 1:
-            EH_timeseries(funcname, outputname, edosys);
+            convergence_test(funcname, outputname, edosys);
             break;
         case 2:
-            poincaremap(funcname, outputname, edosys);
+            EH_timeseries(funcname, outputname, edosys);
             break;
         case 3:
-            lyapunov_exp_wolf(funcname, outputname, edosys);
+            poincaremap(funcname, outputname, edosys);
             break;
         case 4:
-            EH_ftime_series(funcname, outputname, edosys);
+            lyapunov_exp_wolf(funcname, outputname, edosys);
             break;
         case 5:
-            EH_bifurcation(funcname, outputname, edosys);
+            EH_ftime_series(funcname, outputname, edosys);
             break;
         case 6:
-            EH_fbifurcation(funcname, outputname, edosys);
+            EH_bifurcation(funcname, outputname, edosys);
             break;
         case 7:
-            EH_dyndiag(funcname, outputname, edosys);
+            EH_fbifurcation(funcname, outputname, edosys);
             break;
         case 8:
-            EH_fdyndiag(funcname, outputname, edosys);
+            EH_dyndiag(funcname, outputname, edosys);
             break;
         case 9:
-            epbasin(funcname, outputname, edosys);
+            EH_fdyndiag(funcname, outputname, edosys);
             break;
         case 10:
+            epbasin(funcname, outputname, edosys);
+            break;
+        case 11:
             EH_forcedbasin(funcname, outputname, edosys);
             break;    
         default:

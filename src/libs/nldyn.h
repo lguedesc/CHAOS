@@ -52,4 +52,5 @@ void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
                                          int indexX, int indexY, double *parrange, double *par, int npar,
                                          void (*edosys)(int, double *, double, double *, double *), int bifmode, 
                                          void (*write_results)(FILE *output_file, int dim, double **results, int pixels));
-
+void convergence_test_solution(int dim, int N, double t, double tf, double *x, int ntries, double *par, 
+                                void (*edosys)(int, double *, double, double *, double *));
