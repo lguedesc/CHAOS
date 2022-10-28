@@ -14,6 +14,82 @@
 // 2 Nonlinear DoF EH
 // Oscillator-Pendulum Energy Harvester
 
+// General Nonlinear Systems
+void halvorsen(int dim, double *x, double t, double *par, double *f) {
+    // OMEGA = par[0]
+    // a = par[1]
+
+    if (dim == 3) {
+        f[0] = -par[1]*x[0] - 4.0*x[1] - 4.0*x[2] - x[1]*x[1];
+        f[1] = -par[1]*x[1] - 4.0*x[2] - 4.0*x[0] - x[2]*x[2];
+        f[2] = -par[1]*x[2] - 4.0*x[0] - 4.0*x[1] - x[0]*x[0];
+    } 
+    else if (dim == 12) {
+        f[0] = -par[1]*x[0] - 4.0*x[1] - 4.0*x[2] - x[1]*x[1];
+        f[1] = -par[1]*x[1] - 4.0*x[2] - 4.0*x[0] - x[2]*x[2];
+        f[2] = -par[1]*x[2] - 4.0*x[0] - 4.0*x[1] - x[0]*x[0];
+        for (int i = 0; i < 3; i++) {   
+            f[3 + i] = -par[1]*x[3+i] + (-4.0 - 2.0*x[1])*x[6+i] - 4.0*x[9+i];
+            f[6 + i] = -par[1]*x[6+i] + (-4.0 - 2.0*x[2])*x[9+i] - 4.0*x[3+i];
+            f[9 + i] = -par[1]*x[9+i] + (-4.0 - 2.0*x[0])*x[3+i] - 4.0*x[6+i];
+        }
+    }
+    else {
+        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
+        exit(1);
+    }    
+}
+
+void lorenz(int dim, double *x, double t, double *par, double *f) {
+    // OMEGA = par[0]
+    // sigma = par[1]
+    // rho = par[2]
+    // beta = par[3]
+    if (dim == 3) {
+        f[0] = par[1]*(x[1] - x[0]);
+        f[1] = x[0]*(par[2] - x[2]) - x[1];
+        f[2] = x[0]*x[1] - par[3]*x[2];    
+    } 
+    else if (dim == 12) {
+        f[0] = par[1]*(x[1] - x[0]);
+        f[1] = x[0]*(par[2] - x[2]) - x[1];
+        f[2] = x[0]*x[1] - par[3]*x[2];
+        for (int i = 0; i < 3; i++) {
+            f[3 + i] = par[1]*(x[6 + i] - x[3 + i]);
+            f[6 + i] = (par[2] - x[2])*x[3 + i] - x[6 + i] - x[0]*x[9 + i];
+            f[9 + i] = x[1]*x[3 + i] + x[0]*x[6 + i] - par[3]*x[9 + i];
+        }
+    }
+    else {
+        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
+        exit(1);
+    }    
+}
+
+void lotka_volterra_predator_prey(int dim, double *x, double t, double *par, double *f) {
+    // OMEGA   = par[0]   |   x[0] = x => number of prey      
+    // alpha   = par[1]   |   x[1] = y => number of predator  
+    // beta    = par[2]   |        
+    // delta   = par[3]   |      
+    // gamma   = par[4]   |           
+    
+    if (dim == 2) {
+        f[0] = par[1]*x[0] - par[2]*x[0]*x[1];
+        f[1] = par[3]*x[0]*x[1] - par[4]*x[1]; 
+    } 
+    else if (dim == 6) {
+        f[0] = par[1]*x[0] - par[2]*x[0]*x[1];
+        f[1] = par[3]*x[0]*x[1] - par[4]*x[1];
+        for (int i = 0; i < 2; i ++) {
+            // Add later
+            f[2 + i] = (par[1] - par[2]*x[1])*x[2+i] - par[2]*x[0]*x[4+i];
+            f[4 + i] = (-par[4] + par[3]*x[0])*x[4+i] + par[3]*x[1]*x[2+i];
+        }
+    }
+}
+
+
+// Nonlinear Oscillators
 void falksma(int dim, double *x, double t, double *par, double *f) {
     // OMEGA   = par[0]
     // gamma   = par[1]
@@ -110,31 +186,6 @@ void duffing(int dim, double *x, double t, double *par, double *f) {
     }    
 }
 
-void halvorsen(int dim, double *x, double t, double *par, double *f) {
-    // OMEGA = par[0]
-    // a = par[1]
-
-    if (dim == 3) {
-        f[0] = -par[1]*x[0] - 4.0*x[1] - 4.0*x[2] - x[1]*x[1];
-        f[1] = -par[1]*x[1] - 4.0*x[2] - 4.0*x[0] - x[2]*x[2];
-        f[2] = -par[1]*x[2] - 4.0*x[0] - 4.0*x[1] - x[0]*x[0];
-    } 
-    else if (dim == 12) {
-        f[0] = -par[1]*x[0] - 4.0*x[1] - 4.0*x[2] - x[1]*x[1];
-        f[1] = -par[1]*x[1] - 4.0*x[2] - 4.0*x[0] - x[2]*x[2];
-        f[2] = -par[1]*x[2] - 4.0*x[0] - 4.0*x[1] - x[0]*x[0];
-        for (int i = 0; i < 3; i++) {   
-            f[3 + i] = 0;       // Add Linearized Eqs Later
-            f[6 + i] = 0;       // Add Linearized Eqs Later
-            f[9 + i] = 0;       // Add Linearized Eqs Later
-        }
-    }
-    else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
-    }    
-}
-
 void linear_oscillator(int dim, double *x, double t, double *par, double *f) {
     // OMEGA = par[0]
     // gamma = par[1]
@@ -155,80 +206,6 @@ void linear_oscillator(int dim, double *x, double t, double *par, double *f) {
     else {
         printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
         exit(1);
-    }
-}
-
-void lorenz(int dim, double *x, double t, double *par, double *f) {
-    // OMEGA = par[0]
-    // sigma = par[1]
-    // rho = par[2]
-    // beta = par[3]
-    if (dim == 3) {
-        f[0] = par[1]*(x[1] - x[0]);
-        f[1] = x[0]*(par[2] - x[2]) - x[1];
-        f[2] = x[0]*x[1] - par[3]*x[2];    
-    } 
-    else if (dim == 12) {
-        f[0] = par[1]*(x[1] - x[0]);
-        f[1] = x[0]*(par[2] - x[2]) - x[1];
-        f[2] = x[0]*x[1] - par[3]*x[2];
-        for (int i = 0; i < 3; i++) {
-            f[3 + i] = par[1]*(x[6 + i] - x[3 + i]);
-            f[6 + i] = (par[2] - x[2])*x[3 + i] - x[6 + i] - x[0]*x[9 + i];
-            f[9 + i] = x[1]*x[3 + i] + x[0]*x[6 + i] - par[3]*x[9 + i];
-        }
-    }
-    else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
-    }    
-}
-
-void duffing_cldyn(int dim, double *x, double t, double *par, double *f) {
-    // OMEGA = par[0]
-    // gamma = par[1]
-    // zeta = par[2]
-    // alpha = par[3]
-    // beta = par[4]
-    
-    if (dim == 2) {
-        f[0] = x[1];
-        f[1] = par[1]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0];    
-    } 
-    else if (dim == 6) {
-        f[0] = x[1];
-        f[1] = par[1]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0];
-        for (int i = 0; i < 2; i++) {
-            f[2 + i] = x[4 + i];
-            f[4 + i] = par[1]*sin(par[0] * t) - 2*par[2]*x[4 + i] - par[3]*x[2 + i] - par[4]*x[2 + i]*x[2 + i]*x[2 + i];
-        }
-    }
-    else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
-    }    
-}
-
-void bistable_EH(int dim, double *x, double t, double *par, double *f) {
-    /* OMEGA = par[0]   |   chi    = par[5]  
-       gamma = par[1]   |   varphi = par[6]
-       zeta  = par[2]   |   kappa  = par[7]
-       alpha = par[3]   |
-       beta  = par[4]   |                */
-    if (dim == 3) {
-        f[0] = x[1];
-        f[1] = par[1]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] + par[5]*x[2];
-        f[2] = -par[6]*x[2] - par[7]*x[1];
-    }
-    else if (dim == 12) {
-        f[0] = x[1];
-        f[1] = par[1]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] + par[5]*x[2];
-        f[2] = -par[6]*x[2] - par[7]*x[1];
-        for (int i = 0; i < 3; i ++) {
-            f[3 + i] = x[6 + i];
-            f[6 + i] = -par[3]*x[3 + i] - 3*par[4]*x[0]*x[0]*x[3 + i] - 2*par[2]*x[6 + i] + par[5]*x[9 + i];
-            f[9 + i] = -par[6]*x[9 + i] - par[7]*x[6 + i];
-        }
     }
 }
 
@@ -258,6 +235,52 @@ void duffing_2DoF(int dim, double *x, double t, double *par, double *f) {
 			            + 2*par[3]*x[8 + i] - 2*par[3]*x[16 + i]);
         }
     }    
+}
+
+void duffing_vanderpol(int dim, double *x, double t, double *par, double *f) {
+    // OMEGA   = par[0]   |   zeta = par[5]      
+    // gamma   = par[1]   |     
+    // epsilon = par[2]   |        
+    // alpha   = par[3]   |      
+    // beta    = par[4]   |           
+    
+    if (dim == 2) {
+        f[0] = x[1];
+        f[1] = par[1]*par[0]*par[0]*sin(par[0]*t) - par[2]*x[1]*(x[0]*x[0] - 1) - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] - par[5]*x[0]*x[0]*x[0]*x[0]*x[0]; 
+    } 
+    else if (dim == 6) {
+        f[0] = x[1];
+        f[1] = par[1]*par[0]*par[0]*sin(par[0]*t) - par[2]*x[1]*(x[0]*x[0] - 1) - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] - par[5]*x[0]*x[0]*x[0]*x[0]*x[0]; 
+        for (int i = 0; i < 2; i ++) {
+            // Add later
+            f[2 + i] = x[4 + i];
+            f[4 + i] = (-par[3] - 3*par[4]*x[0]*x[0] - 2*par[2]*x[0]*x[1] - 5*par[5]*x[0]*x[0]*x[0]*x[0])*x[2 + i] - par[2]*(x[0]*x[0] - 1)*x[4 + i];
+        }
+    }
+}
+
+// Mechanical Energy Harvesters
+void bistable_EH(int dim, double *x, double t, double *par, double *f) {
+    /* OMEGA = par[0]   |   chi    = par[5]  
+       gamma = par[1]   |   varphi = par[6]
+       zeta  = par[2]   |   kappa  = par[7]
+       alpha = par[3]   |
+       beta  = par[4]   |                */
+    if (dim == 3) {
+        f[0] = x[1];
+        f[1] = par[1]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] + par[5]*x[2];
+        f[2] = -par[6]*x[2] - par[7]*x[1];
+    }
+    else if (dim == 12) {
+        f[0] = x[1];
+        f[1] = par[1]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] + par[5]*x[2];
+        f[2] = -par[6]*x[2] - par[7]*x[1];
+        for (int i = 0; i < 3; i ++) {
+            f[3 + i] = x[6 + i];
+            f[6 + i] = -par[3]*x[3 + i] - 3*par[4]*x[0]*x[0]*x[3 + i] - 2*par[2]*x[6 + i] + par[5]*x[9 + i];
+            f[9 + i] = -par[6]*x[9 + i] - par[7]*x[6 + i];
+        }
+    }
 }
 
 void tristable_EH(int dim, double *x, double t, double *par, double *f) {
@@ -357,54 +380,37 @@ void pend_oscillator_wout_pend_EH(int dim, double *x, double t, double *par, dou
         f[4] = -par[8]*x[3] - par[7]*x[4];
         for (int i = 0; i < 5; i ++) {
             f[5 + i] = x[10 + i];
-            f[10 + i] = 0;
+            f[10 + i] = -(1/(1 + par[3]))*(par[6]*par[6]*x[5+i] + 2*par[4]*x[10+i]);
             f[15 + i] = x[20 + i];
-            f[20 + i] = 0;
-            f[25 + i] = 0;
+            f[20 + i] = -(1/(1 + par[3]))*(x[15+i] + 2*par[5]*x[20+i] - par[9]*x[25+i]);
+            f[25 + i] = -par[8]*x[20+i] - par[7]*x[25+i];
         }
     }
 }
 
-void lotka_volterra_predator_prey(int dim, double *x, double t, double *par, double *f) {
-    // OMEGA   = par[0]   |   x[0] = x => number of prey      
-    // alpha   = par[1]   |   x[1] = y => number of predator  
-    // beta    = par[2]   |        
-    // delta   = par[3]   |      
-    // gamma   = par[4]   |           
-    
-    if (dim == 2) {
-        f[0] = par[1]*x[0] - par[2]*x[0]*x[1];
-        f[1] = par[3]*x[0]*x[1] - par[4]*x[1]; 
-    } 
-    else if (dim == 6) {
-        f[0] = par[1]*x[0] - par[2]*x[0]*x[1];
-        f[1] = par[3]*x[0]*x[1] - par[4]*x[1];
-        for (int i = 0; i < 2; i ++) {
-            // Add later
-            f[2 + i] = 0;
-            f[4 + i] = 0;
-        }
-    }
-}
 
-void duffing_vanderpol(int dim, double *x, double t, double *par, double *f) {
-    // OMEGA   = par[0]   |   zeta = par[5]      
-    // gamma   = par[1]   |     
-    // epsilon = par[2]   |        
-    // alpha   = par[3]   |      
-    // beta    = par[4]   |           
+// Not Implemented
+void duffing_cldyn(int dim, double *x, double t, double *par, double *f) {
+    // OMEGA = par[0]
+    // gamma = par[1]
+    // zeta = par[2]
+    // alpha = par[3]
+    // beta = par[4]
     
     if (dim == 2) {
         f[0] = x[1];
-        f[1] = par[1]*par[0]*par[0]*sin(par[0]*t) - par[2]*x[1]*(x[0]*x[0] - 1) - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] - par[5]*x[0]*x[0]*x[0]*x[0]*x[0]; 
+        f[1] = par[1]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0];    
     } 
     else if (dim == 6) {
         f[0] = x[1];
-        f[1] = par[1]*par[0]*par[0]*sin(par[0]*t) - par[2]*x[1]*(x[0]*x[0] - 1) - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] - par[5]*x[0]*x[0]*x[0]*x[0]*x[0]; 
-        for (int i = 0; i < 2; i ++) {
-            // Add later
+        f[1] = par[1]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0];
+        for (int i = 0; i < 2; i++) {
             f[2 + i] = x[4 + i];
-            f[4 + i] = (-par[3] - 3*par[4]*x[0]*x[0] - 2*par[2]*x[0]*x[1] - 5*par[5]*x[0]*x[0]*x[0]*x[0])*x[2 + i] - par[2]*(x[0]*x[0] - 1)*x[4 + i];
+            f[4 + i] = par[1]*sin(par[0] * t) - 2*par[2]*x[4 + i] - par[3]*x[2 + i] - par[4]*x[2 + i]*x[2 + i]*x[2 + i];
         }
     }
+    else {
+        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
+        exit(1);
+    }    
 }

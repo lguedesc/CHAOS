@@ -1,4 +1,4 @@
-1. Make a module to general dynamical systems (Lorenz, Lotk-Volterra, Halvorsen, Rossler, etc)
+1. Finish the general dynamical systems toolbox (Lorenz, Lotk-Volterra, Halvorsen, Rossler, etc) - Add missing modules and change timestep to be defined by the user, not by number of divisions
 2. Make a Simplified Version of the Forced Basin of Attraction based only on poincare map, without lyapunov.
 3. Implement Runge-Kutta-Fehlberg (RK45) Method and integrate with the existing modules, letting the user decide which integrator he/she wants to use.
 4. Implement Lyapunov Exponents Cloned Dynamics method and integrate with the existing modules, letting the user decide which method he/she wants to use.

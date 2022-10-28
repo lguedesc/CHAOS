@@ -23,23 +23,31 @@
 #include "modules/EH_forcedbasin.h"
 #include "modules/convergence_test.h"
 
-void execute_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
+void execute_OS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
 void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
+void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
 
-#define FUNC_1 duffing
-#define OUTPUTNAME_1 "duffing"
-#define FUNC_2 duffing_2DoF                 
-#define OUTPUTNAME_2 "duffing_2DoF"
-#define FUNC_3 vanderpol
-#define OUTPUTNAME_3 "vanderpol"
-#define FUNC_4 pendulum
-#define OUTPUTNAME_4 "pendulum"
-#define FUNC_5 falksma
-#define OUTPUTNAME_5 "falk_sma"
-#define FUNC_6 linear_oscillator
-#define OUTPUTNAME_6 "linear_oscillator"
-#define FUNC_7 duffing_vanderpol
-#define OUTPUTNAME_7 "duffing_vanderpol"
+#define GNL_FUNC_1 lorenz
+#define GNL_OUTPUTNAME_1 "lorenz"
+#define GNL_FUNC_2 lotka_volterra_predator_prey
+#define GNL_OUTPUTNAME_2 "lotka-volterra"
+#define GNL_FUNC_3 halvorsen
+#define GNL_OUTPUTNAME_3 "halvorsen"
+
+#define OS_FUNC_1 duffing
+#define OS_OUTPUTNAME_1 "duffing"
+#define OS_FUNC_2 duffing_2DoF                 
+#define OS_OUTPUTNAME_2 "duffing_2DoF"
+#define OS_FUNC_3 vanderpol
+#define OS_OUTPUTNAME_3 "vanderpol"
+#define OS_FUNC_4 pendulum
+#define OS_OUTPUTNAME_4 "pendulum"
+#define OS_FUNC_5 falksma
+#define OS_OUTPUTNAME_5 "falk_sma"
+#define OS_FUNC_6 linear_oscillator
+#define OS_OUTPUTNAME_6 "linear_oscillator"
+#define OS_FUNC_7 duffing_vanderpol
+#define OS_OUTPUTNAME_7 "duffing_vanderpol"
 
 #define EH_FUNC_1 bistable_EH               
 #define EH_OUTPUTNAME_1 "bistable_EH"
@@ -51,26 +59,33 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
 #define EH_OUTPUTNAME_4 "pend_oscillator_EH(without_pend)"
 
 #define MAX_NAMELENGTH 120
-#define NUM_OF_SYSTEMS 7
+#define NUM_OF_OS_SYSTEMS 7
 #define NUM_OF_EH_SYSTEMS 4
-#define NUM_OF_TOOLBOXES 2
-#define NUM_OF_MODULES 11 
+#define NUM_OF_GNL_SYSTEMS 3
+#define NUM_OF_TOOLBOXES 3
+#define NUM_OF_MODULES 11
+#define NUM_OF_GNL_MODULES 3 
 
-char *systemNames[NUM_OF_SYSTEMS] = {"Duffing Oscillator",
-                                     "2 DoF Duffing Oscillator",
-                                     "Van Der Pol Oscillator",
-                                     "Simple Pendulum",
-                                     "Falk Shape Memory Alloy Oscillator",
-                                     "Linear Oscillator",
-                                     "Duffing-Van Der Pol Oscillator"};
+char *systemNames[NUM_OF_OS_SYSTEMS] = {"Duffing Oscillator",
+                                        "2 DoF Duffing Oscillator",
+                                        "Van Der Pol Oscillator",
+                                        "Simple Pendulum",
+                                        "Falk Shape Memory Alloy Oscillator",
+                                        "Linear Oscillator",
+                                        "Duffing-Van Der Pol Oscillator"};
  
 char *EHsystemNames[NUM_OF_EH_SYSTEMS] = {"Polynomial Bistable Energy Harvester",
                                           "Polynomial Tristable Energy Harvester",
                                           "Pendulum-Oscillator Energy Harvester",
                                           "Pendulum-Oscillator Energy Harvester (Without Pendulum)"};
 
+char *GNLsystemNames[NUM_OF_GNL_SYSTEMS] = {"Lorenz System",
+                                            "Lotka-Volterra Predator-Prey Model",
+                                            "Halvorsen System"};
+
 char *toolboxesNames[NUM_OF_TOOLBOXES] = {"Nonlinear Dynamics Toolbox",
-                                          "Energy Harvesting Toolbox"};
+                                          "Harmonic Nonlinear Oscillators Toolbox",
+                                          "Mechanical Energy Harvesting Toolbox"};
                             
 char *moduleNames[NUM_OF_MODULES] = {"Convergence Test",
                                      "Time Series",
@@ -84,28 +99,49 @@ char *moduleNames[NUM_OF_MODULES] = {"Convergence Test",
                                      "Basin of Attraction (Fixed Points)",
                                      "Basin of Attraction (Forced)"};
 
-void call_system(unsigned int system, unsigned int module) {
-    switch(system) {
+char *GNLmoduleNames[NUM_OF_GNL_MODULES] = {"Convergence Test",
+                                            "Time Series",
+                                            "Lyapunov Exponents (Method from Wolf et al., 1985)"};
+
+void call_GNL_system(unsigned int system, unsigned int module) {
+        switch(system) {
         case 1:
-            execute_modules(module, FUNC_1, OUTPUTNAME_1, systemNames[0]);
+            execute_GNL_modules(module, GNL_FUNC_1, GNL_OUTPUTNAME_1, GNLsystemNames[0]);
             break;
         case 2:
-            execute_modules(module, FUNC_2, OUTPUTNAME_2, systemNames[1]);
+            execute_GNL_modules(module, GNL_FUNC_2, GNL_OUTPUTNAME_2, GNLsystemNames[1]);
             break;
         case 3:
-            execute_modules(module, FUNC_3, OUTPUTNAME_3, systemNames[2]);
+            execute_GNL_modules(module, GNL_FUNC_3, GNL_OUTPUTNAME_3, GNLsystemNames[2]);
+            break;
+        default:
+            printf("Invalid...\n");
+            exit(0);
+    }
+}
+
+void call_OS_system(unsigned int system, unsigned int module) {
+    switch(system) {
+        case 1:
+            execute_OS_modules(module, OS_FUNC_1, OS_OUTPUTNAME_1, systemNames[0]);
+            break;
+        case 2:
+            execute_OS_modules(module, OS_FUNC_2, OS_OUTPUTNAME_2, systemNames[1]);
+            break;
+        case 3:
+            execute_OS_modules(module, OS_FUNC_3, OS_OUTPUTNAME_3, systemNames[2]);
             break;
         case 4:
-            execute_modules(module, FUNC_4, OUTPUTNAME_4, systemNames[3]);
+            execute_OS_modules(module, OS_FUNC_4, OS_OUTPUTNAME_4, systemNames[3]);
             break;
         case 5:
-            execute_modules(module, FUNC_5, OUTPUTNAME_5, systemNames[4]);
+            execute_OS_modules(module, OS_FUNC_5, OS_OUTPUTNAME_5, systemNames[4]);
             break;
         case 6:
-            execute_modules(module, FUNC_6, OUTPUTNAME_6, systemNames[5]);
+            execute_OS_modules(module, OS_FUNC_6, OS_OUTPUTNAME_6, systemNames[5]);
             break;
         case 7:
-            execute_modules(module, FUNC_7, OUTPUTNAME_7, systemNames[6]);
+            execute_OS_modules(module, OS_FUNC_7, OS_OUTPUTNAME_7, systemNames[6]);
             break;  
         default:
             printf("Invalid...\n");
@@ -143,10 +179,14 @@ int main (void) {
     welcome_header(MAX_NAMELENGTH);
     toolbox = choose_option(toolboxesNames, NUM_OF_TOOLBOXES, MAX_NAMELENGTH, "Toolbox");
     if (toolbox == 1) {
-        identify_simulation(toolbox, &system, &module, toolboxesNames, systemNames, moduleNames, NUM_OF_SYSTEMS, MAX_NAMELENGTH, NUM_OF_MODULES);
-        call_system(system, module);
+        identify_simulation(toolbox, &system, &module, toolboxesNames, GNLsystemNames, GNLmoduleNames, NUM_OF_GNL_SYSTEMS, MAX_NAMELENGTH, NUM_OF_GNL_MODULES);
+        call_GNL_system(system, module);
     }
     else if (toolbox == 2) {
+        identify_simulation(toolbox, &system, &module, toolboxesNames, systemNames, moduleNames, NUM_OF_OS_SYSTEMS, MAX_NAMELENGTH, NUM_OF_MODULES);
+        call_OS_system(system, module);
+    }
+    else if (toolbox == 3) {
         identify_simulation(toolbox, &system, &module, toolboxesNames, EHsystemNames, moduleNames, NUM_OF_EH_SYSTEMS, MAX_NAMELENGTH, NUM_OF_MODULES);
         call_EH_system(system, module);
     }
@@ -165,7 +205,7 @@ int main (void) {
     end_of_execution(MAX_NAMELENGTH);
 }
 
-void execute_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname) {
+void execute_OS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname) {
     switch (module) {
         case 1:
             convergence_test(funcname, outputname, edosys);
@@ -241,6 +281,23 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
         case 11:
             EH_forcedbasin(funcname, outputname, edosys);
             break;    
+        default:
+            printf("Invalid Module\n");
+            exit(0);
+    }
+}
+
+void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname) {
+    switch (module) {
+        case 1:
+            convergence_test(funcname, outputname, edosys);
+            break;
+        case 2:
+            timeseries(funcname, outputname, edosys);
+            break;
+        case 3:
+            lyapunov_exp_wolf(funcname, outputname, edosys);
+            break;
         default:
             printf("Invalid Module\n");
             exit(0);
