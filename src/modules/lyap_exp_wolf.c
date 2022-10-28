@@ -4,7 +4,7 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
-#include "../libs/edosystems.h"
+#include "../libs/odesystems.h"
 #include "../libs/nldyn.h"
 #include "../libs/iofiles.h"
 #include "lyap_exp_wolf.h"

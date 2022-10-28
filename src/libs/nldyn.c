@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
-#include "edosystems.h"
+#include "odesystems.h"
 #ifdef _OPENMP
     #include <omp.h>
 #else

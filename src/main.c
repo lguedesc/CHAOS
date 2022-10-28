@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "libs/interface.h"
-#include "libs/edosystems.h"
+#include "libs/odesystems.h"
 #include "modules/time_series.h"
 #include "modules/poinc_map.h"
 #include "modules/lyap_exp_wolf.h"

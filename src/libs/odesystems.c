@@ -334,8 +334,6 @@ void pend_oscillator_EH(int dim, double *x, double t, double *par, double *f) {
     }
 }
 
-
-
 void pend_oscillator_wout_pend_EH(int dim, double *x, double t, double *par, double *f) {
     // OMEGA   = par[0]   |   zeta_z    = par[5]          |   x[0] = x       
     // gamma   = par[1]   |   OMEGA_s   = par[6]          |   x[1] = dx/dt   
