@@ -38,11 +38,8 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
 #define OUTPUTNAME_5 "falk_sma"
 #define FUNC_6 linear_oscillator
 #define OUTPUTNAME_6 "linear_oscillator"
-#define FUNC_7 lotka_volterra_predator_prey
-#define OUTPUTNAME_7 "predator_prey"
-#define FUNC_8 duffing_vanderpol
-#define OUTPUTNAME_8 "duffing_vanderpol"
-
+#define FUNC_7 duffing_vanderpol
+#define OUTPUTNAME_7 "duffing_vanderpol"
 
 #define EH_FUNC_1 bistable_EH               
 #define EH_OUTPUTNAME_1 "bistable_EH"
@@ -54,7 +51,7 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
 #define EH_OUTPUTNAME_4 "pend_oscillator_EH(without_pend)"
 
 #define MAX_NAMELENGTH 120
-#define NUM_OF_SYSTEMS 8
+#define NUM_OF_SYSTEMS 7
 #define NUM_OF_EH_SYSTEMS 4
 #define NUM_OF_TOOLBOXES 2
 #define NUM_OF_MODULES 11 
@@ -65,7 +62,6 @@ char *systemNames[NUM_OF_SYSTEMS] = {"Duffing Oscillator",
                                      "Simple Pendulum",
                                      "Falk Shape Memory Alloy Oscillator",
                                      "Linear Oscillator",
-                                     "Lotka-Volterra: Predator-Prey Model",
                                      "Duffing-Van Der Pol Oscillator"};
  
 char *EHsystemNames[NUM_OF_EH_SYSTEMS] = {"Polynomial Bistable Energy Harvester",
@@ -110,10 +106,7 @@ void call_system(unsigned int system, unsigned int module) {
             break;
         case 7:
             execute_modules(module, FUNC_7, OUTPUTNAME_7, systemNames[6]);
-            break;
-        case 8:
-            execute_modules(module, FUNC_8, OUTPUTNAME_8, systemNames[7]);
-            break;    
+            break;  
         default:
             printf("Invalid...\n");
             exit(0);
