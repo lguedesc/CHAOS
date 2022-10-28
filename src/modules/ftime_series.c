@@ -9,6 +9,10 @@
 #include "../libs/iofiles.h"
 #include "ftime_series.h"
 
+static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper, int *np, int *ndiv, int* trans, double *t, double **par, double **x);
+static void print_attractor(FILE* info, int attrac, int maxper, char *mode);
+static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double h, double t, double *x, double *par, char* funcname, char* mode);
+
 void ftime_series(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     
     // Declare Program Parameters
@@ -25,7 +29,7 @@ void ftime_series(char *funcname, char* outputname, void (*edosys)(int, double *
     double t;
     double *x = NULL;
     double *par = NULL;
-    fts_read_params_and_IC(input_filename, &DIM, &nPar, &maxPer, &nP, &nDiv, &trans, &t, &par, &x);
+    read_params_and_IC(input_filename, &DIM, &nPar, &maxPer, &nP, &nDiv, &trans, &t, &par, &x);
     // Define Timestep
     double h = (2 * pi) / (nDiv * par[0]); // par[0] = OMEGA
     // Create output files to store results
@@ -44,13 +48,13 @@ void ftime_series(char *funcname, char* outputname, void (*edosys)(int, double *
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);                                     // Create info output file
     
     // Print information in screen and in info file
-    fts_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, h, t, x, par, funcname, "screen");
-    fts_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, h, t, x, par, funcname, "file");
+    print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, h, t, x, par, funcname, "screen");
+    print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, h, t, x, par, funcname, "file");
     // Call solution
     full_timeseries_solution(output_ftimeseries, output_poinc, DIM, nP, nDiv, trans, &attractor, maxPer, t, &x, h, par, edosys, write_results_ftimeseries);
     // Print attractor in screen and in info file
-    fts_print_attractor(output_info, attractor, maxPer, "screen");
-    fts_print_attractor(output_info, attractor, maxPer, "file");
+    print_attractor(output_info, attractor, maxPer, "screen");
+    print_attractor(output_info, attractor, maxPer, "file");
     
     // Close output file
     fclose(output_ftimeseries);
@@ -63,7 +67,7 @@ void ftime_series(char *funcname, char* outputname, void (*edosys)(int, double *
     free(x); free(par);
 }
 
-void fts_read_params_and_IC(char *name, int *dim, int *npar, int *maxper, int *np, int *ndiv, int* trans, double *t, double **par, double **x) {
+static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper, int *np, int *ndiv, int* trans, double *t, double **par, double **x) {
    // Open input file
     FILE *input = fopen(name, "r");
     if (input == NULL) {
@@ -101,7 +105,7 @@ void fts_read_params_and_IC(char *name, int *dim, int *npar, int *maxper, int *n
     /* The user is responsible to free (x) and (par) after the function call */
 }
 
-void fts_print_attractor(FILE* info, int attrac, int maxper, char *mode) {
+static void print_attractor(FILE* info, int attrac, int maxper, char *mode) {
     if (strcmp(mode, "file") == 0) {
         if (attrac < maxper) { 
             fprintf(info, "%-30s%s%-7s%d\n", "  Type of Motion: ", " ", "Period-", attrac); 
@@ -145,7 +149,7 @@ void fts_print_attractor(FILE* info, int attrac, int maxper, char *mode) {
     
 }
 
-void fts_print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double h, double t, double *x, double *par, char* funcname, char* mode) {
+static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double h, double t, double *x, double *par, char* funcname, char* mode) {
     //Get time and date
     time_t tm;
     time(&tm);

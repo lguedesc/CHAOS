@@ -10,6 +10,10 @@
 #include "../libs/energyharvest.h"
 #include "EH_ftime_series.h"
 
+static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper, int *np, int *ndiv, int* trans, int *nrms, double *t, double **par, double **x, int **rmsindex);
+static void print_attractor(FILE* info, int attrac, int maxper, char *mode);
+static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, int nrms, double h, double t, double *x, double *par, int *rmsindex, char* funcname, char* mode);
+
 void EH_ftime_series(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     
     // Declare Program Parameters
@@ -30,7 +34,7 @@ void EH_ftime_series(char *funcname, char* outputname, void (*edosys)(int, doubl
     int *rmsindex = NULL;           // Indexes of state variables that will be submitted to RMS calculation
     double *xRMS = NULL;            // State Variables RMS values at permanent regime
     double *overallxRMS = NULL;     // State Variables RMS values at transient + permanent regime
-    EH_fts_read_params_and_IC(input_filename, &DIM, &nPar, &maxPer, &nP, &nDiv, &trans, &nRMS, &t, &par, &x, &rmsindex);
+    read_params_and_IC(input_filename, &DIM, &nPar, &maxPer, &nP, &nDiv, &trans, &nRMS, &t, &par, &x, &rmsindex);
     // Define Timestep
     double h = (2 * pi) / (nDiv * par[0]); // par[0] = OMEGA
     // Create output files to store results
@@ -49,15 +53,15 @@ void EH_ftime_series(char *funcname, char* outputname, void (*edosys)(int, doubl
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);                                     // Create info output file
     
     // Print information in screen and in info file
-    EH_fts_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, "screen");
-    EH_fts_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, "file");
+    print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, "screen");
+    print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, "file");
     // Call solution
     EH_full_timeseries_solution(output_ftimeseries, output_poinc, DIM, nP, nDiv, trans, &attractor, maxPer, t, &x, h, par, nRMS, rmsindex, &xRMS, &overallxRMS, edosys, write_results_ftimeseries);
     // Print RMS calculations in screen and in info file
     EH_print_RMS(output_info, nRMS, rmsindex, xRMS, overallxRMS);
     // Print attractor in screen and in info file
-    EH_fts_print_attractor(output_info, attractor, maxPer, "screen");
-    EH_fts_print_attractor(output_info, attractor, maxPer, "file");
+    print_attractor(output_info, attractor, maxPer, "screen");
+    print_attractor(output_info, attractor, maxPer, "file");
     
     // Close output file
     fclose(output_ftimeseries);
@@ -71,7 +75,7 @@ void EH_ftime_series(char *funcname, char* outputname, void (*edosys)(int, doubl
     free(xRMS); free(overallxRMS);
 }
 
-void EH_fts_read_params_and_IC(char *name, int *dim, int *npar, int *maxper, int *np, int *ndiv, int* trans, int *nrms, double *t, double **par, double **x, int **rmsindex) {
+static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper, int *np, int *ndiv, int* trans, int *nrms, double *t, double **par, double **x, int **rmsindex) {
    // Open input file
     FILE *input = fopen(name, "r");
     if (input == NULL) {
@@ -117,7 +121,7 @@ void EH_fts_read_params_and_IC(char *name, int *dim, int *npar, int *maxper, int
     /* The user is responsible to free (x) and (par) after the function call */
 }
 
-void EH_fts_print_attractor(FILE* info, int attrac, int maxper, char *mode) {
+static void print_attractor(FILE* info, int attrac, int maxper, char *mode) {
     if (strcmp(mode, "file") == 0) {
         if (attrac < maxper) { 
             fprintf(info, "%-30s%s%-7s%d\n", "  Type of Motion: ", " ", "Period-", attrac); 
@@ -161,7 +165,7 @@ void EH_fts_print_attractor(FILE* info, int attrac, int maxper, char *mode) {
     
 }
 
-void EH_fts_print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, int nrms, double h, double t, double *x, double *par, int *rmsindex, char* funcname, char* mode) {
+static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, int nrms, double h, double t, double *x, double *par, int *rmsindex, char* funcname, char* mode) {
     //Get time and date
     time_t tm;
     time(&tm);

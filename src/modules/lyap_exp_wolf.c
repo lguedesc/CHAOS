@@ -9,6 +9,9 @@
 #include "../libs/iofiles.h"
 #include "lyap_exp_wolf.h"
 
+static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int* trans, double *t, double **par, double **x);
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, double h, double t, double *x, double *par, char* funcname, char* mode);
+
 void lyapunov_exp_wolf(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     
     // Declare Program Parameters
@@ -24,7 +27,7 @@ void lyapunov_exp_wolf(char *funcname, char* outputname, void (*edosys)(int, dou
     double t;
     double *x = NULL;
     double *par = NULL;
-    lyap_wolf_read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &trans, &t, &par, &x);
+    read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &trans, &t, &par, &x);
 
     // Define Timestep
     double h = (2 * pi) / (nDiv * par[0]); // par[0] = OMEGA
@@ -41,8 +44,8 @@ void lyapunov_exp_wolf(char *funcname, char* outputname, void (*edosys)(int, dou
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);                     // Create info output file
     
     // Print information in screen and info output file
-    lyap_wolf_print_info(output_info, DIM, nPar, nP, nDiv, trans, h, t, x, par, funcname, "screen");
-    lyap_wolf_print_info(output_info, DIM, nPar, nP, nDiv, trans, h, t, x, par, funcname, "file");
+    print_info(output_info, DIM, nPar, nP, nDiv, trans, h, t, x, par, funcname, "screen");
+    print_info(output_info, DIM, nPar, nP, nDiv, trans, h, t, x, par, funcname, "file");
     
     // Call solution
     lyap_wolf_solution(output_lyap, DIM, nP, nDiv, trans, t, &x, h, par, edosys, write_results_lyap);
@@ -57,7 +60,7 @@ void lyapunov_exp_wolf(char *funcname, char* outputname, void (*edosys)(int, dou
     free(x); free(par);
 }
 
-void lyap_wolf_read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int* trans, double *t, double **par, double **x) {
+static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int* trans, double *t, double **par, double **x) {
    // Open input file
     FILE *input = fopen(name, "r");
     if (input == NULL) {
@@ -94,7 +97,7 @@ void lyap_wolf_read_params_and_IC(char *name, int *dim, int *npar, int *np, int 
     /* The user is responsible to free (x) and (par) after the function call */
 }
 
-void lyap_wolf_print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, double h, double t, double *x, double *par, char* funcname, char* mode) {
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, double h, double t, double *x, double *par, char* funcname, char* mode) {
     //Get time and date
     time_t tm;
     time(&tm);

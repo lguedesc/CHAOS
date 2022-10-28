@@ -9,6 +9,9 @@
 #include "../libs/iofiles.h"
 #include "dyndiag.h"
 
+static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *indexX, int *indexY, double **x, int *bifmode);
+static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int indexX, int indexY, int bifmode, char* funcname, char* mode);
+
 void dyndiag(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     // Declare Program Parameters
     const double pi = 4 * atan(1);  // Pi number definition
@@ -27,7 +30,7 @@ void dyndiag(char *funcname, char* outputname, void (*edosys)(int, double *, dou
     double *x = NULL;
     double *par = NULL;
     double *parRange = NULL;
-    dyndiag_read_params_and_IC(input_filename, &DIM, &nPar, &maxPer, &nP, &nDiv, &trans, &t, &par, &parRange, &indexX, &indexY, &x, &dMode);
+    read_params_and_IC(input_filename, &DIM, &nPar, &maxPer, &nP, &nDiv, &trans, &t, &par, &parRange, &indexX, &indexY, &x, &dMode);
     
     // Create output files to store results
     char output_dyndiag_name[200];
@@ -42,8 +45,8 @@ void dyndiag(char *funcname, char* outputname, void (*edosys)(int, double *, dou
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);                            // Create info output file
     
     // Print information in screen and info output file
-    dyndiag_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, indexX, indexY, dMode, funcname, "screen");
-    dyndiag_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, indexX, indexY, dMode, funcname, "file");
+    print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, indexX, indexY, dMode, funcname, "screen");
+    print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, indexX, indexY, dMode, funcname, "file");
     // To store the runtime of the program
     //double time_spent = 0.0;
     //clock_t time_i = clock();
@@ -66,7 +69,7 @@ void dyndiag(char *funcname, char* outputname, void (*edosys)(int, double *, dou
 
 }
 
-void dyndiag_read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *indexX, int *indexY, double **x, int *bifmode) {
+static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *indexX, int *indexY, double **x, int *bifmode) {
     // Open input file
     FILE *input = fopen(name, "r");
     if (input == NULL) {
@@ -119,7 +122,7 @@ void dyndiag_read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  i
     /* The user is responsible to free (x), (par) or (parrange) after the function call */
 }
 
-void dyndiag_print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int indexX, int indexY, int bifmode, char* funcname, char* mode) {
+static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int indexX, int indexY, int bifmode, char* funcname, char* mode) {
     //Get time and date
     time_t tm;
     time(&tm);

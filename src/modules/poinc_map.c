@@ -9,6 +9,9 @@
 #include "../libs/iofiles.h"
 #include "poinc_map.h"
 
+static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int* trans, double *t, double **par, double **x);
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, double h, double t, double *x, double *par, char* funcname, char* mode);
+
 void poincaremap(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     
     // Declare Program Parameters
@@ -24,7 +27,7 @@ void poincaremap(char *funcname, char* outputname, void (*edosys)(int, double *,
     double t;
     double *x = NULL;
     double *par = NULL;
-    poinc_read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &trans, &t, &par, &x);
+    read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &trans, &t, &par, &x);
     
     // Define Timestep
     double h = (2 * pi) / (nDiv * par[0]); // par[0] = OMEGA
@@ -42,8 +45,8 @@ void poincaremap(char *funcname, char* outputname, void (*edosys)(int, double *,
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);  // Create info output file
     
     // Print information in screen and info output file
-    poinc_print_info(output_info, DIM, nPar, nP, nDiv, trans, h, t, x, par, funcname, "screen");
-    poinc_print_info(output_info, DIM, nPar, nP, nDiv, trans, h, t, x, par, funcname, "file");
+    print_info(output_info, DIM, nPar, nP, nDiv, trans, h, t, x, par, funcname, "screen");
+    print_info(output_info, DIM, nPar, nP, nDiv, trans, h, t, x, par, funcname, "file");
     
     // Call solution
     poincare_solution(output_poinc, DIM, nP, nDiv, trans, t, x, h, par, edosys, write_results);
@@ -57,7 +60,7 @@ void poincaremap(char *funcname, char* outputname, void (*edosys)(int, double *,
     free(x); free(par);
 }
 
-void poinc_read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int* trans, double *t, double **par, double **x) {
+static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int* trans, double *t, double **par, double **x) {
    // Open input file
     FILE *input = fopen(name, "r");
     if (input == NULL) {
@@ -94,7 +97,7 @@ void poinc_read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndi
     /* The user is responsible to free (x) and (par) after the function call */
 }
 
-void poinc_print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, double h, double t, double *x, double *par, char* funcname, char* mode) {
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, double h, double t, double *x, double *par, char* funcname, char* mode) {
     //Get time and date
     time_t tm;
     time(&tm);
