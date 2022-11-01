@@ -9,6 +9,9 @@
 #include "../libs/iofiles.h"
 #include "epbasin.h"
 
+static void read_params_and_IC(char *name, int *dim, int *npar,  int *np, int *ndiv, double *t, double **par, double **icrange, int *indexX, int *indexY, double **x);
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, double t, double *x, double *par, double *icrange, int indexX, int indexY, char* funcname, char* mode);
+
 void epbasin(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     // Declare Program Parameters
     const double pi = 4 * atan(1);  // Pi number definition
@@ -24,7 +27,7 @@ void epbasin(char *funcname, char* outputname, void (*edosys)(int, double *, dou
     double *x = NULL;
     double *par = NULL;
     double *icRange = NULL;
-    epbasin_read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &t, &par, &icRange, &indexX, &indexY, &x);
+    read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &t, &par, &icRange, &indexX, &indexY, &x);
     
     // Create output files to store results
     char output_epbasin_name[200];
@@ -39,8 +42,8 @@ void epbasin(char *funcname, char* outputname, void (*edosys)(int, double *, dou
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);                            // Create info output file
     
     // Print information in screen and info output file
-    epbasin_print_info(output_info, DIM, nPar, nP, nDiv, t, x, par, icRange, indexX, indexY, funcname, "screen");
-    epbasin_print_info(output_info, DIM, nPar, nP, nDiv, t, x, par, icRange, indexX, indexY, funcname, "file");
+    print_info(output_info, DIM, nPar, nP, nDiv, t, x, par, icRange, indexX, indexY, funcname, "screen");
+    print_info(output_info, DIM, nPar, nP, nDiv, t, x, par, icRange, indexX, indexY, funcname, "file");
     // To store the runtime of the program
     //double time_spent = 0.0;
     //clock_t time_i = clock();
@@ -62,7 +65,7 @@ void epbasin(char *funcname, char* outputname, void (*edosys)(int, double *, dou
 
 }
 
-void epbasin_read_params_and_IC(char *name, int *dim, int *npar,  int *np, int *ndiv, double *t, double **par, double **icrange, int *indexX, int *indexY, double **x) {
+static void read_params_and_IC(char *name, int *dim, int *npar,  int *np, int *ndiv, double *t, double **par, double **icrange, int *indexX, int *indexY, double **x) {
     // Open input file
     FILE *input = fopen(name, "r");
     if (input == NULL) {
@@ -112,7 +115,7 @@ void epbasin_read_params_and_IC(char *name, int *dim, int *npar,  int *np, int *
     /* The user is responsible to free (x), (par) or (parrange) after the function call */
 }
 
-void epbasin_print_info(FILE *info ,int dim, int npar, int np, int ndiv, double t, double *x, double *par, double *icrange, int indexX, int indexY, char* funcname, char* mode) {
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, double t, double *x, double *par, double *icrange, int indexX, int indexY, char* funcname, char* mode) {
     //Get time and date
     time_t tm;
     time(&tm);

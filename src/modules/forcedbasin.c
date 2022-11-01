@@ -9,6 +9,9 @@
 #include "../libs/iofiles.h"
 #include "forcedbasin.h"
 
+static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **icrange, int *indexX, int *indexY, double **x);
+static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *icrange, int indexX, int indexY, char* funcname, char* mode);
+
 void forcedbasin(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     // Declare Program Parameters
     const double pi = 4 * atan(1);  // Pi number definition
@@ -26,7 +29,7 @@ void forcedbasin(char *funcname, char* outputname, void (*edosys)(int, double *,
     double *x = NULL;
     double *par = NULL;
     double *icRange = NULL;
-    forcedbasin_read_params_and_IC(input_filename, &DIM, &nPar, &maxPer, &nP, &nDiv, &trans, &t, &par, &icRange, &indexX, &indexY, &x);
+    read_params_and_IC(input_filename, &DIM, &nPar, &maxPer, &nP, &nDiv, &trans, &t, &par, &icRange, &indexX, &indexY, &x);
     
     // Create output files to store results
     char output_dyndiag_name[200];
@@ -41,8 +44,8 @@ void forcedbasin(char *funcname, char* outputname, void (*edosys)(int, double *,
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);                            // Create info output file
     
     // Print information in screen and info output file
-    forcedbasin_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, icRange, indexX, indexY, funcname, "screen");
-    forcedbasin_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, icRange, indexX, indexY, funcname, "file");
+    print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, icRange, indexX, indexY, funcname, "screen");
+    print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, icRange, indexX, indexY, funcname, "file");
     // To store the runtime of the program
     //double time_spent = 0.0;
     //clock_t time_i = clock();
@@ -65,7 +68,7 @@ void forcedbasin(char *funcname, char* outputname, void (*edosys)(int, double *,
 
 }
 
-void forcedbasin_read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **icrange, int *indexX, int *indexY, double **x) {
+static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **icrange, int *indexX, int *indexY, double **x) {
     // Open input file
     FILE *input = fopen(name, "r");
     if (input == NULL) {
@@ -116,7 +119,7 @@ void forcedbasin_read_params_and_IC(char *name, int *dim, int *npar, int *maxper
     /* The user is responsible to free (x), (par) or (parrange) after the function call */
 }
 
-void forcedbasin_print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *icrange, int indexX, int indexY, char* funcname, char* mode) {
+static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *icrange, int indexX, int indexY, char* funcname, char* mode) {
     //Get time and date
     time_t tm;
     time(&tm);

@@ -9,6 +9,9 @@
 #include "../libs/iofiles.h"
 #include "time_series.h"
 
+static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, double *t, double **par, double **x);
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, double h, double t, double *x, double *par, char* funcname, char* mode);
+
 void timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     
     // Declare Program Parameters
@@ -23,7 +26,7 @@ void timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, 
     double t;
     double *x = NULL;
     double *par = NULL;
-    tseries_read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &t, &par, &x);
+    read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &t, &par, &x);
     
     // Define Timestep
     double h = (2 * pi) / (nDiv * par[0]); // par[0] = OMEGA
@@ -41,8 +44,8 @@ void timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, 
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);  // Create info output file
     
     // Print information in screen and info output file
-    tseries_print_info(output_info, DIM, nPar, nP, nDiv, h, t, x, par, funcname, "screen");
-    tseries_print_info(output_info, DIM, nPar, nP, nDiv, h, t, x, par, funcname, "file");
+    print_info(output_info, DIM, nPar, nP, nDiv, h, t, x, par, funcname, "screen");
+    print_info(output_info, DIM, nPar, nP, nDiv, h, t, x, par, funcname, "file");
     
     /*
     // Time variables
@@ -67,7 +70,7 @@ void timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, 
     free(x); free(par);
 }
 
-void tseries_read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, double *t, double **par, double **x) {
+static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, double *t, double **par, double **x) {
    // Open input file
     FILE *input = fopen(name, "r");
     if (input == NULL) {
@@ -105,7 +108,7 @@ void tseries_read_params_and_IC(char *name, int *dim, int *npar, int *np, int *n
     /* The user is responsible to free (x) and (par) after the function call */
 }
 
-void tseries_print_info(FILE *info ,int dim, int npar, int np, int ndiv, double h, double t, double *x, double *par, char* funcname, char* mode) {
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, double h, double t, double *x, double *par, char* funcname, char* mode) {
     //Get time and date
     time_t tm;
     time(&tm);

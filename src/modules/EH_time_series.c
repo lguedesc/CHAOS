@@ -10,6 +10,9 @@
 #include "../libs/energyharvest.h"
 #include "EH_time_series.h"
 
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, int nrms, double h, double t, double *x, double *par, int *rmsindex, char* funcname, char* mode);
+static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int *trans, int *nrms, double *t, double **par, double **x, int **rmsindex);
+
 void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     
     // Declare Program Parameters
@@ -29,7 +32,7 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     double *xRMS = NULL;            // State Variables RMS values at permanent regime
     double *overallxRMS = NULL;     // State Variables RMS values at transient + permanent regime
     
-    EH_tseries_read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &trans, &nRMS, &t, &par, &x, &rmsindex);
+    read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &trans, &nRMS, &t, &par, &x, &rmsindex);
     
     // Define Timestep
     double h = (2 * pi) / (nDiv * par[0]); // par[0] = OMEGA
@@ -47,8 +50,8 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);  // Create info output file
     
     // Print information in screen and info output file
-    EH_tseries_print_info(output_info, DIM, nPar, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname,"screen");
-    EH_tseries_print_info(output_info, DIM, nPar, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, "file");
+    print_info(output_info, DIM, nPar, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname,"screen");
+    print_info(output_info, DIM, nPar, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, "file");
     
     /*
     // Time variables
@@ -78,7 +81,7 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     free(xRMS); free(overallxRMS);
 }
 
-void EH_tseries_read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int *trans, int *nrms, double *t, double **par, double **x, int **rmsindex) {
+static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int *trans, int *nrms, double *t, double **par, double **x, int **rmsindex) {
    // Open input file
     FILE *input = fopen(name, "r");
     if (input == NULL) {
@@ -123,7 +126,7 @@ void EH_tseries_read_params_and_IC(char *name, int *dim, int *npar, int *np, int
     /* The user is responsible to free (x) and (par) after the function call */
 }
 
-void EH_tseries_print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, int nrms, double h, double t, double *x, double *par, int *rmsindex, char* funcname, char* mode) {
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, int nrms, double h, double t, double *x, double *par, int *rmsindex, char* funcname, char* mode) {
     //Get time and date
     time_t tm;
     time(&tm);

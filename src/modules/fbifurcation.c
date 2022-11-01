@@ -9,6 +9,9 @@
 #include "../libs/iofiles.h"
 #include "fbifurcation.h"
 
+static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *parindex, double **x, int *bifmode);
+static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int parindex, int bifmode, char* edosys, char* mode);
+
 void fbifurcation(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     // Declare Program Parameters
     const double pi = 4 * atan(1);  // Pi number definition
@@ -26,7 +29,7 @@ void fbifurcation(char *funcname, char* outputname, void (*edosys)(int, double *
     double *x = NULL;
     double *par = NULL;
     double *parRange = NULL;
-    fbifurc_read_params_and_IC(input_filename, &DIM, &nPar, &maxPer, &nP, &nDiv, &trans, &t, &par, &parRange, &parIndex, &x, &bMode);
+    read_params_and_IC(input_filename, &DIM, &nPar, &maxPer, &nP, &nDiv, &trans, &t, &par, &parRange, &parIndex, &x, &bMode);
     
     // Create output files to store results
     char output_bifurc_name[200];
@@ -44,8 +47,8 @@ void fbifurcation(char *funcname, char* outputname, void (*edosys)(int, double *
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);                            // Create info output file
     
     // Print information in screen and info output file
-    fbifurc_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, parIndex, bMode, funcname, "screen");
-    fbifurc_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, parIndex, bMode, funcname, "file");
+    print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, parIndex, bMode, funcname, "screen");
+    print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, parIndex, bMode, funcname, "file");
     // To store the runtime of the program
     //double time_spent = 0.0;
     //clock_t time_i = clock();
@@ -67,7 +70,7 @@ void fbifurcation(char *funcname, char* outputname, void (*edosys)(int, double *
 
 }
 
-void fbifurc_read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *parindex, double **x, int *bifmode) {
+static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *parindex, double **x, int *bifmode) {
     // Open input file
     FILE *input = fopen(name, "r");
     if (input == NULL) {
@@ -114,7 +117,7 @@ void fbifurc_read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  i
     /* The user is responsible to free (x), (par) or (parrange) after the function call */
 }
 
-void fbifurc_print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int parindex, int bifmode, char* edosys, char* mode) {
+static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int parindex, int bifmode, char* edosys, char* mode) {
     //Get time and date
     time_t tm;
     time(&tm);

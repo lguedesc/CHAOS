@@ -10,6 +10,9 @@
 #include "../libs/energyharvest.h"
 #include "EH_forcedbasin.h"
 
+static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **icrange, int *indexX, int *indexY, double **x, int *nrms, int **rmsindex);
+static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *icrange, int indexX, int indexY, int nrms, int *rmsindex, char* funcname, char* mode);
+
 void EH_forcedbasin(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     // Declare Program Parameters
     const double pi = 4 * atan(1);  // Pi number definition
@@ -30,7 +33,7 @@ void EH_forcedbasin(char *funcname, char* outputname, void (*edosys)(int, double
     double *icRange = NULL;
     int *rmsindex = NULL;           // Indexes of state variables that will be submitted to RMS calculation
 
-    EH_forcedbasin_read_params_and_IC(input_filename, &DIM, &nPar, &maxPer, &nP, &nDiv, &trans, &t, &par, &icRange, &indexX, &indexY, &x, &nRMS, &rmsindex);
+    read_params_and_IC(input_filename, &DIM, &nPar, &maxPer, &nP, &nDiv, &trans, &t, &par, &icRange, &indexX, &indexY, &x, &nRMS, &rmsindex);
     
     // Create output files to store results
     char output_dyndiag_name[200];
@@ -45,8 +48,8 @@ void EH_forcedbasin(char *funcname, char* outputname, void (*edosys)(int, double
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);                            // Create info output file
     
     // Print information in screen and info output file
-    EH_forcedbasin_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, icRange, indexX, indexY, nRMS, rmsindex, funcname, "screen");
-    EH_forcedbasin_print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, icRange, indexX, indexY, nRMS, rmsindex, funcname, "file");
+    print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, icRange, indexX, indexY, nRMS, rmsindex, funcname, "screen");
+    print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, icRange, indexX, indexY, nRMS, rmsindex, funcname, "file");
     // To store the runtime of the program
     //double time_spent = 0.0;
     //clock_t time_i = clock();
@@ -70,7 +73,7 @@ void EH_forcedbasin(char *funcname, char* outputname, void (*edosys)(int, double
 
 }
 
-void EH_forcedbasin_read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **icrange, int *indexX, int *indexY, double **x, int *nrms, int **rmsindex) {
+static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **icrange, int *indexX, int *indexY, double **x, int *nrms, int **rmsindex) {
     // Open input file
     FILE *input = fopen(name, "r");
     if (input == NULL) {
@@ -129,7 +132,7 @@ void EH_forcedbasin_read_params_and_IC(char *name, int *dim, int *npar, int *max
     /* The user is responsible to free (x), (par) or (parrange) after the function call */
 }
 
-void EH_forcedbasin_print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *icrange, int indexX, int indexY, int nrms, int *rmsindex, char* funcname, char* mode) {
+static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *icrange, int indexX, int indexY, int nrms, int *rmsindex, char* funcname, char* mode) {
     //Get time and date
     time_t tm;
     time(&tm);
