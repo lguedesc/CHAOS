@@ -349,6 +349,20 @@ void print_customcalc(int nprintscr, int *printscrindex, double *customvalue, ch
     partition(2, maxlength);
     // Print Custom calculations on screen
     for (int q = 0; q < nprintscr; q++) {
-        printf("%-*s %-*g\n", spcname, customnames[printscrindex[q]], spcvalue, customnames[printscrindex[q]]);
+        printf("  %s%-*s %-*g\n", customnames[printscrindex[q]], spcname - strlen(customnames[printscrindex[q]]) - 2, ":", spcvalue, customvalue[printscrindex[q]]);
     }
+    partition(2, maxlength);
+}
+
+void fprint_customcalc(FILE *output_file, int nprintscr, int *printscrindex, double *customvalue, char *customnames[], size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    fpartition(output_file, 2, maxlength);
+    fprintf(output_file, "  Results of Custom Calculations:\n");
+    fpartition(output_file, 2, maxlength);
+    // Print Custom calculations on screen
+    for (int q = 0; q < nprintscr; q++) {
+        fprintf(output_file, "  %s%-*s %-*g\n", customnames[printscrindex[q]], spcname - strlen(customnames[printscrindex[q]]) - 2, ":", spcvalue, customvalue[printscrindex[q]]);
+    }
+    fpartition(output_file, 2, maxlength);
 }

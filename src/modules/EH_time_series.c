@@ -69,23 +69,23 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     clock_t time_i = clock();
     */
     // Call solution
+    
     EH_rk4_solution(output_rk4, DIM, nP, nDiv, trans, t, x, h, par, nRMS, rmsindex, &xRMS, &overallxRMS, edosys, EH_write_timeseries_results, 
-                    nCustomValues, &customnames[nCustomValues], &customValues, nPrintf, printfindex, nPrintscr, printscrindex, customfunc);
-
+                                           nCustomValues, customnames, &customValues, nPrintf, printfindex, nPrintscr, printscrindex, customfunc);
     /*
     clock_t time_f = clock();
     time_spent += (double)(time_f - time_i) / CLOCKS_PER_SEC; 
     printf("The elapsed time is %f seconds\n", time_spent);
     */
-
+    
     // Print RMS calculations in screen and in info file
     print_RMS(nRMS, rmsindex, xRMS, overallxRMS, maxLen, percName);
     fprint_RMS(output_info, nRMS, rmsindex, xRMS, overallxRMS, maxLen, percName);
     // Print custom calculations on screen and in info file
-    /*if (nCustomValues > 0) {
+    if (nCustomValues > 0) {
         print_customcalc(nPrintscr, printscrindex, customValues, &customnames[nCustomValues], maxLen, percName);
-    }*/
-    
+        fprint_customcalc(output_info, nPrintscr, printscrindex, customValues, &customnames[nCustomValues], maxLen, percName);
+    }    
     // Close output file
     fclose(output_rk4);
     fclose(output_info);

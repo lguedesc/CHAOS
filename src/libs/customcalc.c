@@ -18,13 +18,10 @@ void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, int 
         // Input Base Excitation Acceleration
         customvalue[2] = par[1]*par[0]*par[0]*sin(par[0]*t);
         // Accumulate the value of the square of the Input Base Excitation Displacement
-        //customvalue[3] = customvalue[3] + (customvalue[0]*customvalue[0]);
         customvalue[3] = RMS(&customvalue[3], customvalue[0], N, 0);
         // Accumulate the value of the square of the Input Base Excitation Velocity
-        //customvalue[4] = customvalue[4] + (customvalue[1]*customvalue[1]);
         customvalue[4] = RMS(&customvalue[4], customvalue[1], N, 0);
         // Accumulate the value of the square of the Input Base Excitation Acceleration
-        //customvalue[5] = customvalue[5] + (customvalue[2]*customvalue[2]);
         customvalue[5] = RMS(&customvalue[5], customvalue[2], N, 0);
     }
     // Check if mode is equal to "end"
