@@ -18,20 +18,23 @@ void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, int 
         // Input Base Excitation Acceleration
         customvalue[2] = par[1]*par[0]*par[0]*sin(par[0]*t);
         // Accumulate the value of the square of the Input Base Excitation Displacement
-        customvalue[3] = customvalue[3] + (customvalue[0]*customvalue[0]);
+        //customvalue[3] = customvalue[3] + (customvalue[0]*customvalue[0]);
+        customvalue[3] = RMS(&customvalue[3], customvalue[0], N, 0);
         // Accumulate the value of the square of the Input Base Excitation Velocity
-        customvalue[4] = customvalue[4] + (customvalue[1]*customvalue[1]);
+        //customvalue[4] = customvalue[4] + (customvalue[1]*customvalue[1]);
+        customvalue[4] = RMS(&customvalue[4], customvalue[1], N, 0);
         // Accumulate the value of the square of the Input Base Excitation Acceleration
-        customvalue[5] = customvalue[5] + (customvalue[2]*customvalue[2]);
+        //customvalue[5] = customvalue[5] + (customvalue[2]*customvalue[2]);
+        customvalue[5] = RMS(&customvalue[5], customvalue[2], N, 0);
     }
     // Check if mode is equal to "end"
     else if (strcmp(mode, "end") == 0) {
         // RMS of the Input Base Excitation Displacement
-        customvalue[6] = sqrt(customvalue[3] / N);
+        customvalue[6] = RMS(&customvalue[3], customvalue[0], N, 1);
         // RMS of the Input Base Excitation Velocity
-        customvalue[7] = sqrt(customvalue[4] / N);
+        customvalue[7] = RMS(&customvalue[4], customvalue[1], N, 1);
         // RMS of the Input Base Excitation Acceleration
-        customvalue[8] = sqrt(customvalue[5] / N);
+        customvalue[8] = RMS(&customvalue[5], customvalue[2], N, 1);
         // Peak to Peak Average Electrical Output Power
         customvalue[9] = (par[5]*par[6]/par[7])*xrms[2];
         // Peak to Peak Average Mechanical Input Power of the relative motion with respect to the base
@@ -51,8 +54,8 @@ void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, int 
         customnames[6] = "xbRMS";
         customnames[7] = "dxbRMS";
         customnames[8] = "ddxbRMS";
-        customnames[9] = "Pout";
-        customnames[10] = "Pin";
-        customnames[11] = "Eff";
+        customnames[9] = "PoutAvg";
+        customnames[10] = "PinAvg";
+        customnames[11] = "EffAvg";
     }
 }

@@ -98,7 +98,7 @@ void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
                 customfunc(x, par, t, (*xrms), N, ncustomvalues, &customnames[ncustomvalues], (*customvalues), "table");
             }
             // Write results in output file
-            write_results(output_file, dim, t, x, ncustomvalues, &customnames[ncustomvalues], (*customvalues), nprintf, printfindex, 1);
+            write_results(output_file, dim, t, x, ncustomvalues, &customnames[ncustomvalues], (*customvalues), nprintf, printfindex, 2);
         }
     }
     // Compute RMS values of state variables

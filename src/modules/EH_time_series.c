@@ -3,18 +3,22 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include <time.h>
+#include "../libs/interface.h"
 #include "../libs/odesystems.h"
 #include "../libs/nldyn.h"
 #include "../libs/iofiles.h"
 #include "../libs/energyharvest.h"
 #include "EH_time_series.h"
 
-static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, int nrms, double h, double t, double *x, double *par, int *rmsindex, char* funcname, char* mode);
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, int nrms, double h, double t, double *x, double *par, int *rmsindex, char* funcname, 
+                       int ncustomvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex, size_t maxlength, double percname, char* mode);
 static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int *trans, int *nrms, double *t, double **par, double **x, int **rmsindex, int *ncustomvalues, int *nprintf, int *nprintscr, int **printfindex, int **printscrindex);
 
 void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, int, int, char **, double *, char*)) {
     
+    // Parameters related to printing information
+    size_t maxLen = 71;             // Max length of the info printed on the screen and on info file
+    double percName = 0.6;          // Percentage of space occuped by the name of the quantity printed
     // Declare Program Parameters related to the system of equations
     const double pi = 4 * atan(1);  // Pi number definition
     int DIM;                        // Dimension of the system
@@ -35,7 +39,7 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     double *xRMS = NULL;                // State Variables RMS values at permanent regime
     double *overallxRMS = NULL;         // State Variables RMS values at transient + permanent regime
     double *customValues = NULL;        // Variable to store all custom values that custom functions calculate
-    char *customnames[nCustomValues]; // Names of the custom values
+    char *customnames[nCustomValues];   // Names of the custom values
     int *printfindex = NULL;            // Indexes of custom values that will be printed in the output file
     int *printscrindex = NULL;          // Indexes of custom values that will be printed on the screen
 
@@ -56,8 +60,8 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);  // Create info output file
     
     // Print information in screen and info output file
-    print_info(output_info, DIM, nPar, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname,"screen");
-    print_info(output_info, DIM, nPar, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, "file");
+    print_info(output_info, DIM, nPar, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, nCustomValues, nPrintf, printfindex, nPrintscr, printscrindex, maxLen, percName, "screen");
+    print_info(output_info, DIM, nPar, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, nCustomValues, nPrintf, printfindex, nPrintscr, printscrindex, maxLen, percName,"file");
     
     /*
     // Time variables
@@ -74,8 +78,13 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     printf("The elapsed time is %f seconds\n", time_spent);
     */
 
-   // Print RMS calculations in screen and in info file
-    EH_print_RMS(output_info, nRMS, rmsindex, xRMS, overallxRMS);
+    // Print RMS calculations in screen and in info file
+    print_RMS(nRMS, rmsindex, xRMS, overallxRMS, maxLen, percName);
+    fprint_RMS(output_info, nRMS, rmsindex, xRMS, overallxRMS, maxLen, percName);
+    // Print custom calculations on screen and in info file
+    /*if (nCustomValues > 0) {
+        print_customcalc(nPrintscr, printscrindex, customValues, &customnames[nCustomValues], maxLen, percName);
+    }*/
     
     // Close output file
     fclose(output_rk4);
@@ -132,10 +141,10 @@ static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *nd
         fscanf(input, "%d\n", &(*rmsindex)[i]);
     }
     // Assign the number of custom variables to be calculated
-    fscanf(input, "%d", ncustomvalues);
+    fscanf(input, "%d\n", ncustomvalues);
     if (ncustomvalues > 0) {
         // Assign the number of custom variables that will be printed in output file
-        fscanf(input, "%d", nprintf);
+        fscanf(input, "%d\n", nprintf);
         // Allocate memory for printfindex[nprintf]
         *printfindex = malloc((*nprintf) * sizeof **printfindex);
         // Assign indexes to printfindex[nprintf]
@@ -143,7 +152,7 @@ static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *nd
             fscanf(input, "%d\n", &(*printfindex)[i]);
         }
         // Assign the number of custom variables that will be printed on screen
-        fscanf(input, "%d", nprintscr);
+        fscanf(input, "%d\n", nprintscr);
         // Allocate memory for printscrindex[nprintf]
         *printscrindex = malloc((*nprintscr) * sizeof **printscrindex);
         // Assign indexes to printscrindex[nprintscr]
@@ -156,75 +165,22 @@ static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *nd
     /* The user is responsible to free (x) and (par) after the function call */
 }
 
-static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, int nrms, double h, double t, double *x, double *par, int *rmsindex, char* funcname, char* mode) {
-    //Get time and date
-    time_t tm;
-    time(&tm);
-
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, int nrms, double h, double t, double *x, double *par, int *rmsindex, char* funcname, 
+                       int ncustomvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex, size_t maxlength, double percname, char* mode) {
+    
     if (strcmp(mode, "screen") == 0) {   
-        printf("\n  Program Parameters\n");
-        printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20d\n", "  Dimension:", " ", dim);
-        printf("%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
-        printf("%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
-        printf("%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
-        printf("%-30s%s%-20d\n", "  Transient Considered:", " ", trans);
-        printf("%-30s%s%-20g\n", "  Timestep value:", " ", h);
-        printf("  -------------------------------------------------\n");
-        printf("  Initial Conditions\n");
-        printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20g\n", "  Initial Time (t):", " ",  t);
-        for (int i = 0; i < dim; i++) {
-            printf("%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
-        }
-        printf("  -------------------------------------------------\n");
-        printf("  System Parameters\n");
-        printf("  -------------------------------------------------\n");
-        for (int i = 0; i < npar; i++) {
-            printf("%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
-        }
-        printf("  -------------------------------------------------\n");
-        printf("  RMS Calculation Parameters\n");
-        printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20d\n", "  Number of RMS calculations:", " ", nrms);
-        for (int i = 0; i < nrms; i++) {
-            printf("%s%d%-18s%s%-20d\n", "  rmsindex[", i, "]:", " ", rmsindex[i]);
-        }
+        write_prog_parameters_timeseries(dim, npar, np, ndiv, trans, h, maxlength, percname);
+        write_initial_conditions(dim, x, t, maxlength, percname);
+        write_sys_parameters(npar, par, maxlength, percname);
+        write_RMS_calculations_info(nrms, rmsindex, maxlength, percname);
+        write_custom_info_calculations(ncustomvalues, nprintf, printfindex, nprintscr, printscrindex, maxlength, percname);
     } 
     else if (strcmp(mode, "file") == 0) {
-        fprintf(info, "  Date/Time:  %s", ctime(&tm)); 
-        fprintf(info, "\n  =================================================\n");
-        fprintf(info, "  Time Series: %s\n", funcname);
-        fprintf(info, "  =================================================\n\n");
-        fprintf(info, "  Program Parameters\n");
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20d\n", "  Dimension:", " ", dim);
-        fprintf(info, "%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
-        fprintf(info, "%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
-        fprintf(info, "%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
-        fprintf(info, "%-30s%s%-20d\n", "  Transient Considered:", " ", trans);
-        fprintf(info, "%-30s%s%-20g\n", "  Timestep value:", " ", h);
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "  Initial Conditions\n");
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20g\n", "  Initial Time (t):", " ",  t);
-        for (int i = 0; i < dim; i++) {
-            fprintf(info, "%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
-        }
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "  System Parameters\n");
-        fprintf(info, "  -------------------------------------------------\n");
-        for (int i = 0; i < npar; i++) {
-            fprintf(info, "%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
-        }
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "  RMS Calculation Parameters\n");
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20d\n", "  Number of RMS calculations:", " ", nrms);
-        for (int i = 0; i < nrms; i++) {
-            fprintf(info, "%s%d%-18s%s%-20d\n", "  rmsindex[", i, "]:", " ", rmsindex[i]);
-        }
-
+        fwrite_prog_parameters_timeseries(info, funcname, dim, npar, np, ndiv, trans, h, maxlength, percname);
+        fwrite_initial_conditions(info, dim, x, t, maxlength, percname);
+        fwrite_sys_parameters(info, npar, par, maxlength, percname);
+        fwrite_RMS_calculations_info(info, nrms, rmsindex, maxlength, percname);
+        fwrite_custom_info_calculations(info, ncustomvalues, nprintf, printfindex, nprintscr, printscrindex, maxlength, percname);
     }
     else {
         printf("Information could not be printed using mode (%s)...\n", mode);
