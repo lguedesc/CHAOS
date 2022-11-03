@@ -1,0 +1,2 @@
+void customcalc(double *x, double *par, double t, double *xrms, int N, int ncustomvalues, char *customnames[], double *customvalue, char* mode);
+void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, int N, int ncustomvalues, char *customnames[], double *customvalue, char* mode);

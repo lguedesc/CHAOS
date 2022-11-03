@@ -4,6 +4,7 @@
 #include <string.h>
 #include "libs/interface.h"
 #include "libs/odesystems.h"
+#include "libs/customcalc.h"
 #include "modules/time_series.h"
 #include "modules/poinc_map.h"
 #include "modules/lyap_exp_wolf.h"
@@ -23,8 +24,11 @@
 #include "modules/EH_forcedbasin.h"
 #include "modules/convergence_test.h"
 
+
 void execute_OS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
-void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
+void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
+                        void (*customfunc)(double *, double *, double, double *, int, int, char **, double *, char*),
+                        char* outputname, char *funcname);
 void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
 
 #define GNL_FUNC_1 lorenz
@@ -50,12 +54,17 @@ void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, doub
 #define OS_OUTPUTNAME_7 "duffing_vanderpol"
 
 #define EH_FUNC_1 bistable_EH               
+#define EH_CUSTOM_1 customcalc_bistable_EH
 #define EH_OUTPUTNAME_1 "bistable_EH"
-#define EH_FUNC_2 tristable_EH               
+
+#define EH_FUNC_2 tristable_EH
+#define EH_CUSTOM_2 customcalc               
 #define EH_OUTPUTNAME_2 "tristable_EH"
-#define EH_FUNC_3 pend_oscillator_EH               
+#define EH_FUNC_3 pend_oscillator_EH
+#define EH_CUSTOM_3 customcalc                 
 #define EH_OUTPUTNAME_3 "pend_oscillator_EH"
-#define EH_FUNC_4 pend_oscillator_wout_pend_EH               
+#define EH_FUNC_4 pend_oscillator_wout_pend_EH
+#define EH_CUSTOM_4 customcalc                 
 #define EH_OUTPUTNAME_4 "pend_oscillator_EH(without_pend)"
 
 #define MAX_NAMELENGTH 120
@@ -152,16 +161,16 @@ void call_OS_system(unsigned int system, unsigned int module) {
 void call_EH_system(unsigned int system, unsigned int module) {
     switch(system) {
         case 1:
-            execute_EH_modules(module, EH_FUNC_1, EH_OUTPUTNAME_1, EHsystemNames[0]);
+            execute_EH_modules(module, EH_FUNC_1, EH_CUSTOM_1, EH_OUTPUTNAME_1, EHsystemNames[0]);
             break;
         case 2:
-            execute_EH_modules(module, EH_FUNC_2, EH_OUTPUTNAME_2, EHsystemNames[1]);
+            execute_EH_modules(module, EH_FUNC_2, EH_CUSTOM_2, EH_OUTPUTNAME_2, EHsystemNames[1]);
             break;
         case 3:
-            execute_EH_modules(module, EH_FUNC_3, EH_OUTPUTNAME_3, EHsystemNames[2]);
+            execute_EH_modules(module, EH_FUNC_3, EH_CUSTOM_3, EH_OUTPUTNAME_3, EHsystemNames[2]);
             break;
         case 4:
-            execute_EH_modules(module, EH_FUNC_4, EH_OUTPUTNAME_4, EHsystemNames[3]);
+            execute_EH_modules(module, EH_FUNC_4, EH_CUSTOM_4, EH_OUTPUTNAME_4, EHsystemNames[3]);
             break;
         default:
             printf("Invalid...\n");
@@ -246,13 +255,15 @@ void execute_OS_modules(unsigned int module, void (*edosys)(int, double *, doubl
     }
 }
 
-void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname) {
+void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
+                        void (*customfunc)(double *, double *, double, double *, int, int, char **, double *, char*),
+                        char* outputname, char *funcname) {
     switch (module) {
         case 1:
             convergence_test(funcname, outputname, edosys);
             break;
         case 2:
-            EH_timeseries(funcname, outputname, edosys);
+            EH_timeseries(funcname, outputname, edosys, customfunc);
             break;
         case 3:
             poincaremap(funcname, outputname, edosys);

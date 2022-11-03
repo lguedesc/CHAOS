@@ -11,11 +11,11 @@
 #include "EH_time_series.h"
 
 static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, int nrms, double h, double t, double *x, double *par, int *rmsindex, char* funcname, char* mode);
-static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int *trans, int *nrms, double *t, double **par, double **x, int **rmsindex);
+static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int *trans, int *nrms, double *t, double **par, double **x, int **rmsindex, int *ncustomvalues, int *nprintf, int *nprintscr, int **printfindex, int **printscrindex);
 
-void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
+void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, int, int, char **, double *, char*)) {
     
-    // Declare Program Parameters
+    // Declare Program Parameters related to the system of equations
     const double pi = 4 * atan(1);  // Pi number definition
     int DIM;                        // Dimension of the system
     int nP;                         // Number of forcing periods analyzed
@@ -23,17 +23,23 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     int nPar;                       // Number of parameters of the system
     int trans;                      // Number of forcing periods considered transient
     int nRMS;                       // Number of state variables that will be submitted to RMS calculation
+    int nCustomValues = 0;          // If there is a custom function to be called, this is the number of calculations the function is going to perform
+    int nPrintf = 0;                // Number of custom values to be printed in the output file
+    int nPrintscr = 0;              // Number of custom values to be printed on the screen
     // Assign values for program parameters, system parameters and initial conditions
     char *input_filename = get_input_filename();
-    double t;                       // Time
-    double *x = NULL;               // State Variables
-    double *par = NULL;             // Parameters
-    int *rmsindex = NULL;           // Indexes of state variables that will be submitted to RMS calculation
-    double *xRMS = NULL;            // State Variables RMS values at permanent regime
-    double *overallxRMS = NULL;     // State Variables RMS values at transient + permanent regime
-    
-    read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &trans, &nRMS, &t, &par, &x, &rmsindex);
-    
+    double t;                           // Time
+    double *x = NULL;                   // State Variables
+    double *par = NULL;                 // Parameters
+    int *rmsindex = NULL;               // Indexes of state variables that will be submitted to RMS calculation
+    double *xRMS = NULL;                // State Variables RMS values at permanent regime
+    double *overallxRMS = NULL;         // State Variables RMS values at transient + permanent regime
+    double *customValues = NULL;        // Variable to store all custom values that custom functions calculate
+    char *customnames[nCustomValues]; // Names of the custom values
+    int *printfindex = NULL;            // Indexes of custom values that will be printed in the output file
+    int *printscrindex = NULL;          // Indexes of custom values that will be printed on the screen
+
+    read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &trans, &nRMS, &t, &par, &x, &rmsindex, &nCustomValues, &nPrintf, &nPrintscr, &printfindex, &printscrindex);
     // Define Timestep
     double h = (2 * pi) / (nDiv * par[0]); // par[0] = OMEGA
     
@@ -59,7 +65,8 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     clock_t time_i = clock();
     */
     // Call solution
-    EH_rk4_solution(output_rk4, DIM, nP, nDiv, trans, t, x, h, par, nRMS, rmsindex, &xRMS, &overallxRMS, edosys, write_results);
+    EH_rk4_solution(output_rk4, DIM, nP, nDiv, trans, t, x, h, par, nRMS, rmsindex, &xRMS, &overallxRMS, edosys, EH_write_timeseries_results, 
+                    nCustomValues, &customnames[nCustomValues], &customValues, nPrintf, printfindex, nPrintscr, printscrindex, customfunc);
 
     /*
     clock_t time_f = clock();
@@ -78,10 +85,13 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     free(dir);
     free(input_filename);
     free(x); free(par);
-    free(xRMS); free(overallxRMS);
+    free(xRMS); free(overallxRMS); free(rmsindex);
+    if (nCustomValues > 0) {
+        free(customValues); free(printfindex); free(printscrindex);
+    }
 }
 
-static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int *trans, int *nrms, double *t, double **par, double **x, int **rmsindex) {
+static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int *trans, int *nrms, double *t, double **par, double **x, int **rmsindex, int *ncustomvalues, int *nprintf, int *nprintscr, int **printfindex, int **printscrindex) {
    // Open input file
     FILE *input = fopen(name, "r");
     if (input == NULL) {
@@ -119,7 +129,27 @@ static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *nd
     *rmsindex = malloc((*nrms) * sizeof **rmsindex);
     // Assign indexes to rmsindex[nrms] vector
     for (int i = 0; i < *nrms; i++) {
-            fscanf(input, "%d\n", &(*rmsindex)[i]);
+        fscanf(input, "%d\n", &(*rmsindex)[i]);
+    }
+    // Assign the number of custom variables to be calculated
+    fscanf(input, "%d", ncustomvalues);
+    if (ncustomvalues > 0) {
+        // Assign the number of custom variables that will be printed in output file
+        fscanf(input, "%d", nprintf);
+        // Allocate memory for printfindex[nprintf]
+        *printfindex = malloc((*nprintf) * sizeof **printfindex);
+        // Assign indexes to printfindex[nprintf]
+        for (int i = 0; i < *nprintf; i++) {
+            fscanf(input, "%d\n", &(*printfindex)[i]);
+        }
+        // Assign the number of custom variables that will be printed on screen
+        fscanf(input, "%d", nprintscr);
+        // Allocate memory for printscrindex[nprintf]
+        *printscrindex = malloc((*nprintscr) * sizeof **printscrindex);
+        // Assign indexes to printscrindex[nprintscr]
+        for (int i = 0; i < *nprintscr; i++) {
+            fscanf(input, "%d\n", &(*printscrindex)[i]);
+        }
     }
     // Close input file
     fclose(input);

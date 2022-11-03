@@ -667,26 +667,29 @@ void EH_p_write_dyndiag_results(FILE *output_file, int dim, int nrms, int *rmsin
     }
 }
 
-void write_convtest_results(FILE *output_file, int dim, double t, double *x, int mode) {
+void EH_write_timeseries_results(FILE *output_file, int dim, double t, double *x, int ncustomvalues, char *customnames[], double *customvalue, int nprintf, int *printfindex, int mode) {
     // Check the mode of the function
-    if (mode == 0) {
+    if (mode == 1) {
+        // Add Header
         fprintf(output_file, "Time ");
         for (int i = 0; i < dim; i++) {
             fprintf(output_file, "x[%i] ", i);
         }
-        fprintf(output_file, "\n");
-    }
-    else if (mode == 1) {
-        // Header
-        fprintf(output_file, "Time ");
-        for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "x[%i] ", i);
+        if (ncustomvalues > 0) { // If it has any custom calculations, add custom header
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%s ", customnames[printfindex[i]]);
+            } 
         }
         fprintf(output_file, "\n");
-        // Initial Conditions
+        // Add Initial Conditions
         fprintf(output_file, "%.10f ", t);
         for (int i = 0; i < dim; i++) {
             fprintf(output_file, "%.10lf ", x[i]);
+        }
+        if (ncustomvalues > 0) { // If it has any custom calculations, add custom values
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%.10lf ", customvalue[printfindex[i]]);
+            } 
         }
         fprintf(output_file, "\n");
     } 
@@ -694,6 +697,11 @@ void write_convtest_results(FILE *output_file, int dim, double t, double *x, int
         fprintf(output_file, "%.10f ", t);
         for (int i = 0; i < dim; i++) {
             fprintf(output_file, "%.10lf ", x[i]);
+        }
+        if (ncustomvalues > 0) { // If it has any custom calculations, add custom values
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%.10lf ", customvalue[printfindex[i]]);
+            } 
         }
         fprintf(output_file, "\n");
     }

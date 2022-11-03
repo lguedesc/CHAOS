@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdarg.h>
+#include <string.h>
 #include "iofiles.h"
 #include "nldyn.h"
 #ifdef _OPENMP
@@ -43,7 +45,11 @@ void EH_print_RMS(FILE *info, int nRMS, int *rmsindex, double *xRMS, double *ove
 }
 
 // Solutions
-void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double *x, double h, double *par, int nrms, int *rmsindex, double **xrms, double **overallxrms, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, int dim, double t, double *x, int mode)) {
+void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double *x, double h, double *par, int nrms, int *rmsindex, double **xrms, double **overallxrms, 
+                     void (*edosys)(int, double *, double, double *, double *), 
+                     void (*write_results)(FILE *output_file, int dim, double t, double *x, int ncustomvalues, char *customnames[], double *customvalue, int nprintf, int *printfindex, int mode), 
+                     int ncustomvalues, char *customnames[], double **customvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex,
+                     void (*customfunc)(double *x, double *par, double t, double *xrms, int N, int ncustomvalues, char *customnames[], double *customvalue, char* mode)) {
     // Allocate x` = f(x)
     double *f = malloc(dim * sizeof *f);
     // Allocate RMS variables
@@ -54,10 +60,23 @@ void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
         (*xrms)[i] = 0.0;
         (*overallxrms)[i] = 0.0;
     }
+    // Allocate customvalues if there is any custom calculations to be executed
+    if (ncustomvalues > 0) {
+        (*customvalues) = malloc(ncustomvalues * sizeof **customvalues);
+        // Initialize customvalues[ncustomvalues]
+        for (int i = 0; i < ncustomvalues; i++) {
+            (*customvalues)[i] = 0.0;
+        }
+    } 
+    
     // Mumber of integration steps
     int N = np*ndiv;
-    // Make the header o output file
-    write_results(output_file, dim, t, x, 1);
+    // Check if there is any custom names to be inserted on the header of the output file
+    if (ncustomvalues > 0) {
+        customfunc(x, par, t, (*xrms), N, ncustomvalues, &customnames[ncustomvalues], (*customvalues), "names");
+    }
+    // Make the header of the output file
+    write_results(output_file, dim, t, x, ncustomvalues, &customnames[ncustomvalues], (*customvalues), nprintf, printfindex, 1);
     // Call Runge-Kutta 4th order integrator n = np * ndiv times
     for (int i = 0; i < np; i++) {
         for (int j = 0; j < ndiv; j++) {
@@ -74,13 +93,22 @@ void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
             for (int q = 0; q < nrms; q++) {
                 (*overallxrms)[rmsindex[q]] = RMS(&(*overallxrms)[rmsindex[q]], x[rmsindex[q]], N, 0);
             }
-            write_results(output_file, dim, t, x, 2);
+            // Perform "table" type custom calculations if there is calculations to be done
+            if (ncustomvalues > 0) {
+                customfunc(x, par, t, (*xrms), N, ncustomvalues, &customnames[ncustomvalues], (*customvalues), "table");
+            }
+            // Write results in output file
+            write_results(output_file, dim, t, x, ncustomvalues, &customnames[ncustomvalues], (*customvalues), nprintf, printfindex, 1);
         }
     }
     // Compute RMS values of state variables
     for (int q = 0; q < nrms; q++) {
         (*xrms)[rmsindex[q]] = RMS(&(*xrms)[rmsindex[q]], x[rmsindex[q]], N, 1);
         (*overallxrms)[rmsindex[q]] = RMS(&(*overallxrms)[rmsindex[q]], x[rmsindex[q]], N, 1);
+    }
+    // Perform "end" type custom calculations if there is calculations to be done
+    if (ncustomvalues > 0) {
+        customfunc(x, par, t, (*xrms), N, ncustomvalues, &customnames[ncustomvalues], (*customvalues), "end");
     }
     // Free Memory
     free(f); 
