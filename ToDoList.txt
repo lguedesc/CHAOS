@@ -5,5 +5,12 @@
 5. Implement 0-1 Test for Chaos method and integrate with existing modules, letting the user decide which method he/she wants to use.
 6. Implement Geometric Poincaré Map for systems that don't have harmonic external forcing terms.
 7. Implement Lyapunov Dimension (Kaplan-Yorke Dimension) and Kolmogorov-Sinai Entropy
-8. Implement Multiple Scales Method to find all solution branches of a parameter domain.
+8. Implement Harmonic Balance Method to find all solution branches of a parameter domain.
 9. See if f is really necessary in rk4 arguments.
+
+
+*** URGENT!!! ***
+1. Add max and min calculations in all EH modules
+2. Add overall max and min calculations in all EH modules
+3. Add dependency of customcalc function to max, min, overall max and overall min Values
+4. Transform EH Toolbox in Oscillators Toolbox

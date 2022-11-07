@@ -33,6 +33,8 @@ void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, int 
                             "Sum(xb^2)",
                             "Sum(dxb^2)",
                             "Sum(ddxb^2)",
+                            "TRdispl",
+                            "TRvel",
                             "xbRMS",
                             "dxbRMS",
                             "ddxbRMS",
@@ -56,21 +58,25 @@ void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, int 
         customvalue[4] = RMS(&customvalue[4], customvalue[1], N, 0);
         // Accumulate the value of the square of the Input Base Excitation Acceleration
         customvalue[5] = RMS(&customvalue[5], customvalue[2], N, 0);
+        // Transmissibility of displacement
+        customvalue[6] = x[0]/customvalue[0];
+        // Transmissibility of velocity
+        customvalue[7] = x[1]/customvalue[1];
     }
     // Check if mode is equal to "end"
     else if (mode == 2) {
         // RMS of the Input Base Excitation Displacement
-        customvalue[6] = RMS(&customvalue[3], customvalue[0], N, 1);
+        customvalue[8] = RMS(&customvalue[3], customvalue[0], N, 1);
         // RMS of the Input Base Excitation Velocity
-        customvalue[7] = RMS(&customvalue[4], customvalue[1], N, 1);
+        customvalue[9] = RMS(&customvalue[4], customvalue[1], N, 1);
         // RMS of the Input Base Excitation Acceleration
-        customvalue[8] = RMS(&customvalue[5], customvalue[2], N, 1);
+        customvalue[10] = RMS(&customvalue[5], customvalue[2], N, 1);
         // Peak to Peak Average Electrical Output Power
-        customvalue[9] = (par[5]*par[6]/par[7])*xrms[2];
+        customvalue[11] = (par[5]*par[6]/par[7])*xrms[2];
         // Peak to Peak Average Mechanical Input Power of the relative motion with respect to the base
-        customvalue[10] = customvalue[8]*xrms[1];
+        customvalue[12] = customvalue[10]*xrms[1];
         // Efficiency of Conversion n = pe/pm
-        customvalue[11] = customvalue[9]/customvalue[10];
+        customvalue[13] = customvalue[11]/customvalue[12];
     }
     else {
         printf("DEBUG WARNING: Custom Function using mode = %d, please use 0, 1 or 2", mode);
