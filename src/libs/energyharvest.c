@@ -47,11 +47,9 @@ void EH_print_RMS(FILE *info, int nRMS, int *rmsindex, double *xRMS, double *ove
 
 // Solutions
 void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double *x, double h, double *par, int nrms, int *rmsindex, double **xrms, double **overallxrms, 
-                     void (*edosys)(int, double *, double, double *, double *), 
-                     void (*write_results)(FILE *output_file, int dim, double t, double *x, int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode), 
+                     double **xmin, double **xmax, double **overallxmin, double **overallxmax, void (*edosys)(int, double *, double, double *, double *),  
                      int ncustomvalues, char ***customnames, double **customvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex,
-                     void (*customfunc)(double *x, double *par, double t, double *xrms, int N, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode)) {
-    
+                     void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode)) {
     // Maximum length of custom names, if there is custom calculations
     size_t nchars = 20;
     // Allocate x` = f(x)
@@ -64,7 +62,18 @@ void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
         (*xrms)[i] = 0.0;
         (*overallxrms)[i] = 0.0;
     }
-    // Allocate memory if there is any custom calculations to be executed
+    // Declare memory to store min, max, overall min and overall max values
+    (*xmax) = malloc(dim * sizeof **xmax);
+    (*xmin) = malloc(dim * sizeof **xmin);
+    (*overallxmax) = malloc(dim * sizeof **xmin);
+    (*overallxmin) = malloc(dim * sizeof **xmin);
+    // Initialize min, max, overall min and overall max vectors
+    for (int i = 0; i < dim; i ++) {
+        (*xmin)[i] = 0.0;
+        (*overallxmin)[i] = x[i];
+        (*xmax)[i] = 0.0;
+        (*overallxmax)[i] = x[i];
+    }
     if (ncustomvalues > 0) {
         // Allocate variable to store custom values
         (*customvalues) = malloc(ncustomvalues * sizeof **customvalues);
@@ -82,11 +91,10 @@ void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
     int N = np*ndiv;
     // Check if there is any custom names to be inserted on the header of the output file
     if (ncustomvalues > 0) {
-        customfunc(x, par, t, (*xrms), N, ncustomvalues, (*customnames), nchars, (*customvalues), 0);
+        customfunc(x, par, t, (*xrms), (*xmin), (*xmax), N, ncustomvalues, (*customnames), nchars, (*customvalues), 0);
     }
     // Make the header of the output file
-    write_results(output_file, dim, t, x, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 1);
-    
+    EH_write_timeseries_results(output_file, dim, t, x, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 1);
     // Call Runge-Kutta 4th order integrator n = np * ndiv times
     for (int i = 0; i < np; i++) {
         for (int j = 0; j < ndiv; j++) {
@@ -94,12 +102,28 @@ void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
             t = t + h;
             // Permanent Regime Calculations
             if (i >= trans) {
+                // Get max and min values at permanent regime
+                for (int q = 0; q < dim; q++) {
+                    // Initialize xmax[dim] and xmin[dim] with first values of x[dim] at permanent regime
+                    if (i == trans && j == 0) {
+                        (*xmax)[q] = x[q];
+                        (*xmin)[q] = x[q];
+                    }
+                    max_value(x[q], &(*xmax)[q]);
+                    min_value(x[q], &(*xmin)[q]);
+                }
                 // Accumulate squared values to RMS computation in permanent regime (if there is RMS calculations to be performed)
                 if (nrms > 0) {
                     for (int q = 0; q < nrms; q++) {
                         (*xrms)[rmsindex[q]] = RMS(&(*xrms)[rmsindex[q]], x[rmsindex[q]], N, 0);
                     }
                 }
+            }
+            // Get overall max and min values
+            for (int q = 0; q < dim; q++) {
+                    //printf("overallxmax[%d] = %lf\n", q, overallxmax[q]);
+                    max_value(x[q], &(*overallxmax)[q]);
+                    min_value(x[q], &(*overallxmin)[q]);
             }
             // Accumulate squared values to RMS computation for all time domain (if there is RMS calculations to be performed)
             if (nrms > 0) {
@@ -109,11 +133,10 @@ void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
             }
             // Perform "table" type custom calculations if there is calculations to be done
             if (ncustomvalues > 0) {
-                customfunc(x, par, t, (*xrms), N, ncustomvalues, (*customnames), nchars, (*customvalues), 1);
+                customfunc(x, par, t, (*xrms), (*xmin), (*xmax), N, ncustomvalues, (*customnames), nchars, (*customvalues), 1);
             }
             // Write results in output file
-            write_results(output_file, dim, t, x, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 2);
-            
+            EH_write_timeseries_results(output_file, dim, t, x, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 2);
         }
     }
     // Compute RMS values of state variables (if there is RMS calculations to be performed)
@@ -125,7 +148,7 @@ void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
     }
     // Perform "end" type custom calculations if there is calculations to be done
     if (ncustomvalues > 0) {
-        customfunc(x, par, t, (*xrms), N, ncustomvalues, (*customnames), nchars, (*customvalues), 2);
+        customfunc(x, par, t, (*xrms), (*xmin), (*xmax), N, ncustomvalues, (*customnames), nchars, (*customvalues), 2);
     }
     // Free Memory
     free(f); 

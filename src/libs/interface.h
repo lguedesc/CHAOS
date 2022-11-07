@@ -36,3 +36,6 @@ void fprint_RMS(FILE *output_file, int nRMS, int *rmsindex, double *xRMS, double
 
 void print_customcalc(int nprintscr, int *printscrindex, double *customvalue, char **customnames, size_t maxlength, double percname);
 void fprint_customcalc(FILE *output_file, int nprintscr, int *printscrindex, double *customvalue, char **customnames, size_t maxlength, double percname);
+
+void print_minmax(double *xmin, double *xmax, double *overallxmin, double *overallxmax, int dim, size_t maxlength, double percname);
+void fprint_minmax(FILE *output_file, double *xmin, double *xmax, double *overallxmin, double *overallxmax, int dim, size_t maxlength, double percname);

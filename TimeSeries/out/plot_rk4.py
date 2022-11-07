@@ -17,7 +17,7 @@ save = False
 system = "bistable_EH"
 ext = ".pdf"
 
-readpath = "TimeSeries/out/" + system + "_rk4(1).csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "TimeSeries/out/" + system + "_rk4(15).csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "TimeSeries/figs"; savepath = pltconf.convert_dir(savepath)
         
 df = pd.read_csv(readpath, delimiter = " ")
@@ -41,13 +41,13 @@ ax1 = fig.add_subplot(grid[0,:-2])
 ax2 = fig.add_subplot(grid[1,:-2])
 ax3 = fig.add_subplot(grid[:,2:4])
 
-ax1.plot(df['Time'], df['TRdispl'], rasterized = True, color = "red", linewidth = 0.5, zorder = 1)
-ax1.set_ylabel(r'$x_b$')
+ax1.plot(df['Time'], df['x[0]'], rasterized = True, color = "red", linewidth = 0.5, zorder = 1)
+ax1.set_ylabel(r'$x$')
 ax1.set_xlabel(r'$\tau$')
 ax1.set_xlim(df['Time'].min(), df['Time'].max())
 
-ax2.plot(df['Time'], df['TRvel'], rasterized = True, color = "blue", linewidth = 0.5, zorder = 1)
-ax2.set_ylabel(r'$\dot{x}_b$')
+ax2.plot(df['Time'], df['x[1]'], rasterized = True, color = "blue", linewidth = 0.5, zorder = 1)
+ax2.set_ylabel(r'$\dot{x}$')
 ax2.set_xlabel(r'$\tau$')
 ax2.set_xlim(df['Time'].min(), df['Time'].max())
 

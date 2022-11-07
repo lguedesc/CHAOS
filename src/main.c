@@ -27,7 +27,7 @@
 
 void execute_OS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
 void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
-                        void (*customfunc)(double *, double *, double, double *, int, int, char **, size_t, double *, int),
+                        void (*customfunc)(double *, double *, double, double *, double *, double *, int, int, char **, size_t, double *, int),
                         char* outputname, char *funcname);
 void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
 
@@ -256,7 +256,7 @@ void execute_OS_modules(unsigned int module, void (*edosys)(int, double *, doubl
 }
 
 void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
-                        void (*customfunc)(double *, double *, double, double *, int, int, char **, size_t, double *, int),
+                        void (*customfunc)(double *, double *, double, double *, double *, double *, int, int, char **, size_t, double *, int),
                         char* outputname, char *funcname) {
     switch (module) {
         case 1:

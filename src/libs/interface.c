@@ -315,7 +315,7 @@ void print_RMS(int nRMS, int *rmsindex, double *xRMS, double *overallxRMS, size_
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
     partition(2, maxlength);
-    printf("  Results of RMS Calculations:\n");
+    printf("  Results of RMS Calculations\n");
     partition(2, maxlength);
     // Print RMS calculations on screen
     for (int q = 0; q < nRMS; q++) {
@@ -330,7 +330,7 @@ void fprint_RMS(FILE *output_file, int nRMS, int *rmsindex, double *xRMS, double
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
     fpartition(output_file, 2, maxlength);
-    fprintf(output_file, "  Results of RMS Calculations:\n");
+    fprintf(output_file, "  Results of RMS Calculations\n");
     fpartition(output_file, 2, maxlength);
     // Print RMS calculations on file
     for (int q = 0; q < nRMS; q++) {
@@ -345,7 +345,7 @@ void print_customcalc(int nprintscr, int *printscrindex, double *customvalue, ch
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
     partition(2, maxlength);
-    printf("  Results of Custom Calculations:\n");
+    printf("  Results of Custom Calculations\n");
     partition(2, maxlength);
     // Print Custom calculations on screen
     for (int q = 0; q < nprintscr; q++) {
@@ -358,11 +358,53 @@ void fprint_customcalc(FILE *output_file, int nprintscr, int *printscrindex, dou
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
     fpartition(output_file, 2, maxlength);
-    fprintf(output_file, "  Results of Custom Calculations:\n");
+    fprintf(output_file, "  Results of Custom Calculations\n");
     fpartition(output_file, 2, maxlength);
     // Print Custom calculations on screen
     for (int q = 0; q < nprintscr; q++) {
         fprintf(output_file, "  %s%-*s %-*g\n", customnames[printscrindex[q]], (int)(spcname - strlen(customnames[printscrindex[q]]) - 2), ":", spcvalue, customvalue[printscrindex[q]]);
     }
     fpartition(output_file, 2, maxlength);
+}
+
+void print_minmax(double *xmin, double *xmax, double *overallxmin, double *overallxmax, int dim, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    partition(2, maxlength);
+    printf("  Minimum and Maximum Values\n");
+    partition(2, maxlength);
+    // Print min and maximum values
+    for (int q = 0; q < dim; q++) {
+        printf("%s%d%-*s %-*g\n", "  xmix[", q, spcname - 8, "]:", spcvalue, xmin[q]);
+    }
+    for (int q = 0; q < dim; q++) {
+        printf("%s%d%-*s %-*g\n", "  xmax[", q, spcname - 8, "]:", spcvalue, xmax[q]);
+    }
+    for (int q = 0; q < dim; q++) {
+        printf("%s%d%-*s %-*g\n", "  Overall xmin[", q, spcname - 16, "]:", spcvalue, overallxmin[q]);
+    }
+    for (int q = 0; q < dim; q++) {
+        printf("%s%d%-*s %-*g\n", "  Overall xmax[", q, spcname - 16, "]:", spcvalue, overallxmax[q]);
+    }
+}
+
+void fprint_minmax(FILE *output_file, double *xmin, double *xmax, double *overallxmin, double *overallxmax, int dim, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    fpartition(output_file, 2, maxlength);
+    fprintf(output_file, "  Minimum and Maximum Values\n");
+    fpartition(output_file, 2, maxlength);
+    // Print min and maximum values
+    for (int q = 0; q < dim; q++) {
+        fprintf(output_file, "%s%d%-*s %-*g\n", "  xMIN[", q, spcname - 8, "]:", spcvalue, xmin[q]);
+    }
+    for (int q = 0; q < dim; q++) {
+        fprintf(output_file, "%s%d%-*s %-*g\n", "  xMAX[", q, spcname - 8, "]:", spcvalue, xmax[q]);
+    }
+    for (int q = 0; q < dim; q++) {
+        fprintf(output_file, "%s%d%-*s %-*g\n", "  Overall xMIN[", q, spcname - 16, "]:", spcvalue, overallxmin[q]);
+    }
+    for (int q = 0; q < dim; q++) {
+        fprintf(output_file, "%s%d%-*s %-*g\n", "  Overall xMAX[", q, spcname - 16, "]:", spcvalue, overallxmax[q]);
+    }
 }
