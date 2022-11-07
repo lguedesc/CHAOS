@@ -49,7 +49,7 @@ void EH_print_RMS(FILE *info, int nRMS, int *rmsindex, double *xRMS, double *ove
 void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double *x, double h, double *par, int nrms, int *rmsindex, double **xrms, double **overallxrms, 
                      void (*edosys)(int, double *, double, double *, double *), 
                      void (*write_results)(FILE *output_file, int dim, double t, double *x, int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode), 
-                     int ncustomvalues, char **customnames, double **customvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex,
+                     int ncustomvalues, char ***customnames, double **customvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex,
                      void (*customfunc)(double *x, double *par, double t, double *xrms, int N, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode)) {
     
     // Maximum length of custom names, if there is custom calculations
@@ -73,19 +73,19 @@ void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
             (*customvalues)[i] = 0.0;
         }
         // Allocate variable to store the names of the custom values
-        customnames = malloc(ncustomvalues * sizeof *customnames);
+        (*customnames) = malloc(ncustomvalues * sizeof *customnames);
         for (int i = 0; i < ncustomvalues; i++) {
-            customnames[i] = malloc(nchars * sizeof *customnames);
+            (*customnames)[i] = malloc(nchars * sizeof *customnames);
         }
     } 
     // Mumber of integration steps
     int N = np*ndiv;
     // Check if there is any custom names to be inserted on the header of the output file
     if (ncustomvalues > 0) {
-        customfunc(x, par, t, (*xrms), N, ncustomvalues, customnames, nchars, (*customvalues), 3);
+        customfunc(x, par, t, (*xrms), N, ncustomvalues, (*customnames), nchars, (*customvalues), 0);
     }
     // Make the header of the output file
-    write_results(output_file, dim, t, x, ncustomvalues, customnames, (*customvalues), nprintf, printfindex, 1);
+    write_results(output_file, dim, t, x, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 1);
     
     // Call Runge-Kutta 4th order integrator n = np * ndiv times
     for (int i = 0; i < np; i++) {
@@ -105,10 +105,10 @@ void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
             }
             // Perform "table" type custom calculations if there is calculations to be done
             if (ncustomvalues > 0) {
-                customfunc(x, par, t, (*xrms), N, ncustomvalues, customnames, nchars, (*customvalues), 1);
+                customfunc(x, par, t, (*xrms), N, ncustomvalues, (*customnames), nchars, (*customvalues), 1);
             }
             // Write results in output file
-            write_results(output_file, dim, t, x, ncustomvalues, customnames, (*customvalues), nprintf, printfindex, 2);
+            write_results(output_file, dim, t, x, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 2);
             
         }
     }
@@ -119,7 +119,7 @@ void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
     }
     // Perform "end" type custom calculations if there is calculations to be done
     if (ncustomvalues > 0) {
-        customfunc(x, par, t, (*xrms), N, ncustomvalues, customnames, nchars, (*customvalues), 2);
+        customfunc(x, par, t, (*xrms), N, ncustomvalues, (*customnames), nchars, (*customvalues), 2);
     }
     // Free Memory
     free(f); 

@@ -28,7 +28,25 @@ void customcalc(double *x, double *par, double t, double *xrms, int N, int ncust
 
 void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, int N, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
     // Check if mode is equal to "table"
-    if (mode == 1) {
+    if (mode == 0) {
+        // Names to be printed in the output file
+        char *names[] = {   "xb",
+                            "dxb",
+                            "ddxb",
+                            "Sum(xb^2)",
+                            "Sum(dxb^2)",
+                            "Sum(ddxb^2)",
+                            "xbRMS",
+                            "dxbRMS",
+                            "ddxbRMS",
+                            "PoutAvg",
+                            "PinAvg",
+                            "EffAvg"
+                        };
+        // Assign names to custom values
+        assign_names(names, ncustomvalues, customnames, maxstrlen);
+    }
+    else if (mode == 1) {
         // Input Base Excitation Displacement
         customvalue[0] = par[1]*sin(par[0]*t);
         // Input Base Excitation Velocity
@@ -57,26 +75,7 @@ void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, int 
         // Efficiency of Conversion n = pe/pm
         customvalue[11] = customvalue[9]/customvalue[10];
     }
-    // Check if mode is equal to "names"
-    else if (mode == 3) {
-        // Names to be printed in the output file
-        char *names[] = {   "xb",
-                            "dxb",
-                            "ddxb",
-                            "Sum(xb^2)",
-                            "Sum(dxb^2)",
-                            "Sum(ddxb^2)",
-                            "xbRMS",
-                            "dxbRMS",
-                            "ddxbRMS",
-                            "PoutAvg",
-                            "PinAvg",
-                            "EffAvg"
-                        };
-        // Assign names to custom values
-        assign_names(names, ncustomvalues, customnames, maxstrlen);
-    }
     else {
-        printf("DEBUG WARNING: Custom Function using mode = %d, please use 1, 2 or 3", mode);
+        printf("DEBUG WARNING: Custom Function using mode = %d, please use 0, 1 or 2", mode);
     }
 }

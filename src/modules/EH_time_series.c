@@ -39,7 +39,7 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     double *xRMS = NULL;                // State Variables RMS values at permanent regime
     double *overallxRMS = NULL;         // State Variables RMS values at transient + permanent regime
     double *customValues = NULL;        // Variable to store all custom values that custom functions calculate
-    char **customnames = NULL;          // Names of the custom values
+    char **customNames = NULL;          // Names of the custom values
     int *printfindex = NULL;            // Indexes of custom values that will be printed in the output file
     int *printscrindex = NULL;          // Indexes of custom values that will be printed on the screen
 
@@ -70,7 +70,7 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     // Call solution
     
     EH_rk4_solution(output_rk4, DIM, nP, nDiv, trans, t, x, h, par, nRMS, rmsindex, &xRMS, &overallxRMS, edosys, EH_write_timeseries_results, 
-                    nCustomValues, &customnames, &customValues, nPrintf, printfindex, nPrintscr, printscrindex, customfunc);
+                    nCustomValues, &customNames, &customValues, nPrintf, printfindex, nPrintscr, printscrindex, customfunc);
     /*
     clock_t time_f = clock();
     time_spent += (double)(time_f - time_i) / CLOCKS_PER_SEC; 
@@ -81,12 +81,9 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     print_RMS(nRMS, rmsindex, xRMS, overallxRMS, maxLen, percName);
     fprint_RMS(output_info, nRMS, rmsindex, xRMS, overallxRMS, maxLen, percName);
     // Print custom calculations on screen and in info file
-    for (int i = 0; i < nCustomValues; i++) {
-        printf("customnames[%d] = %s\n", i, customnames[i]);
-    }
     if (nCustomValues > 0) {
-        print_customcalc(nPrintscr, printscrindex, customValues, customnames, maxLen, percName);
-        fprint_customcalc(output_info, nPrintscr, printscrindex, customValues, customnames, maxLen, percName);
+        print_customcalc(nPrintscr, printscrindex, customValues, customNames, maxLen, percName);
+        fprint_customcalc(output_info, nPrintscr, printscrindex, customValues, customNames, maxLen, percName);
     }    
     // Close output file
     fclose(output_rk4);
@@ -99,6 +96,10 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     free(xRMS); free(overallxRMS); free(rmsindex);
     if (nCustomValues > 0) {
         free(customValues); free(printfindex); free(printscrindex);
+        for (int i = 0; i < nCustomValues; i++) {
+            free(customNames[i]);
+        }
+        free(customNames); 
     }
 }
 

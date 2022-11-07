@@ -349,8 +349,7 @@ void print_customcalc(int nprintscr, int *printscrindex, double *customvalue, ch
     partition(2, maxlength);
     // Print Custom calculations on screen
     for (int q = 0; q < nprintscr; q++) {
-        printf("%g\n", customvalue[printscrindex[q]]);
-        //printf("  %s%-*s %-*g\n", customnames[printscrindex[q]], spcname - strlen(customnames[printscrindex[q]]) - 2, ":", spcvalue, customvalue[printscrindex[q]]);
+        printf("  %s%-*s %-*g\n", customnames[printscrindex[q]], (int)(spcname - strlen(customnames[printscrindex[q]]) - 2), ":", spcvalue, customvalue[printscrindex[q]]);
     }
     partition(2, maxlength);
 }
