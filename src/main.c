@@ -272,7 +272,7 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
             lyapunov_exp_wolf(funcname, outputname, edosys);
             break;
         case 5:
-            EH_ftime_series(funcname, outputname, edosys);
+            EH_ftime_series(funcname, outputname, edosys, customfunc);
             break;
         case 6:
             EH_bifurcation(funcname, outputname, edosys);

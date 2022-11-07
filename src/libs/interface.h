@@ -31,6 +31,9 @@ void fwrite_custom_info_calculations(FILE* output_file, int n, int nf, int *find
 void write_prog_parameters_timeseries(int dim, int npar, int np, int ndiv, int trans, double h, size_t maxlength, double percname);
 void fwrite_prog_parameters_timeseries(FILE* output_file, char *funcname, int dim, int npar, int np, int ndiv, int trans, double h, size_t maxlength, double percname);
 
+void write_prog_parameters_ftimeseries(int dim, int npar, int maxper, int np, int ndiv, int trans, double h, size_t maxlength, double percname);
+void fwrite_prog_parameters_ftimeseries(FILE* output_file, char *funcname, int dim, int npar, int maxper, int np, int ndiv, int trans, double h, size_t maxlength, double percname);
+
 void print_RMS(int nRMS, int *rmsindex, double *xRMS, double *overallxRMS, size_t maxlength, double percname);
 void fprint_RMS(FILE *output_file, int nRMS, int *rmsindex, double *xRMS, double *overallxRMS, size_t maxlength, double percname);
 
@@ -39,3 +42,6 @@ void fprint_customcalc(FILE *output_file, int nprintscr, int *printscrindex, dou
 
 void print_minmax(double *xmin, double *xmax, double *overallxmin, double *overallxmax, int dim, size_t maxlength, double percname);
 void fprint_minmax(FILE *output_file, double *xmin, double *xmax, double *overallxmin, double *overallxmax, int dim, size_t maxlength, double percname);
+
+void print_attractor(int attrac, int maxper, size_t maxlength, double percname);
+void fprint_attractor(FILE *output_file, int attrac, int maxper, size_t maxlength, double percname);

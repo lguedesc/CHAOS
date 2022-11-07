@@ -272,6 +272,15 @@ void fwrite_custom_info_calculations(FILE* output_file, int n, int nf, int *find
     }
 }
 
+void fwrite_module_and_system(FILE *output_file, char *funcname, char *modulename, size_t maxlength) {
+    time_t tm;
+    time(&tm);
+    fprintf(output_file, "  Date/Time:  %s", ctime(&tm)); 
+    fpartition(output_file, 1, maxlength);
+    fprintf(output_file, "  %s: %s\n", modulename, funcname);
+    fpartition(output_file, 1, maxlength);;
+}
+
 void write_prog_parameters_timeseries(int dim, int npar, int np, int ndiv, int trans, double h, size_t maxlength, double percname) {
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
@@ -284,15 +293,6 @@ void write_prog_parameters_timeseries(int dim, int npar, int np, int ndiv, int t
     printf("%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
     printf("%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
     printf("%-*s %-*g\n", spcname, "  Timestep Value:", spcvalue, h);
-}
-
-void fwrite_module_and_system(FILE *output_file, char *funcname, char *modulename, size_t maxlength) {
-    time_t tm;
-    time(&tm);
-    fprintf(output_file, "  Date/Time:  %s", ctime(&tm)); 
-    fpartition(output_file, 1, maxlength);
-    fprintf(output_file, "  %s: %s\n", modulename, funcname);
-    fpartition(output_file, 1, maxlength);;
 }
 
 void fwrite_prog_parameters_timeseries(FILE* output_file, char *funcname, int dim, int npar, int np, int ndiv, int trans, double h, size_t maxlength, double percname) {
@@ -309,6 +309,96 @@ void fwrite_prog_parameters_timeseries(FILE* output_file, char *funcname, int di
     fprintf(output_file, "%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
     fprintf(output_file, "%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
     fprintf(output_file, "%-*s %-*g\n", spcname, "  Timestep Value:", spcvalue, h);
+}
+
+void write_prog_parameters_ftimeseries(int dim, int npar, int maxper, int np, int ndiv, int trans, double h, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    printf("\n  Program Parameters\n");
+    partition(2, maxlength);
+    printf("%-*s %-*d\n", spcname, "  Dimension:", spcvalue, dim);
+    printf("%-*s %-*d\n", spcname, "  Number of Parameters:", spcvalue, npar);
+    printf("%-*s %-*d\n", spcname, "  Forcing Periods:", spcvalue, np);
+    printf("%-*s %-*d\n", spcname, "  Timesteps per Period:", spcvalue, ndiv);
+    printf("%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
+    printf("%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
+    printf("%-*s %-*g\n", spcname, "  Timestep Value:", spcvalue, h);
+    printf("%-*s %-*d\n", spcname, "  Max Periodicity Considered:", spcvalue, maxper);
+}
+
+void fwrite_prog_parameters_ftimeseries(FILE* output_file, char *funcname, int dim, int npar, int maxper, int np, int ndiv, int trans, double h, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    //Get time and date
+    fwrite_module_and_system(output_file, funcname, "Time Series", maxlength);
+    fprintf(output_file, "\n  Program Parameters\n");
+    fpartition(output_file, 2, maxlength);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Dimension:", spcvalue, dim);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Number of Parameters:", spcvalue, npar);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Forcing Periods:", spcvalue, np);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Timesteps per Period:", spcvalue, ndiv);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Timestep Value:", spcvalue, h);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Max Periodicity Considered:", spcvalue, maxper);
+}
+
+void print_attractor(int attrac, int maxper, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    printf("  Attractor\n");
+    partition(2, maxlength);
+    // Get the attractor and convert into a string
+    char number[5];
+    sprintf(number, "%d", attrac);
+
+    if (attrac < maxper) { 
+        printf("%-*s %s%d%-*s\n", spcname, "  Type of Motion:", "Period-", attrac, spcvalue - 8 - strlen(number) - 1, "T");
+    }
+    else if (attrac == maxper) {
+        printf("%-*s %-*s\n", spcname, "  Type of Motion:", spcvalue, "Many Periods");
+    }
+    else if (attrac == maxper + 1) {
+        printf("%-*s %-*s\n", spcname, "  Type of Motion:", spcvalue, "Chaotic");
+    }
+    else if (attrac == maxper + 2) {
+        printf("%-*s %-*s\n", spcname, "  Type of Motion:", spcvalue, "Hyperchaotic");
+    }
+    else if (attrac == maxper + 3) {
+        printf("%-*s %-*s\n", spcname, "  Type of Motion:", spcvalue, "Undefined");
+    }
+    else {
+        printf("%-*s %-*s\n", spcname, "  Type of Motion:", spcvalue, "Undefined (Escape)");
+    } 
+}
+
+void fprint_attractor(FILE *output_file, int attrac, int maxper, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    fprintf(output_file, "  Attractor\n");
+    fpartition(output_file, 2, maxlength);
+    // Get the attractor and convert into a string
+    char number[5];
+    sprintf(number, "%d", attrac);
+
+    if (attrac < maxper) { 
+        fprintf(output_file, "%-*s %s%d%-*s\n", spcname, "  Type of Motion:", "Period-", attrac, spcvalue - 8 - strlen(number) - 1, "T");
+    }
+    else if (attrac == maxper) {
+        fprintf(output_file, "%-*s %-*s\n", spcname, "  Type of Motion:", spcvalue, "Many Periods");
+    }
+    else if (attrac == maxper + 1) {
+        fprintf(output_file, "%-*s %-*s\n", spcname, "  Type of Motion:", spcvalue, "Chaotic");
+    }
+    else if (attrac == maxper + 2) {
+        fprintf(output_file, "%-*s %-*s\n", spcname, "  Type of Motion:", spcvalue, "Hyperchaotic");
+    }
+    else if (attrac == maxper + 3) {
+        fprintf(output_file, "%-*s %-*s\n", spcname, "  Type of Motion:", spcvalue, "Undefined");
+    }
+    else {
+        fprintf(output_file, "%-*s %-*s\n", spcname, "  Type of Motion:", spcvalue, "Undefined (Escape)");
+    } 
 }
 
 void print_RMS(int nRMS, int *rmsindex, double *xRMS, double *overallxRMS, size_t maxlength, double percname) {

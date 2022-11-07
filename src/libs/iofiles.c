@@ -676,7 +676,8 @@ void EH_write_timeseries_results(FILE *output_file, int dim, double t, double *x
         for (int i = 0; i < dim; i++) {
             fprintf(output_file, "x[%i] ", i);
         }
-        if (ncustomvalues > 0) { // If it has any custom calculations, add custom header
+        // If it has any custom calculations, add custom header
+        if (ncustomvalues > 0) { 
             for (int i = 0; i < nprintf; i++) {
                 fprintf(output_file, "%s ", customnames[printfindex[i]]);
             } 
@@ -687,7 +688,8 @@ void EH_write_timeseries_results(FILE *output_file, int dim, double t, double *x
         for (int i = 0; i < dim; i++) {
             fprintf(output_file, "%.10lf ", x[i]);
         }
-        if (ncustomvalues > 0) { // If it has any custom calculations, add custom values
+        // If it has any custom calculations, add custom values
+        if (ncustomvalues > 0) { 
             for (int i = 0; i < nprintf; i++) {
                 fprintf(output_file, "%.10lf ", customvalue[printfindex[i]]);
             } 
@@ -695,17 +697,85 @@ void EH_write_timeseries_results(FILE *output_file, int dim, double t, double *x
         fprintf(output_file, "\n");
     } 
     else if (mode == 2) {
+        // Add results
         fprintf(output_file, "%.10f ", t);
         for (int i = 0; i < dim; i++) {
             fprintf(output_file, "%.10lf ", x[i]);
         }
-        if (ncustomvalues > 0) { // If it has any custom calculations, add custom values
+        // If it has any custom calculations, add custom results
+        if (ncustomvalues > 0) { 
             for (int i = 0; i < nprintf; i++) {
                 fprintf(output_file, "%.10lf ", customvalue[printfindex[i]]);
             } 
         }
         fprintf(output_file, "\n");
     }
+    else {
+        printf("Failed to write results in output file using mode (%d)...\n", mode);
+        return;
+    }
+}
+
+void EH_write_ftimeseries_results(FILE *output_file, int dim, double t, double *x, double *lambda, double *s_lambda, int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode) {
+    // Check the mode of the function
+    if (mode == 1) {
+        // Header
+        fprintf(output_file, "Time ");
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "x[%i] ", i);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "LE[%i] ", i);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "sLE[%i] ", i);
+        }
+        // If it has any custom calculations, add custom header
+        if (ncustomvalues > 0) { 
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%s ", customnames[printfindex[i]]);
+            } 
+        }
+        fprintf(output_file, "\n");
+        // Initial Conditions
+        fprintf(output_file, "%.10lf ", t);
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", x[i]);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", lambda[i]);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", s_lambda[i]);
+        }
+        // If it has any custom calculations, add custom values
+        if (ncustomvalues > 0) { 
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%.10lf ", customvalue[printfindex[i]]);
+            } 
+        }
+        fprintf(output_file, "\n");
+    }
+    else if (mode == 2) {
+        // Add Results
+        fprintf(output_file, "%.10lf ", t);
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", x[i]);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", lambda[i]);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", s_lambda[i]);
+        }
+        // If it has any custom calculations, add custom values
+        if (ncustomvalues > 0) { 
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%.10lf ", customvalue[printfindex[i]]);
+            } 
+        }
+        fprintf(output_file, "\n");
+    } 
     else {
         printf("Failed to write results in output file using mode (%d)...\n", mode);
         return;

@@ -154,7 +154,13 @@ void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
     free(f); 
 }
 
-void EH_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int *attrac, int maxper, double t, double **x, double h, double *par, int nrms, int *rmsindex, double **xrms, double **overallxrms, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, int dim, double t, double *x, double *lambda, double *s_lambda, int mode)) {
+void EH_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int *attrac, int maxper, double t, double **x, double h, double *par, 
+                                 int nrms, int *rmsindex, double **xrms, double **overallxrms, double **xmin, double **xmax, double **overallxmin, double **overallxmax,
+                                 void (*edosys)(int, double *, double, double *, double *), 
+                                 int ncustomvalues, char ***customnames, double **customvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex,
+                                 void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode)) {
+    // Maximum length of custom names, if there is custom calculations
+    size_t nchars = 20;
     // Allocate memory for x` = f(x)
     double *f = malloc(dim * sizeof *f);
     // Allocate memory for vectors necessary for lyapunov exponents calculation
@@ -177,6 +183,31 @@ void EH_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poi
         (*xrms)[i] = 0.0;
         (*overallxrms)[i] = 0.0;
     }
+    // Declare memory to store min, max, overall min and overall max values
+    (*xmax) = malloc(dim * sizeof **xmax);
+    (*xmin) = malloc(dim * sizeof **xmin);
+    (*overallxmax) = malloc(dim * sizeof **xmin);
+    (*overallxmin) = malloc(dim * sizeof **xmin);
+    // Initialize min, max, overall min and overall max vectors
+    for (int i = 0; i < dim; i ++) {
+        (*xmin)[i] = 0.0;
+        (*overallxmin)[i] = (*x)[i];
+        (*xmax)[i] = 0.0;
+        (*overallxmax)[i] = (*x)[i];
+    }
+    if (ncustomvalues > 0) {
+        // Allocate variable to store custom values
+        (*customvalues) = malloc(ncustomvalues * sizeof **customvalues);
+        // Initialize customvalues[ncustomvalues]
+        for (int i = 0; i < ncustomvalues; i++) {
+            (*customvalues)[i] = 0.0;
+        }
+        // Allocate variable to store the names of the custom values
+        (*customnames) = malloc(ncustomvalues * sizeof *customnames);
+        for (int i = 0; i < ncustomvalues; i++) {
+            (*customnames)[i] = malloc(nchars * sizeof *customnames);
+        }
+    }
     // Mumber of integration steps
     int N = np*ndiv;
     // Numerical control parameters
@@ -194,17 +225,20 @@ void EH_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poi
     realloc_vector(x, ndim);
     // Assign initial perturbation
     perturb_wolf(x, dim, ndim, &cum, &s_cum);
+    // Check if there is any custom names to be inserted on the header of the output file
+    if (ncustomvalues > 0) {
+        customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), N, ncustomvalues, (*customnames), nchars, (*customvalues), 0);
+    }
     // Make the header of output files
-    write_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, 1);
-    write_results(output_poinc_file, dim, t, (*x), lambda, s_lambda, 3);
+    EH_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 1);
+    write_results(output_poinc_file, dim, t, (*x), 0);
     // Call Runge-Kutta 4th order integrator N = nP * nDiv times
     for (int i = 0; i < np; i++) {
         for (int j = 0; j < ndiv; j++) {
             rk4(ndim, *x, t, h, par, f, edosys);
             lyapunov_wolf(x, t, h, dim, ndim, s_T0, &cum, &s_cum, &lambda, &s_lambda, &znorm, &gsc);
             t = t + h;
-            write_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, 2);
-            // Apply poincare map at permanent regime
+            // Steady State Regime Calculations
             if (i >= trans) {
                 // Choose any point in the trajectory for poincare section placement
                 if (j == 1) {
@@ -212,35 +246,63 @@ void EH_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poi
                     for (int p = 0; p < dim; p++) {
                         poinc[i - trans][p] = (*x)[p];
                     }
-                    write_results(output_poinc_file, dim, t, (*x), lambda, s_lambda, 4);
+                    write_results(output_poinc_file, dim, t, (*x), 2);
+                }
+                // Get max and min values at permanent regime
+                for (int q = 0; q < dim; q++) {
+                    // Initialize xmax[dim] and xmin[dim] with first values of x[dim] at permanent regime
+                    if (i == trans && j == 0) {
+                        (*xmax)[q] = (*x)[q];
+                        (*xmin)[q] = (*x)[q];
+                    }
+                    max_value((*x)[q], &(*xmax)[q]);
+                    min_value((*x)[q], &(*xmin)[q]);
                 }
                 // Accumulate squared values to RMS computation in permanent regime
-                for (int q = 0; q < nrms; q++) {
-                    (*xrms)[rmsindex[q]] = RMS(&(*xrms)[rmsindex[q]], (*x)[rmsindex[q]], N, 0);
+                if (nrms > 0) {
+                    for (int q = 0; q < nrms; q++) {
+                        (*xrms)[rmsindex[q]] = RMS(&(*xrms)[rmsindex[q]], (*x)[rmsindex[q]], N, 0);
+                    }
                 }
             }
-            // Accumulate squared values to RMS computation for all time domain
-            for (int q = 0; q < nrms; q++) {
-                (*overallxrms)[rmsindex[q]] = RMS(&(*overallxrms)[rmsindex[q]], (*x)[rmsindex[q]], N, 0);
+            // Get overall max and min values
+            for (int q = 0; q < dim; q++) {
+                    //printf("overallxmax[%d] = %lf\n", q, overallxmax[q]);
+                    max_value((*x)[q], &(*overallxmax)[q]);
+                    min_value((*x)[q], &(*overallxmin)[q]);
             }
+            // Accumulate squared values to RMS computation for all time domain
+            if (nrms > 0) {
+                for (int q = 0; q < nrms; q++) {
+                    (*overallxrms)[rmsindex[q]] = RMS(&(*overallxrms)[rmsindex[q]], (*x)[rmsindex[q]], N, 0);
+                }
+            }
+            // Perform "table" type custom calculations if there is calculations to be done
+            if (ncustomvalues > 0) {
+                customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), N, ncustomvalues, (*customnames), nchars, (*customvalues), 1);
+            }
+            // Write Results in output file
+            EH_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 2);
         }
     }
     // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
     store_LE(dim, lambda, s_lambda, LE);
-    /*for (int i = 0; i< dim; i++) {
-        printf("  LE[%i] = %.10lf\n", i, LE[i]);
-    }*/
     // Declare vector for temporary storage of periodicity values to check if all directions are equal
     int *tmp_attrac = malloc(dim * sizeof *tmp_attrac);
     // Declare variable to flag if all directions present same periodicity or not (0 = all the same, 1 = not the same)
     int diffAttrac = -1;
     // Verify the type of motion of the system
     (*attrac) = get_attractor(poinc, LE, dim, np, trans, tmp_attrac, &diffAttrac, maxper);
-    //printf("  diffAttrac = %i\n", diffAttrac);
     // Compute RMS values of state variables
-    for (int q = 0; q < nrms; q++) {
-        (*xrms)[rmsindex[q]] = RMS(&(*xrms)[rmsindex[q]], (*x)[rmsindex[q]], N, 1);
-        (*overallxrms)[rmsindex[q]] = RMS(&(*overallxrms)[rmsindex[q]], (*x)[rmsindex[q]], N, 1);
+    if (nrms > 0) {
+        for (int q = 0; q < nrms; q++) {
+            (*xrms)[rmsindex[q]] = RMS(&(*xrms)[rmsindex[q]], (*x)[rmsindex[q]], N, 1);
+            (*overallxrms)[rmsindex[q]] = RMS(&(*overallxrms)[rmsindex[q]], (*x)[rmsindex[q]], N, 1);
+        }
+    }
+    // Perform "end" type custom calculations if there is calculations to be done
+    if (ncustomvalues > 0) {
+        customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), N, ncustomvalues, (*customnames), nchars, (*customvalues), 2);
     }
     // Free memory    
     free(f); free(cum); free(s_cum); free(lambda); free(s_lambda);

@@ -26,7 +26,7 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     int nDiv;                       // Number of divisions in each forcing period
     int nPar;                       // Number of parameters of the system
     int trans;                      // Number of forcing periods considered transient
-    int nRMS;                       // Number of state variables that will be submitted to RMS calculation
+    int nRMS = 0;                       // Number of state variables that will be submitted to RMS calculation
     int nCustomValues = 0;          // If there is a custom function to be called, this is the number of calculations the function is going to perform
     int nPrintf = 0;                // Number of custom values to be printed in the output file
     int nPrintscr = 0;              // Number of custom values to be printed on the screen
@@ -46,7 +46,6 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     double *xmax = NULL;                // State variables maximum value at steady state regime
     double *overallxmin = NULL;         // Overall state variables minimum value at steady state regime 
     double *overallxmax = NULL;         // Overall state variables maximum value at steady state regime 
-
 
     read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &trans, &nRMS, &t, &par, &x, &rmsindex, &nCustomValues, &nPrintf, &nPrintscr, &printfindex, &printscrindex);
     // Define Timestep
@@ -142,15 +141,17 @@ static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *nd
     }
     // Assign parameter values to par[npar] vector
     for (int i = 0; i < *npar; i++) {
-            fscanf(input, "%lf\n", &(*par)[i]);
+        fscanf(input, "%lf\n", &(*par)[i]);
     }
     // Assign number of state variables that will be submitted to RMS calculation
     fscanf(input, "%d", nrms);
-    // Allocate memory for rmsindex[nrms]
-    *rmsindex = malloc((*nrms) * sizeof **rmsindex);
-    // Assign indexes to rmsindex[nrms] vector
-    for (int i = 0; i < *nrms; i++) {
-        fscanf(input, "%d\n", &(*rmsindex)[i]);
+    if (nrms > 0) {
+        // Allocate memory for rmsindex[nrms]
+        *rmsindex = malloc((*nrms) * sizeof **rmsindex);
+        // Assign indexes to rmsindex[nrms] vector
+        for (int i = 0; i < *nrms; i++) {
+            fscanf(input, "%d\n", &(*rmsindex)[i]);
+        }
     }
     // Assign the number of custom variables to be calculated
     fscanf(input, "%d\n", ncustomvalues);
