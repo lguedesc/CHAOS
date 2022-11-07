@@ -34,5 +34,5 @@ void fwrite_prog_parameters_timeseries(FILE* output_file, char *funcname, int di
 void print_RMS(int nRMS, int *rmsindex, double *xRMS, double *overallxRMS, size_t maxlength, double percname);
 void fprint_RMS(FILE *output_file, int nRMS, int *rmsindex, double *xRMS, double *overallxRMS, size_t maxlength, double percname);
 
-void print_customcalc(int nprintscr, int *printscrindex, double *customvalue, char *customnames[], size_t maxlength, double percname);
-void fprint_customcalc(FILE *output_file, int nprintscr, int *printscrindex, double *customvalue, char *customnames[], size_t maxlength, double percname);
+void print_customcalc(int nprintscr, int *printscrindex, double *customvalue, char **customnames, size_t maxlength, double percname);
+void fprint_customcalc(FILE *output_file, int nprintscr, int *printscrindex, double *customvalue, char **customnames, size_t maxlength, double percname);

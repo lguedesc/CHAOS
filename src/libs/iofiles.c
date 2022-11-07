@@ -668,7 +668,7 @@ void EH_p_write_dyndiag_results(FILE *output_file, int dim, int nrms, int *rmsin
     }
 }
 
-void EH_write_timeseries_results(FILE *output_file, int dim, double t, double *x, int ncustomvalues, char *customnames[], double *customvalue, int nprintf, int *printfindex, int mode) {
+void EH_write_timeseries_results(FILE *output_file, int dim, double t, double *x, int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode) {
     // Check the mode of the function
     if (mode == 1) {
         // Add Header

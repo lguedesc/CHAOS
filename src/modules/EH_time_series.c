@@ -14,7 +14,7 @@ static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int tran
                        int ncustomvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex, size_t maxlength, double percname, char* mode);
 static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int *trans, int *nrms, double *t, double **par, double **x, int **rmsindex, int *ncustomvalues, int *nprintf, int *nprintscr, int **printfindex, int **printscrindex);
 
-void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, int, int, char **, double *, char*)) {
+void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, int, int, char **, size_t, double *, int)) {
     
     // Parameters related to printing information
     size_t maxLen = 71;             // Max length of the info printed on the screen and on info file
@@ -39,7 +39,7 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     double *xRMS = NULL;                // State Variables RMS values at permanent regime
     double *overallxRMS = NULL;         // State Variables RMS values at transient + permanent regime
     double *customValues = NULL;        // Variable to store all custom values that custom functions calculate
-    char *customnames[nCustomValues];   // Names of the custom values
+    char **customnames = NULL;          // Names of the custom values
     int *printfindex = NULL;            // Indexes of custom values that will be printed in the output file
     int *printscrindex = NULL;          // Indexes of custom values that will be printed on the screen
 
@@ -62,7 +62,6 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     // Print information in screen and info output file
     print_info(output_info, DIM, nPar, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, nCustomValues, nPrintf, printfindex, nPrintscr, printscrindex, maxLen, percName, "screen");
     print_info(output_info, DIM, nPar, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, nCustomValues, nPrintf, printfindex, nPrintscr, printscrindex, maxLen, percName,"file");
-    
     /*
     // Time variables
     double time_spent = 0.0;
@@ -71,7 +70,7 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     // Call solution
     
     EH_rk4_solution(output_rk4, DIM, nP, nDiv, trans, t, x, h, par, nRMS, rmsindex, &xRMS, &overallxRMS, edosys, EH_write_timeseries_results, 
-                                           nCustomValues, customnames, &customValues, nPrintf, printfindex, nPrintscr, printscrindex, customfunc);
+                    nCustomValues, &customnames, &customValues, nPrintf, printfindex, nPrintscr, printscrindex, customfunc);
     /*
     clock_t time_f = clock();
     time_spent += (double)(time_f - time_i) / CLOCKS_PER_SEC; 
@@ -82,9 +81,12 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     print_RMS(nRMS, rmsindex, xRMS, overallxRMS, maxLen, percName);
     fprint_RMS(output_info, nRMS, rmsindex, xRMS, overallxRMS, maxLen, percName);
     // Print custom calculations on screen and in info file
+    for (int i = 0; i < nCustomValues; i++) {
+        printf("customnames[%d] = %s\n", i, customnames[i]);
+    }
     if (nCustomValues > 0) {
-        print_customcalc(nPrintscr, printscrindex, customValues, &customnames[nCustomValues], maxLen, percName);
-        fprint_customcalc(output_info, nPrintscr, printscrindex, customValues, &customnames[nCustomValues], maxLen, percName);
+        print_customcalc(nPrintscr, printscrindex, customValues, customnames, maxLen, percName);
+        fprint_customcalc(output_info, nPrintscr, printscrindex, customValues, customnames, maxLen, percName);
     }    
     // Close output file
     fclose(output_rk4);
@@ -181,6 +183,7 @@ static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int tran
         fwrite_sys_parameters(info, npar, par, maxlength, percname);
         fwrite_RMS_calculations_info(info, nrms, rmsindex, maxlength, percname);
         fwrite_custom_info_calculations(info, ncustomvalues, nprintf, printfindex, nprintscr, printscrindex, maxlength, percname);
+        
     }
     else {
         printf("Information could not be printed using mode (%s)...\n", mode);

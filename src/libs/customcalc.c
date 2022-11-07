@@ -1,16 +1,34 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include "energyharvest.h"
 
-void customcalc(double *x, double *par, double t, double *xrms, int N, int ncustomvalues, char *customnames[], double *customvalue, char* mode) {
+// Methods
+void assign_names(char **strings, const int nvalues, char **names, size_t maxstrlen) {
+    // Get every row of strings and copy to names
+    for (int i = 0; i < nvalues; i++) {
+        if (strlen(strings[i]) + 1 >= maxstrlen) {
+            printf("  CUSTOM CALCULATIONS FUNCTION WARNING: One or more given names of the custom values are too big, please assign smaller names of maximum length of %zu before trying to run the program.\n", maxstrlen);
+            printf("  Exiting Program...\n");
+            exit(1);
+        }
+        strcpy(names[i], strings[i]);
+    }
+}
+
+
+
+
+// Custom Calculations
+void customcalc(double *x, double *par, double t, double *xrms, int N, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
     return;
 }
 
-void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, int N, int ncustomvalues, char *customnames[], double *customvalue, char* mode) {
+void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, int N, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
     // Check if mode is equal to "table"
-    if (strcmp(mode, "table") == 0) {
+    if (mode == 1) {
         // Input Base Excitation Displacement
         customvalue[0] = par[1]*sin(par[0]*t);
         // Input Base Excitation Velocity
@@ -25,7 +43,7 @@ void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, int 
         customvalue[5] = RMS(&customvalue[5], customvalue[2], N, 0);
     }
     // Check if mode is equal to "end"
-    else if (strcmp(mode, "end") == 0) {
+    else if (mode == 2) {
         // RMS of the Input Base Excitation Displacement
         customvalue[6] = RMS(&customvalue[3], customvalue[0], N, 1);
         // RMS of the Input Base Excitation Velocity
@@ -40,19 +58,25 @@ void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, int 
         customvalue[11] = customvalue[9]/customvalue[10];
     }
     // Check if mode is equal to "names"
-    else if (strcmp(mode, "names") == 0) {
+    else if (mode == 3) {
         // Names to be printed in the output file
-        customnames[0] = "xb";
-        customnames[1] = "dxb";
-        customnames[2] = "ddxb";
-        customnames[3] = "Sum(xb^2)";
-        customnames[4] = "Sum(dxb^2)";
-        customnames[5] = "Sum(ddxb^2)";
-        customnames[6] = "xbRMS";
-        customnames[7] = "dxbRMS";
-        customnames[8] = "ddxbRMS";
-        customnames[9] = "PoutAvg";
-        customnames[10] = "PinAvg";
-        customnames[11] = "EffAvg";
+        char *names[] = {   "xb",
+                            "dxb",
+                            "ddxb",
+                            "Sum(xb^2)",
+                            "Sum(dxb^2)",
+                            "Sum(ddxb^2)",
+                            "xbRMS",
+                            "dxbRMS",
+                            "ddxbRMS",
+                            "PoutAvg",
+                            "PinAvg",
+                            "EffAvg"
+                        };
+        // Assign names to custom values
+        assign_names(names, ncustomvalues, customnames, maxstrlen);
+    }
+    else {
+        printf("DEBUG WARNING: Custom Function using mode = %d, please use 1, 2 or 3", mode);
     }
 }
