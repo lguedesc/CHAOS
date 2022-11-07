@@ -78,8 +78,10 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     */
     
     // Print RMS calculations in screen and in info file
-    print_RMS(nRMS, rmsindex, xRMS, overallxRMS, maxLen, percName);
-    fprint_RMS(output_info, nRMS, rmsindex, xRMS, overallxRMS, maxLen, percName);
+    if (nRMS > 0) {
+        print_RMS(nRMS, rmsindex, xRMS, overallxRMS, maxLen, percName);
+        fprint_RMS(output_info, nRMS, rmsindex, xRMS, overallxRMS, maxLen, percName);
+    }
     // Print custom calculations on screen and in info file
     if (nCustomValues > 0) {
         print_customcalc(nPrintscr, printscrindex, customValues, customNames, maxLen, percName);

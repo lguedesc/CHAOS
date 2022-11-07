@@ -94,14 +94,18 @@ void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
             t = t + h;
             // Permanent Regime Calculations
             if (i >= trans) {
-                // Accumulate squared values to RMS computation in permanent regime
-                for (int q = 0; q < nrms; q++) {
-                    (*xrms)[rmsindex[q]] = RMS(&(*xrms)[rmsindex[q]], x[rmsindex[q]], N, 0);
+                // Accumulate squared values to RMS computation in permanent regime (if there is RMS calculations to be performed)
+                if (nrms > 0) {
+                    for (int q = 0; q < nrms; q++) {
+                        (*xrms)[rmsindex[q]] = RMS(&(*xrms)[rmsindex[q]], x[rmsindex[q]], N, 0);
+                    }
                 }
             }
-            // Accumulate squared values to RMS computation for all time domain
-            for (int q = 0; q < nrms; q++) {
-                (*overallxrms)[rmsindex[q]] = RMS(&(*overallxrms)[rmsindex[q]], x[rmsindex[q]], N, 0);
+            // Accumulate squared values to RMS computation for all time domain (if there is RMS calculations to be performed)
+            if (nrms > 0) {
+                for (int q = 0; q < nrms; q++) {
+                    (*overallxrms)[rmsindex[q]] = RMS(&(*overallxrms)[rmsindex[q]], x[rmsindex[q]], N, 0);
+                }
             }
             // Perform "table" type custom calculations if there is calculations to be done
             if (ncustomvalues > 0) {
@@ -112,10 +116,12 @@ void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
             
         }
     }
-    // Compute RMS values of state variables
-    for (int q = 0; q < nrms; q++) {
-        (*xrms)[rmsindex[q]] = RMS(&(*xrms)[rmsindex[q]], x[rmsindex[q]], N, 1);
-        (*overallxrms)[rmsindex[q]] = RMS(&(*overallxrms)[rmsindex[q]], x[rmsindex[q]], N, 1);
+    // Compute RMS values of state variables (if there is RMS calculations to be performed)
+    if (nrms > 0) {
+        for (int q = 0; q < nrms; q++) {
+            (*xrms)[rmsindex[q]] = RMS(&(*xrms)[rmsindex[q]], x[rmsindex[q]], N, 1);
+            (*overallxrms)[rmsindex[q]] = RMS(&(*overallxrms)[rmsindex[q]], x[rmsindex[q]], N, 1);
+        }
     }
     // Perform "end" type custom calculations if there is calculations to be done
     if (ncustomvalues > 0) {

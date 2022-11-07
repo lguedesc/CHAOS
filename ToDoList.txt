@@ -6,3 +6,4 @@
 6. Implement Geometric Poincaré Map for systems that don't have harmonic external forcing terms.
 7. Implement Lyapunov Dimension (Kaplan-Yorke Dimension) and Kolmogorov-Sinai Entropy
 8. Implement Multiple Scales Method to find all solution branches of a parameter domain.
+9. See if f is really necessary in rk4 arguments.
