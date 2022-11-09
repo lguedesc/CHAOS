@@ -480,7 +480,8 @@ void p_write_epbasin_results(FILE *output_file, double **results, int pixels, in
 
 // Write results for Energy Harvesting Toolbox
 
-void EH_write_bifurc_results(FILE *output_file, int dim, double varpar, double *x, double *xmin, double *xmax, int nrms, int *rmsindex, double *xrms, double *overallxrms, int mode) {
+void EH_write_bifurc_results(FILE *output_file, int dim, double varpar, double *x, double *xmin, double *xmax, double *overallxmin, double *overallxmax, int nrms, int *rmsindex, double *xrms, double *overallxrms,
+                             int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode) {
     // Check the mode of the function
     if (mode == 0) {
         fprintf(output_file, "%s ", "Cpar");
@@ -499,14 +500,24 @@ void EH_write_bifurc_results(FILE *output_file, int dim, double varpar, double *
     else if (mode == 2) {
         fprintf(output_file, "%s ", "Cpar");
         for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "xmax[%d] ", i);
-            fprintf(output_file, "xmin[%d] ", i);
+            fprintf(output_file, "xMAX[%d] ", i);
+            fprintf(output_file, "xMIN[%d] ", i);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "OverallxMAX[%d] ", i);
+            fprintf(output_file, "OverallxMIN[%d] ", i);
         }
         for (int i = 0; i < nrms; i++) {
             fprintf(output_file, "xRMS[%d] ", rmsindex[i]);
         }
         for (int i = 0; i < nrms; i++) {
             fprintf(output_file, "OverallxRMS[%d] ", rmsindex[i]);
+        }
+        // If it has any custom calculations, add custom header
+        if (ncustomvalues > 0) { 
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%s ", customnames[printfindex[i]]);
+            } 
         }
         fprintf(output_file, "\n");
     }
@@ -516,11 +527,21 @@ void EH_write_bifurc_results(FILE *output_file, int dim, double varpar, double *
             fprintf(output_file, "%.10lf ", xmax[i]);
             fprintf(output_file, "%.10lf ", xmin[i]);
         }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", overallxmax[i]);
+            fprintf(output_file, "%.10lf ", overallxmin[i]);
+        }
         for (int i = 0; i < nrms; i++) {
             fprintf(output_file, "%.10lf ", xrms[rmsindex[i]]);
         }
         for (int i = 0; i < nrms; i++) {
             fprintf(output_file, "%.10lf ", overallxrms[rmsindex[i]]);
+        }
+        // If it has any custom calculations, add custom values
+        if (ncustomvalues > 0) { 
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%.10lf ", customvalue[printfindex[i]]);
+            } 
         }
         fprintf(output_file, "\n");
     }

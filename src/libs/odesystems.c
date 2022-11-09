@@ -86,6 +86,10 @@ void lotka_volterra_predator_prey(int dim, double *x, double t, double *par, dou
             f[4 + i] = (-par[4] + par[3]*x[0])*x[4+i] + par[3]*x[1]*x[2+i];
         }
     }
+    else {
+        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
+        exit(1);
+    }
 }
 
 
@@ -234,7 +238,11 @@ void duffing_2DoF(int dim, double *x, double t, double *par, double *f) {
             f[16 + i] = (1/par[8])*((-par[5] - 3*par[7]*pow((x[2] - x[0]), 2))*x[12 + i] + (par[5] + 3*par[7]*pow((x[2] - x[0]), 2))*x[4 + i]
 			            + 2*par[3]*x[8 + i] - 2*par[3]*x[16 + i]);
         }
-    }    
+    }
+    else {
+        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
+        exit(1);
+    }
 }
 
 void duffing_vanderpol(int dim, double *x, double t, double *par, double *f) {
@@ -256,6 +264,10 @@ void duffing_vanderpol(int dim, double *x, double t, double *par, double *f) {
             f[2 + i] = x[4 + i];
             f[4 + i] = (-par[3] - 3*par[4]*x[0]*x[0] - 2*par[2]*x[0]*x[1] - 5*par[5]*x[0]*x[0]*x[0]*x[0])*x[2 + i] - par[2]*(x[0]*x[0] - 1)*x[4 + i];
         }
+    }
+    else {
+        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
+        exit(1);
     }
 }
 
@@ -281,6 +293,10 @@ void bistable_EH(int dim, double *x, double t, double *par, double *f) {
             f[9 + i] = -par[6]*x[9 + i] - par[7]*x[6 + i];
         }
     }
+    else {
+        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
+        exit(1);
+    }
 }
 
 void tristable_EH(int dim, double *x, double t, double *par, double *f) {
@@ -303,6 +319,10 @@ void tristable_EH(int dim, double *x, double t, double *par, double *f) {
             f[6 + i] = - 2*par[2]*x[6 + i] + par[6]*x[9 + i] - (par[3] + 3*par[4]*x[0]*x[0] + 5*par[5]*x[0]*x[0]*x[0]*x[0])*x[3 + i];
             f[9 + i] = -par[7]*x[9 + i] - par[8]*x[6 + i];
         }
+    }
+    else {
+        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
+        exit(1);
     }
 }
 
@@ -355,6 +375,10 @@ void pend_oscillator_EH(int dim, double *x, double t, double *par, double *f) {
             f[64 + i] = -(par[14]*x[48 + i]) - par[13]*x[64 + i];
         }
     }
+    else {
+        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
+        exit(1);
+    }
 }
 
 void pend_oscillator_wout_pend_EH(int dim, double *x, double t, double *par, double *f) {
@@ -385,6 +409,10 @@ void pend_oscillator_wout_pend_EH(int dim, double *x, double t, double *par, dou
             f[20 + i] = -(1/(1 + par[3]))*(x[15+i] + 2*par[5]*x[20+i] - par[9]*x[25+i]);
             f[25 + i] = -par[8]*x[20+i] - par[7]*x[25+i];
         }
+    }
+    else {
+        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
+        exit(1);
     }
 }
 

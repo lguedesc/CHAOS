@@ -8,12 +8,18 @@
 #include "../libs/nldyn.h"
 #include "../libs/iofiles.h"
 #include "../libs/energyharvest.h"
+#include "../libs/interface.h"
 #include "EH_bifurcation.h"
 
-static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *parindex, double **x, int *nrms, int **rmsindex, int *bifmode);
-static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int parindex, int nrms, int *rmsindex, int bifmode, char* funcname, char* mode);
+static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *parindex, double **x, int *nrms, int **rmsindex, int *bifmode,
+                                int *ncustomvalues, int *nprintf, int **printfindex);
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int parindex, int nrms, int *rmsindex, int bifmode, char* funcname,
+                        int ncustomvalues, int nprintf, int *printfindex, size_t maxlength, double percname, char* mode);
 
-void EH_bifurcation(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
+void EH_bifurcation(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, int, int, char **, size_t, double *, int)) {
+    // Parameters related to printing information
+    size_t maxLen = 71;             // Max length of the info printed on the screen and on info file
+    double percName = 0.6;          // Percentage of space occuped by the name of the quantity printed
     // Declare Program Parameters
     const double pi = 4 * atan(1);  // Pi number definition
     int DIM;                        // Dimension of the system
@@ -23,7 +29,9 @@ void EH_bifurcation(char *funcname, char* outputname, void (*edosys)(int, double
     int trans;                      // Value of nP in which greater values are considered transient response
     int bMode;                      // Mode of the Bifurcation Diagram: 0 to follow attractor, 1 to reset initial conditions in each step
     int parIndex;                   // Index of control parameter in par array
-    int nRMS;                       // Number of state variables that will be submitted to RMS calculation
+    int nRMS = 0;                       // Number of state variables that will be submitted to RMS calculation
+    int nCustomValues = 0;          // If there is a custom function to be called, this is the number of calculations the function is going to perform
+    int nPrintf = 0;                // Number of custom values to be printed in the output file
     // Assign values for program parameters, system parameters and initial conditions
     char *input_filename = get_input_filename();
     double t;
@@ -31,7 +39,9 @@ void EH_bifurcation(char *funcname, char* outputname, void (*edosys)(int, double
     double *par = NULL;
     double *parRange = NULL;
     int *rmsindex = NULL;           // Indexes of state variables that will be submitted to RMS calculation
-    read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &trans, &t, &par, &parRange, &parIndex, &x, &nRMS, &rmsindex, &bMode);
+    int *printfindex = NULL;        // Indexes of custom values that will be printed in the output file
+    read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &trans, &t, &par, &parRange, &parIndex, &x, &nRMS, &rmsindex, &bMode,
+                       &nCustomValues, &nPrintf, &printfindex);
     
     // Create output files to store results
     char output_bifurc_name[200];
@@ -49,13 +59,13 @@ void EH_bifurcation(char *funcname, char* outputname, void (*edosys)(int, double
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);                            // Create info output file
     
     // Print information in screen and info output file
-    print_info(output_info, DIM, nPar, nP, nDiv, trans, t, x, par, parRange, parIndex, nRMS, rmsindex, bMode, funcname, "screen");
-    print_info(output_info, DIM, nPar, nP, nDiv, trans, t, x, par, parRange, parIndex, nRMS, rmsindex, bMode, funcname, "file");
+    print_info(output_info, DIM, nPar, nP, nDiv, trans, t, x, par, parRange, parIndex, nRMS, rmsindex, bMode, funcname, nCustomValues, nPrintf, printfindex, maxLen, percName, "screen");
+    print_info(output_info, DIM, nPar, nP, nDiv, trans, t, x, par, parRange, parIndex, nRMS, rmsindex, bMode, funcname, nCustomValues, nPrintf, printfindex, maxLen, percName, "file");
     // To store the runtime of the program
     //double time_spent = 0.0;
     //clock_t time_i = clock();
     // Call solution
-    EH_bifurc_solution(output_bifurc, output_bifurc_poinc, DIM, nP, nDiv, trans, t, x, parIndex, parRange, par, nRMS, rmsindex, edosys, EH_write_bifurc_results, bMode);
+    EH_bifurc_solution(output_bifurc, output_bifurc_poinc, DIM, nP, nDiv, trans, t, x, parIndex, parRange, par, nRMS, rmsindex, edosys, nCustomValues, nPrintf, printfindex, customfunc, bMode);
     // Close output file
     fclose(output_bifurc);
     fclose(output_info);
@@ -65,6 +75,7 @@ void EH_bifurcation(char *funcname, char* outputname, void (*edosys)(int, double
     free(input_filename);
     free(x); free(par); free(parRange);
     free(rmsindex);
+    free(printfindex);
 
     // Calculate time of execution
     //clock_t time_f = clock();
@@ -73,7 +84,8 @@ void EH_bifurcation(char *funcname, char* outputname, void (*edosys)(int, double
 
 }
 
-static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *parindex, double **x, int *nrms, int **rmsindex, int *bifmode) {
+static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *parindex, double **x, int *nrms, int **rmsindex, int *bifmode,
+                                int *ncustomvalues, int *nprintf, int **printfindex) {
     // Open input file
     FILE *input = fopen(name, "r");
     if (input == NULL) {
@@ -81,6 +93,8 @@ static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *nd
         perror(name);
         exit(1);
     }
+    // Determine the mode of the bifurcation diagram: 0 to follow attractor, 1 to reset initial conditions in each step
+    fscanf(input, "%d", &(*bifmode));
     // Read and assign system constants
     fscanf(input, "%d", dim);
     fscanf(input, "%d", npar);
@@ -120,114 +134,43 @@ static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *nd
     for (int i = 0; i < *nrms; i++) {
             fscanf(input, "%d\n", &(*rmsindex)[i]);
     }
-    // Determine the mode of the bifurcation diagram: 0 to follow attractor, 1 to reset initial conditions in each step
-    fscanf(input, "%d", &(*bifmode));
+    // Assign the number of custom variables to be calculated
+    fscanf(input, "%d\n", ncustomvalues);
+    if (ncustomvalues > 0) {
+        // Assign the number of custom variables that will be printed in output file
+        fscanf(input, "%d\n", nprintf);
+        // Allocate memory for printfindex[nprintf]
+        *printfindex = malloc((*nprintf) * sizeof **printfindex);
+        // Assign indexes to printfindex[nprintf]
+        for (int i = 0; i < *nprintf; i++) {
+            fscanf(input, "%d\n", &(*printfindex)[i]);
+        }
+    }
     // Close input file
     fclose(input);
     /* The user is responsible to free (x), (par) or (parrange) after the function call */
 }
 
-static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int parindex, int nrms, int *rmsindex, int bifmode, char* funcname, char* mode) {
-    //Get time and date
-    time_t tm;
-    time(&tm);
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int parindex, int nrms, int *rmsindex, int bifmode, char* funcname,
+                        int ncustomvalues, int nprintf, int *printfindex, size_t maxlength, double percname, char* mode) {
 
     if (strcmp(mode, "screen") == 0) {   
-        if (bifmode == 0){
-            printf("\n  Bifurcation Mode: Following Attractor\n");
-        }
-        else if (bifmode == 1) {
-            printf("\n  Bifurcation Mode: Reseting ICs\n");
-        }
-        else {
-            printf("\n  Invalid Bifurcation Mode of %d...\nCheck Results!\n", bifmode);
-        }
-        printf("  -------------------------------------------------\n");
-        printf("  Program Parameters\n");
-        printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20d\n", "  Dimension:", " ", dim);
-        printf("%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
-        printf("%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
-        printf("%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
-        printf("%-30s%s%-20d\n", "  Transient Considered:", " ", trans);
-        printf("%-30s%s%-20s\n", "  Timestep value:", " ", "(2*pi)/(nDiv*par[0])");
-        printf("  -------------------------------------------------\n");
-        printf("  Initial Conditions\n");
-        printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20g\n", "  Initial Time (t):", " ",  t);
-        for (int i = 0; i < dim; i++) {
-            printf("%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
-        }
-        printf("  -------------------------------------------------\n");
-        printf("  System Parameters\n");
-        printf("  -------------------------------------------------\n");
-        for (int i = 0; i < npar; i++) {
-            printf("%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
-        }
-        printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20d\n", "  Parameter Index:", " ", parindex);
-        printf("%-30s%s%-20g\n", "  Intial Parameter:", " ", parrange[0]);
-        printf("%-30s%s%-20g\n", "  Final Parameter:", " ", parrange[1]);
-        printf("%-30s%s%-20g\n", "  Increment Parameter:", " ", (parrange[1] - parrange[0]) / (parrange[2] - 1));
-        printf("%-30s%s%-20g\n", "  Number of Steps:", " ", parrange[2]);
-        printf("  -------------------------------------------------\n");
-        printf("  RMS Calculation Parameters\n");
-        printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20d\n", "  Number of RMS calculations:", " ", nrms);
-        for (int i = 0; i < nrms; i++) {
-            printf("%s%d%-18s%s%-20d\n", "  rmsindex[", i, "]:", " ", rmsindex[i]);
-        }        
-        printf("  -------------------------------------------------\n");
+        write_prog_parameters_bifurcation(dim, npar, np, ndiv, trans, maxlength, percname);
+        write_initial_conditions(dim, x, t, maxlength, percname);
+        write_sys_parameters(npar, par, maxlength, percname);
+        write_bifurcation_info(parrange, parindex, bifmode, maxlength, percname);
+        write_RMS_calculations_info(nrms, rmsindex, maxlength, percname);
+        write_custom_info_calculations(ncustomvalues, nprintf, printfindex, 0, NULL, maxlength, percname);
+        partition(2, maxlength);
     } 
     else if (strcmp(mode, "file") == 0) {
-        fprintf(info, "  Date/Time:  %s", ctime(&tm)); 
-        fprintf(info, "\n  ===================================================\n");
-        fprintf(info, "  Bifurcation Diagram: %s\n", funcname);
-        if (bifmode == 0){
-            fprintf(info, "  Bifurcation Mode: Following Attractor\n");
-        }
-        else if (bifmode == 1) {
-            fprintf(info, "  Bifurcation Mode: Reseting ICs\n");
-        }
-        else {
-            fprintf(info, "  Invalid Bifurcation Mode of %i...\nCheck Results!\n", bifmode);
-        }
-        fprintf(info, "  ===================================================\n\n");
-        fprintf(info, "\n  Program Parameters\n");
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20d\n", "  Dimension:", " ", dim);
-        fprintf(info, "%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
-        fprintf(info, "%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
-        fprintf(info, "%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
-        fprintf(info, "%-30s%s%-20d\n", "  Transient Considered:", " ", trans);
-        fprintf(info, "%-30s%s%-20s\n", "  Timestep value:", " ", "(2*pi)/(nDiv*par[0])");
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "  Initial Conditions\n");
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20g\n", "  Initial Time (t):", " ",  t);
-        for (int i = 0; i < dim; i++) {
-            fprintf(info, "%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
-        }
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "  System Parameters\n");
-        fprintf(info, "  -------------------------------------------------\n");
-        for (int i = 0; i < npar; i++) {
-            fprintf(info, "%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
-        }
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20d\n", "  Parameter Index:", " ", parindex);
-        fprintf(info, "%-30s%s%-20g\n", "  Intial Parameter:", " ", parrange[0]);
-        fprintf(info, "%-30s%s%-20g\n", "  Final Parameter:", " ", parrange[1]);
-        fprintf(info, "%-30s%s%-20g\n", "  Increment Parameter:", " ", (parrange[1] - parrange[0]) / (parrange[2] - 1));
-        fprintf(info, "%-30s%s%-20g\n", "  Number of Steps:", " ", parrange[2]);
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "  RMS Calculation Parameters\n");
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20d\n", "  Number of RMS calculations:", " ", nrms);
-        for (int i = 0; i < nrms; i++) {
-            fprintf(info, "%s%d%-18s%s%-20d\n", "  rmsindex[", i, "]:", " ", rmsindex[i]);
-        }
-        fprintf(info, "  -------------------------------------------------\n");
+        fwrite_prog_parameters_bifurcation(info, funcname, dim, npar, np, ndiv, trans, maxlength, percname);
+        fwrite_initial_conditions(info, dim, x, t, maxlength, percname);
+        fwrite_sys_parameters(info, npar, par, maxlength, percname);
+        fwrite_bifurcation_info(info, parrange, parindex, bifmode, maxlength, percname);
+        fwrite_RMS_calculations_info(info, nrms, rmsindex, maxlength, percname);
+        fwrite_custom_info_calculations(info, ncustomvalues, nprintf, printfindex, 0, NULL, maxlength, percname);
+        fpartition(info, 2, maxlength);
     }
     else {
         printf("Information could not be printed using mode (%s)...\n", mode);

@@ -186,8 +186,8 @@ void EH_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poi
     // Declare memory to store min, max, overall min and overall max values
     (*xmax) = malloc(dim * sizeof **xmax);
     (*xmin) = malloc(dim * sizeof **xmin);
-    (*overallxmax) = malloc(dim * sizeof **xmin);
-    (*overallxmin) = malloc(dim * sizeof **xmin);
+    (*overallxmax) = malloc(dim * sizeof **overallxmax);
+    (*overallxmin) = malloc(dim * sizeof **overallxmin);
     // Initialize min, max, overall min and overall max vectors
     for (int i = 0; i < dim; i ++) {
         (*xmin)[i] = 0.0;
@@ -315,7 +315,11 @@ void EH_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poi
 
 void EH_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, double t, double *x, int parindex, 
                         double *parrange, double *par, int nrms, int *rmsindex, void (*edosys)(int, double *, double, double *, double *), 
-                        void (*write_results)(FILE *output_file, int dim, double varpar, double *x, double *xmin, double *xmax, int nrms, int *rmsindex, double *xrms, double *overallxrms, int mode), int bifmode) {
+                        int ncustomvalues, int nprintf, int *printfindex,
+                        void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
+                        int mode), int bifmode) {
+    // Maximum length of custom names, if there is custom calculations
+    size_t nchars = 20;
     // Allocate x` = f(x)
     double *f = malloc(dim * sizeof *f);
     // Store Initial Conditions
@@ -327,9 +331,18 @@ void EH_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int
     // Declare memory to store min and max values
     double *xmax = malloc(dim * sizeof *xmax);
     double *xmin = malloc(dim * sizeof *xmin);
+    double *overallxmin = malloc(dim * sizeof *overallxmin);
+    double *overallxmax = malloc(dim * sizeof *overallxmax);
     // Allocate RMS variables
     double *xrms = malloc(dim * sizeof *xrms);
     double *overallxrms = malloc(dim * sizeof *overallxrms);
+    // Allocate variable to store custom values
+    double *customvalues = malloc(ncustomvalues * sizeof *customvalues);
+    // Allocate variable to store the names of the custom values
+    char **customnames = malloc(ncustomvalues * sizeof *customnames);
+    for (int i = 0; i < ncustomvalues; i++) {
+        customnames[i] = malloc(nchars * sizeof *customnames);
+    }
     // Mumber of integration steps
     int N = np*ndiv;
     // Declare timestep and pi
@@ -338,18 +351,18 @@ void EH_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int
     // Declare and define increment of control parameters
     double varstep;        
     varstep = (parrange[1] - parrange[0])/(parrange[2] - 1); // -1 in the denominator ensures the input resolution
+    // Check if there is any custom names to be inserted on the header of the output file
+    if (ncustomvalues > 0) {
+        customfunc(x, par, t, xrms, xmin, xmax, N, ncustomvalues, customnames, nchars, customvalues, 0);
+    }
     // Make the header of the output file
-    write_results(output_poinc_file, dim, par[parindex], x, xmin, xmax, nrms, rmsindex, xrms, overallxrms, 0);
-    write_results(output_file, dim, par[parindex], x, xmin, xmax, nrms, rmsindex, xrms, overallxrms, 2);
+    EH_write_bifurc_results(output_poinc_file, dim, par[parindex], x, xmin, xmax, overallxmin, overallxmax, nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 0);    
+    EH_write_bifurc_results(output_file, dim, par[parindex], x, xmin, xmax, overallxmin, overallxmax, nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 2);
+    //write_results(output_poinc_file, dim, par[parindex], x, xmin, xmax, nrms, rmsindex, xrms, overallxrms, 0);
+    //write_results(output_file, dim, par[parindex], x, xmin, xmax, nrms, rmsindex, xrms, overallxrms, 2);
     // Starts sweep the control parameter
     for (int k = 0; k < (int)parrange[2]; k++) {
         par[parindex] = parrange[0] + k*varstep; // Increment value
-        // Reset Variables
-        t = t0;
-        for (int i = 0; i < dim; i ++) {
-            xrms[i] = 0.0;
-            overallxrms[i] = 0.0;
-        }
         // Check the mode of the bifurcation
         if (bifmode == 1) {
             // Reset Initial conditions in each bifurcation step
@@ -357,11 +370,19 @@ void EH_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int
                 x[i] = IC[i];
             }
         }
-        // Reset initial values to xmax and xmin based on initial values of x
-        /*for (int i = 0; i < dim; i++) {
-            xmax[i] = x[i];
-            xmin[i] = x[i];
-        }*/
+        // Reset Variables
+        t = t0;
+        for (int i = 0; i < dim; i ++) {
+            xmin[i] = 0.0;
+            overallxmin[i] = x[i];
+            xmax[i] = 0.0;
+            overallxmax[i] = x[i];
+        }
+        if (ncustomvalues > 0) {
+            for (int i = 0; i < ncustomvalues; i++) {
+                customvalues[i] = 0.0;
+            }
+        }
         // Vary timestep if varpar = par[0]
         h = (2 * pi) / (ndiv * par[0]);         // par[0] = OMEGA
         // Call Runge-Kutta 4th order integrator n = np * ndiv times
@@ -384,16 +405,30 @@ void EH_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int
                     // Choose any point in the trajectory for plane placement
                     if (j == 1) {
                         // Print the result in output file
-                        write_results(output_poinc_file, dim, par[parindex], x, xmin, xmax, nrms, rmsindex, xrms, overallxrms, 1);
+                        EH_write_bifurc_results(output_poinc_file, dim, par[parindex], x, xmin, xmax, overallxmin, overallxmax, nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 1);
+                        //write_results(output_poinc_file, dim, par[parindex], x, xmin, xmax, nrms, rmsindex, xrms, overallxrms, 1);
                     }
                     // Accumulate squared values to RMS computation in permanent regime
-                    for (int q = 0; q < nrms; q++) {
-                        xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], x[rmsindex[q]], N, 0);
+                    if (nrms > 0) {
+                        for (int q = 0; q < nrms; q++) {
+                            xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], x[rmsindex[q]], N, 0);
+                        }
                     }
                 }
+                // Get overall max and min values
+                for (int q = 0; q < dim; q++) {
+                    max_value(x[q], &overallxmax[q]);
+                    min_value(x[q], &overallxmin[q]);
+                }
                 // Accumulate squared values to RMS computation for all time domain
-                for (int q = 0; q < nrms; q++) {
-                    overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], x[rmsindex[q]], N, 0);
+                if (nrms > 0) {
+                    for (int q = 0; q < nrms; q++) {
+                        overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], x[rmsindex[q]], N, 0);
+                    }
+                }
+                // Perform "table" type custom calculations if there is calculations to be done
+                if (ncustomvalues > 0) {
+                    customfunc(x, par, t, xrms, xmin, xmax, N, ncustomvalues, customnames, nchars, customvalues, 1);
                 }
             }
         }
@@ -402,8 +437,13 @@ void EH_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int
             xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], x[rmsindex[q]], N, 1);
             overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], x[rmsindex[q]], N, 1);
         }
+        // Perform "end" type custom calculations if there is calculations to be done
+        if (ncustomvalues > 0) {
+            customfunc(x, par, t, xrms, xmin, xmax, N, ncustomvalues, customnames, nchars, customvalues, 2);
+        }
         // Print results in output file
-        write_results(output_file, dim, par[parindex], x, xmin, xmax, nrms, rmsindex, xrms, overallxrms, 3);
+        EH_write_bifurc_results(output_file, dim, par[parindex], x, xmin, xmax, overallxmin, overallxmax, nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 3);
+        //write_results(output_file, dim, par[parindex], x, xmin, xmax, nrms, rmsindex, xrms, overallxrms, 3);
         // Progress Monitor
         if (parrange[2] > 100) {
             if (k % 50 == 0) {
@@ -419,6 +459,11 @@ void EH_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int
     }
     // Free Memory
     free(f); free(IC); free(xmax); free(xmin); free(xrms); free(overallxrms);
+    free(overallxmin); free(overallxmax); free(customvalues);
+    for (int i = 0; i < ncustomvalues; i++) {
+        free(customnames[i]);
+    }
+    free(customnames); 
 }
 
 void EH_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int maxper, double t,

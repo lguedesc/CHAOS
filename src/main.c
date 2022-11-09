@@ -275,7 +275,7 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
             EH_ftime_series(funcname, outputname, edosys, customfunc);
             break;
         case 6:
-            EH_bifurcation(funcname, outputname, edosys);
+            EH_bifurcation(funcname, outputname, edosys, customfunc);
             break;
         case 7:
             EH_fbifurcation(funcname, outputname, edosys);

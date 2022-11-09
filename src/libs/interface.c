@@ -234,16 +234,20 @@ void write_custom_info_calculations(int n, int nf, int *findex, int nscr, int *s
         printf("  Custom Calculation Parameters\n");
         partition(2, maxlength);
         printf("%-*s %-*d\n", spcname, "  Number of Custom Calculations:", spcvalue, n);
-        printf("%-*s %-*d\n", spcname, "  Custom Values Printed on File:", spcvalue, nf);
-        printf("%-*s %d", spcname, "  Printed on File Indexes:", findex[0]);
-        for (int i = 1; i < nf; i++) {
-            printf(", %d", findex[i]);
+        if (nf > 0) {
+            printf("%-*s %-*d\n", spcname, "  Custom Values Printed on File:", spcvalue, nf);
+            printf("%-*s %d", spcname, "  Printed on File Indexes:", findex[0]);
+            for (int i = 1; i < nf; i++) {
+                printf(", %d", findex[i]);
+            }
         }
-        printf("\n");
-        printf("%-*s %-*d\n", spcname, "  Custom Values Printed on Screen:", spcvalue, nscr);
-        printf("%-*s %d", spcname, "  Printed on Screen Indexes:", scrindex[0]);
-        for (int i = 1; i < nscr; i++) {
-            printf(", %d", scrindex[i]);
+        if (nscr > 0) {
+            printf("\n");
+            printf("%-*s %-*d\n", spcname, "  Custom Values Printed on Screen:", spcvalue, nscr);
+            printf("%-*s %d", spcname, "  Printed on Screen Indexes:", scrindex[0]);
+            for (int i = 1; i < nscr; i++) {
+                printf(", %d", scrindex[i]);
+            }
         }
         printf("\n");
     }
@@ -257,16 +261,20 @@ void fwrite_custom_info_calculations(FILE* output_file, int n, int nf, int *find
         fprintf(output_file, "  Custom Calculation Parameters\n");
         fpartition(output_file, 2, maxlength);
         fprintf(output_file, "%-*s %-*d\n", spcname, "  Number of Custom Calculations:", spcvalue, n);
-        fprintf(output_file, "%-*s %-*d\n", spcname, "  Custom Values Printed on File:", spcvalue, nf);
-        fprintf(output_file, "%-*s %d", spcname, "  Printed on File Indexes:", findex[0]);
-        for (int i = 1; i < nf; i++) {
-            fprintf(output_file, ", %d", findex[i]);
+        if (nf > 0) {
+            fprintf(output_file, "%-*s %-*d\n", spcname, "  Custom Values Printed on File:", spcvalue, nf);
+            fprintf(output_file, "%-*s %d", spcname, "  Printed on File Indexes:", findex[0]);
+            for (int i = 1; i < nf; i++) {
+                fprintf(output_file, ", %d", findex[i]);
+            }
         }
-        fprintf(output_file, "\n");
-        fprintf(output_file, "%-*s %-*d\n", spcname, "  Custom Values Printed on Screen:", spcvalue, nscr);
-        fprintf(output_file, "%-*s %d", spcname, "  Printed on Screen Indexes:", scrindex[0]);
-        for (int i = 1; i < nscr; i++) {
-            fprintf(output_file, ", %d", scrindex[i]);
+        if (nscr > 0) {
+            fprintf(output_file, "\n");
+            fprintf(output_file, "%-*s %-*d\n", spcname, "  Custom Values Printed on Screen:", spcvalue, nscr);
+            fprintf(output_file, "%-*s %d", spcname, "  Printed on Screen Indexes:", scrindex[0]);
+            for (int i = 1; i < nscr; i++) {
+                fprintf(output_file, ", %d", scrindex[i]);
+            }
         }
         fprintf(output_file, "\n");
     }
@@ -329,7 +337,6 @@ void write_prog_parameters_ftimeseries(int dim, int npar, int maxper, int np, in
 void fwrite_prog_parameters_ftimeseries(FILE* output_file, char *funcname, int dim, int npar, int maxper, int np, int ndiv, int trans, double h, size_t maxlength, double percname) {
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
-    //Get time and date
     fwrite_module_and_system(output_file, funcname, "Time Series", maxlength);
     fprintf(output_file, "\n  Program Parameters\n");
     fpartition(output_file, 2, maxlength);
@@ -341,6 +348,83 @@ void fwrite_prog_parameters_ftimeseries(FILE* output_file, char *funcname, int d
     fprintf(output_file, "%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
     fprintf(output_file, "%-*s %-*g\n", spcname, "  Timestep Value:", spcvalue, h);
     fprintf(output_file, "%-*s %-*d\n", spcname, "  Max Periodicity Considered:", spcvalue, maxper);
+}
+
+void write_prog_parameters_bifurcation(int dim, int npar, int np, int ndiv, int trans, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    
+    printf("\n  Program Parameters\n");
+    partition(2, maxlength);
+    printf("%-*s %-*d\n", spcname, "  Dimension:", spcvalue, dim);
+    printf("%-*s %-*d\n", spcname, "  Number of Parameters:", spcvalue, npar);
+    printf("%-*s %-*d\n", spcname, "  Forcing Periods:", spcvalue, np);
+    printf("%-*s %-*d\n", spcname, "  Timesteps per Period:", spcvalue, ndiv);
+    printf("%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
+    printf("%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
+    printf("%-*s %-*s\n", spcname, "  Timestep Value:", spcvalue, "(2*pi)/(nDiv*par[0])");
+}
+
+void fwrite_prog_parameters_bifurcation(FILE* output_file, char *funcname, int dim, int npar, int np, int ndiv, int trans, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength;  // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;       // Space for value of variable
+    fwrite_module_and_system(output_file, funcname, "Bifurcation Diagram", maxlength);
+    fprintf(output_file, "\n  Program Parameters\n");
+    fpartition(output_file, 2, maxlength);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Dimension:", spcvalue, dim);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Number of Parameters:", spcvalue, npar);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Forcing Periods:", spcvalue, np);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Timesteps per Period:", spcvalue, ndiv);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
+    fprintf(output_file, "%-*s %-*s\n", spcname, "  Timestep Value:", spcvalue, "(2*pi)/(nDiv*par[0])");
+}
+
+void write_bifurcation_info(double *parrange, int parindex, int bifmode, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength;  // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;       // Space for value of variable
+    partition(2, maxlength);
+    printf("  Bifurcation Parameters\n");
+    partition(2, maxlength);
+    if (bifmode == 0) {
+        printf("%-*s %-*s\n", spcname, "  Bifucation Mode:", spcvalue, "Following Attractor");
+    }
+    else if (bifmode == 1) {
+        printf("%-*s %-*s\n", spcname, "  Bifucation Mode:", spcvalue, "Reseting Initial Conditions");
+    } 
+    else {
+        printf("\n  Invalid Bifurcation Mode of %d...\nChange to 0 or 1 in the input file and run the program again.\nExiting Program...!\n", bifmode);
+        exit(1);
+    }
+    printf("%-*s %-*d\n", spcname, "  Control Parameter Index:", spcvalue, parindex);
+    printf("%-*s %-*g\n", spcname, "  Initial Control Parameter:", spcvalue, parrange[0]);
+    printf("%-*s %-*g\n", spcname, "  Final Control Parameter:", spcvalue, parrange[1]);
+    printf("%-*s %-*g\n", spcname, "  Control Parameter Step:", spcvalue, (parrange[1] - parrange[0]) / (parrange[2] - 1));
+    printf("%-*s %-*g\n", spcname, "  Total Number of Steps:", spcvalue, parrange[2]);
+}
+
+void fwrite_bifurcation_info(FILE* output_file, double *parrange, int parindex, int bifmode, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength;  // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;       // Space for value of variable
+    fpartition(output_file, 2, maxlength);
+    fprintf(output_file, "  Bifurcation Parameters\n");
+    fpartition(output_file, 2, maxlength);
+    
+    if (bifmode == 0) {
+        fprintf(output_file, "%-*s %-*s\n", spcname, "  Bifucation Mode:", spcvalue, "Following Attractor");
+    }
+    else if (bifmode == 1) {
+        fprintf(output_file, "%-*s %-*s\n", spcname, "  Bifucation Mode:", spcvalue, "Reseting Initial Conditions");
+    } 
+    else {
+        fprintf(output_file, "\n  Invalid Bifurcation Mode of %d...\nChange to 0 or 1 in the input file and run the program again.\nExiting Program...!\n", bifmode);
+        exit(1);
+    }
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Control Parameter Index:", spcvalue, parindex);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Initial Control Parameter:", spcvalue, parrange[0]);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Final Control Parameter:", spcvalue, parrange[1]);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Control Parameter Step:", spcvalue, (parrange[1] - parrange[0]) / (parrange[2] - 1));
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Total Number of Steps:", spcvalue, parrange[2]);
 }
 
 void print_attractor(int attrac, int maxper, size_t maxlength, double percname) {
@@ -441,7 +525,6 @@ void print_customcalc(int nprintscr, int *printscrindex, double *customvalue, ch
     for (int q = 0; q < nprintscr; q++) {
         printf("  %s%-*s %-*g\n", customnames[printscrindex[q]], (int)(spcname - strlen(customnames[printscrindex[q]]) - 2), ":", spcvalue, customvalue[printscrindex[q]]);
     }
-    partition(2, maxlength);
 }
 
 void fprint_customcalc(FILE *output_file, int nprintscr, int *printscrindex, double *customvalue, char **customnames, size_t maxlength, double percname) {
@@ -454,7 +537,6 @@ void fprint_customcalc(FILE *output_file, int nprintscr, int *printscrindex, dou
     for (int q = 0; q < nprintscr; q++) {
         fprintf(output_file, "  %s%-*s %-*g\n", customnames[printscrindex[q]], (int)(spcname - strlen(customnames[printscrindex[q]]) - 2), ":", spcvalue, customvalue[printscrindex[q]]);
     }
-    fpartition(output_file, 2, maxlength);
 }
 
 void print_minmax(double *xmin, double *xmax, double *overallxmin, double *overallxmax, int dim, size_t maxlength, double percname) {
@@ -498,3 +580,4 @@ void fprint_minmax(FILE *output_file, double *xmin, double *xmax, double *overal
         fprintf(output_file, "%s%d%-*s %-*g\n", "  Overall xMAX[", q, spcname - 16, "]:", spcvalue, overallxmax[q]);
     }
 }
+

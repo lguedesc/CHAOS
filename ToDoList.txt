@@ -14,3 +14,5 @@
 2. Add overall max and min calculations in all EH modules
 3. Add dependency of customcalc function to max, min, overall max and overall min Values
 4. Transform EH Toolbox in Oscillators Toolbox
+5. Change bifmode to be inserted on top of input file for all bifurcation/dynamical diagram modules
+6. Eficiencia media de entrada

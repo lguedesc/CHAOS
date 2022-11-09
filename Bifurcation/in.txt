@@ -1,10 +1,11 @@
+0
 3
 8
 
 1000 1000 750
 
 0.0
-0.0 0.0 0.0
+1.0 0.0 0.0
 
 0.0
 0.2
@@ -18,34 +19,22 @@
 0
 0.01
 2.0
-2000
+200
 
+3
+0
 1
 2
 
-0
-
-/* Variables */
-DIM
-nPar
-
-nP nDiv trans
-
-t0
-IC: x[0] x[1] x[2] ...
-
-par[0] = OMEGA
-par[1] = gamma
-par[2] = zeta
-par[3] = alpha
-par[4] = beta
-
-index variable parameters
-varpar_i
-varpar_f
-number of steps
-
-number of state variables that will be submitted to RMS calculation
-indexes of state variables submitted to RMS calculation
-
-Bifurcation Mode (0 for "follow attractor", 1 for "reset IC")
+16
+10
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
