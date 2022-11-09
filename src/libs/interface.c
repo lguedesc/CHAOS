@@ -427,6 +427,38 @@ void fwrite_bifurcation_info(FILE* output_file, double *parrange, int parindex, 
     fprintf(output_file, "%-*s %-*g\n", spcname, "  Total Number of Steps:", spcvalue, parrange[2]);
 }
 
+void write_prog_parameters_fbifurcation(int dim, int npar, int np, int ndiv, int trans, int maxper, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    
+    printf("\n  Program Parameters\n");
+    partition(2, maxlength);
+    printf("%-*s %-*d\n", spcname, "  Dimension:", spcvalue, dim);
+    printf("%-*s %-*d\n", spcname, "  Number of Parameters:", spcvalue, npar);
+    printf("%-*s %-*d\n", spcname, "  Forcing Periods:", spcvalue, np);
+    printf("%-*s %-*d\n", spcname, "  Timesteps per Period:", spcvalue, ndiv);
+    printf("%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
+    printf("%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
+    printf("%-*s %-*d\n", spcname, "  Max Periodicity Considered:", spcvalue, maxper);
+    printf("%-*s %-*s\n", spcname, "  Timestep Value:", spcvalue, "(2*pi)/(nDiv*par[0])");
+}
+
+void fwrite_prog_parameters_fbifurcation(FILE *output_file, char *funcname, int dim, int npar, int np, int ndiv, int trans, int maxper, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    fwrite_module_and_system(output_file, funcname, "Bifurcation Diagram", maxlength);
+    fprintf(output_file, "\n  Program Parameters\n");
+    fpartition(output_file, 2, maxlength);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Dimension:", spcvalue, dim);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Number of Parameters:", spcvalue, npar);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Forcing Periods:", spcvalue, np);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Timesteps per Period:", spcvalue, ndiv);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Max Periodicity Considered:", spcvalue, maxper);
+    fprintf(output_file, "%-*s %-*s\n", spcname, "  Timestep Value:", spcvalue, "(2*pi)/(nDiv*par[0])");
+}
+
 void print_attractor(int attrac, int maxper, size_t maxlength, double percname) {
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;      // Space for value of variable

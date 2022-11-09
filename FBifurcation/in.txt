@@ -1,3 +1,4 @@
+0
 3
 8
 6
@@ -5,7 +6,7 @@
 1000 1000 750
 
 0.0
-0.0 0.0 0.0
+1.0 0.0 0.0
 
 0.0
 0.2
@@ -18,32 +19,23 @@
 
 0
 0.01
-1.0
-1000
+2.0
+200
 
+3
+0
 1
 2
 
 0
-
-/* Variables */
-DIM
-nPar
-maxPer
-
-nP nDiv trans
-
-t0
-IC: x[0] x[1] x[2] ...
-
-par[0] = OMEGA
-par[1] = gamma
-par[2] = zeta
-par[3] = alpha
-par[4] = beta
-
-varpar_i
-varpar_f
-number of steps
-
-Bifurcation Mode (0 for "follow attractor", 1 for "reset IC")
+10
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15

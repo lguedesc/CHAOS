@@ -551,7 +551,8 @@ void EH_write_bifurc_results(FILE *output_file, int dim, double varpar, double *
     }
 }
 
-void EH_write_fbifurc_results(FILE *output_file, int dim, int np, int trans, double varpar, double *x, double *xmin, double *xmax, double *LE, int attractor, double **poinc, int diffattrac, int nrms, int *rmsindex, double *xrms, double *overallxrms, int mode) {
+void EH_write_fbifurc_results(FILE *output_file, int dim, int np, int trans, double varpar, double *x, double *xmin, double *xmax, double *overallxmin, double *overallxmax, double *LE, int attractor, double **poinc, int diffattrac, int nrms, int *rmsindex, double *xrms, double *overallxrms,
+                              int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode) {
     // Check the mode of the function
     // Header for poincare bifurc
     if (mode == 0) {
@@ -575,8 +576,12 @@ void EH_write_fbifurc_results(FILE *output_file, int dim, int np, int trans, dou
     else if (mode == 2) {
         fprintf(output_file, "%s ", "Cpar");
         for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "xmin[%d] ", i);
-            fprintf(output_file, "xmax[%d] ", i);
+            fprintf(output_file, "xMIN[%d] ", i);
+            fprintf(output_file, "xMAX[%d] ", i);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "OverallxMAX[%d] ", i);
+            fprintf(output_file, "OverallxMIN[%d] ", i);
         }
         for (int i = 0; i < nrms; i++) {
             fprintf(output_file, "xRMS[%d] ", rmsindex[i]);
@@ -587,13 +592,24 @@ void EH_write_fbifurc_results(FILE *output_file, int dim, int np, int trans, dou
         for (int i = 0; i < dim; i++) {
             fprintf(output_file, "LE[%d] ", i);
         }
-        fprintf(output_file, "Attractor DiffAttrac\n");
+        fprintf(output_file, "Attractor DiffAttrac ");
+        // If it has any custom calculations, add custom header
+        if (ncustomvalues > 0) { 
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%s ", customnames[printfindex[i]]);
+            } 
+        }
+        fprintf(output_file, "\n");
     }
     else if (mode == 3) {
         fprintf(output_file, "%.10f ", varpar);
         for (int i = 0; i < dim; i++) {
             fprintf(output_file, "%.10lf ", xmax[i]);
             fprintf(output_file, "%.10lf ", xmin[i]);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", overallxmax[i]);
+            fprintf(output_file, "%.10lf ", overallxmin[i]);
         }
         for (int i = 0; i < nrms; i++) {
             fprintf(output_file, "%.10lf ", xrms[rmsindex[i]]);
@@ -604,7 +620,14 @@ void EH_write_fbifurc_results(FILE *output_file, int dim, int np, int trans, dou
         for (int i = 0; i < dim; i++) {
             fprintf(output_file, "%.10lf ", LE[i]);
         }
-        fprintf(output_file, "%d %d\n", attractor, diffattrac);
+        fprintf(output_file, "%d %d ", attractor, diffattrac);
+        // If it has any custom calculations, add custom values
+        if (ncustomvalues > 0) { 
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%.10lf ", customvalue[printfindex[i]]);
+            } 
+        }
+        fprintf(output_file, "\n");
     }
     // Error
     else {

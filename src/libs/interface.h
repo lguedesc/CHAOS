@@ -37,6 +37,9 @@ void fwrite_prog_parameters_ftimeseries(FILE* output_file, char *funcname, int d
 void write_prog_parameters_bifurcation(int dim, int npar, int np, int ndiv, int trans, size_t maxlength, double percname);
 void fwrite_prog_parameters_bifurcation(FILE* output_file, char *funcname, int dim, int npar, int np, int ndiv, int trans, size_t maxlength, double percname);
 
+void write_prog_parameters_fbifurcation(int dim, int npar, int np, int ndiv, int trans, int maxper, size_t maxlength, double percname);
+void fwrite_prog_parameters_fbifurcation(FILE *output_file, char *funcname, int dim, int npar, int np, int ndiv, int trans, int maxper, size_t maxlength, double percname);
+
 void write_bifurcation_info(double *parrange, int parindex, int bifmode, size_t maxlength, double percname);
 void fwrite_bifurcation_info(FILE* output_file, double *parrange, int parindex, int bifmode, size_t maxlength, double percname);
 

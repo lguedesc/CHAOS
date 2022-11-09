@@ -10,11 +10,11 @@ from src.libs import plotconfig as pltconf
 pltconf.plot_params(True, 10, 0.5)
 
 save = False
-system = "tristable_EH"
+system = "bistable_EH"
 ext = ".pdf"
 
-readpath = "FBifurcation/out/" + system + "_fbifurc(1).csv"; readpath = pltconf.convert_dir(readpath)
-readpathpoinc = "FBifurcation/out/" + system + "_fbifurc_poinc(1).csv"; readpathpoinc = pltconf.convert_dir(readpathpoinc)
+readpath = "FBifurcation/out/" + system + "_fbifurc.csv"; readpath = pltconf.convert_dir(readpath)
+readpathpoinc = "FBifurcation/out/" + system + "_fbifurc_poinc.csv"; readpathpoinc = pltconf.convert_dir(readpathpoinc)
 savepath = "FBifurcation/figs"; savepath = pltconf.convert_dir(savepath)
 
 df = pd.read_csv(readpath, delimiter = " ")
@@ -46,16 +46,16 @@ size = 0.5
 colormap = pltconf.set_colormap(df['Attractor'])
 fillcolor = 'lightgray'
 ax1.scatter(dfpoinc['Cpar'], dfpoinc['x[0]'], c = dfpoinc['Attractor'], cmap = colormap, rasterized = True, s = size, linewidths = 0, marker = 'o', zorder = 2)
-ax1.plot(df['Cpar'], df['xmax[0]'], rasterized = True, color = fillcolor, zorder = 1)
-ax1.plot(df['Cpar'], df['xmin[0]'], rasterized = True, color = fillcolor, zorder = 1)
-ax1.fill_between(df['Cpar'], df['xmax[0]'], df['xmin[0]'], color = fillcolor, zorder = 0)
+ax1.plot(df['Cpar'], df['xMAX[0]'], rasterized = True, color = fillcolor, zorder = 1)
+ax1.plot(df['Cpar'], df['xMIN[0]'], rasterized = True, color = fillcolor, zorder = 1)
+ax1.fill_between(df['Cpar'], df['xMAX[0]'], df['xMIN[0]'], color = fillcolor, zorder = 0)
 ax1.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
 ax1.set_ylabel(r'$x$')
 
 ax2.scatter(dfpoinc['Cpar'], dfpoinc['x[1]'], c = dfpoinc['Attractor'], cmap = colormap, rasterized = True, s = size, linewidths = 0, marker = 'o', zorder = 2)
-ax2.plot(df['Cpar'], df['xmax[1]'], rasterized = True, color = fillcolor, zorder = 1)
-ax2.plot(df['Cpar'], df['xmin[1]'], rasterized = True, color = fillcolor, zorder = 1)
-ax2.fill_between(df['Cpar'], df['xmax[1]'], df['xmin[1]'], color = fillcolor, zorder = 0)
+ax2.plot(df['Cpar'], df['xMAX[1]'], rasterized = True, color = fillcolor, zorder = 1)
+ax2.plot(df['Cpar'], df['xMIN[1]'], rasterized = True, color = fillcolor, zorder = 1)
+ax2.fill_between(df['Cpar'], df['xMAX[1]'], df['xMIN[1]'], color = fillcolor, zorder = 0)
 ax2.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
 ax2.set_ylabel(r'$\dot{x}$')
 
@@ -70,14 +70,14 @@ ax4.set_xlabel(r'$\Omega$')
 ax4.set_xlim(df['Cpar'].min(), df['Cpar'].max())
 
 ax5.scatter(dfpoinc['Cpar'], dfpoinc['x[2]'], c = dfpoinc['Attractor'], cmap = colormap, rasterized = True, s = size, linewidths = 0, marker = 'o', zorder = 2)
-ax5.plot(df['Cpar'], df['xmax[2]'], rasterized = True, color = fillcolor, zorder = 1)
-ax5.plot(df['Cpar'], df['xmin[2]'], rasterized = True, color = fillcolor, zorder = 1)
-ax5.fill_between(df['Cpar'], df['xmax[2]'], df['xmin[2]'], color = fillcolor, zorder = 0)
+ax5.plot(df['Cpar'], df['xMAX[2]'], rasterized = True, color = fillcolor, zorder = 1)
+ax5.plot(df['Cpar'], df['xMIN[2]'], rasterized = True, color = fillcolor, zorder = 1)
+ax5.fill_between(df['Cpar'], df['xMAX[2]'], df['xMIN[2]'], color = fillcolor, zorder = 0)
 ax5.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
 ax5.set_ylabel(r'$\nu$')
 
-ax6.plot(df['Cpar'], df['xRMS[2]'], rasterized = True, color = 'red', zorder = 1)
-ax6.plot(df['Cpar'], df['OverallxRMS[2]'], rasterized = True, color = 'blue', zorder = 1)
+ax6.plot(df['Cpar'], df['TRdispl(PtoP)'], rasterized = True, color = 'red', zorder = 1)
+#ax6.plot(df['Cpar'], df['OverallxRMS[2]'], rasterized = True, color = 'blue', zorder = 1)
 ax6.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
 ax6.set_ylabel(r'$\nu_{rms}$')
 
