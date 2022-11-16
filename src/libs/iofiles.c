@@ -500,12 +500,12 @@ void EH_write_bifurc_results(FILE *output_file, int dim, double varpar, double *
     else if (mode == 2) {
         fprintf(output_file, "%s ", "Cpar");
         for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "xMAX[%d] ", i);
             fprintf(output_file, "xMIN[%d] ", i);
+            fprintf(output_file, "xMAX[%d] ", i);
         }
         for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "OverallxMAX[%d] ", i);
             fprintf(output_file, "OverallxMIN[%d] ", i);
+            fprintf(output_file, "OverallxMAX[%d] ", i);
         }
         for (int i = 0; i < nrms; i++) {
             fprintf(output_file, "xRMS[%d] ", rmsindex[i]);
@@ -524,12 +524,12 @@ void EH_write_bifurc_results(FILE *output_file, int dim, double varpar, double *
     else if (mode == 3) {
         fprintf(output_file, "%.10f ", varpar);
         for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "%.10lf ", xmax[i]);
             fprintf(output_file, "%.10lf ", xmin[i]);
+            fprintf(output_file, "%.10lf ", xmax[i]);
         }
         for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "%.10lf ", overallxmax[i]);
             fprintf(output_file, "%.10lf ", overallxmin[i]);
+            fprintf(output_file, "%.10lf ", overallxmax[i]);
         }
         for (int i = 0; i < nrms; i++) {
             fprintf(output_file, "%.10lf ", xrms[rmsindex[i]]);
@@ -580,8 +580,8 @@ void EH_write_fbifurc_results(FILE *output_file, int dim, int np, int trans, dou
             fprintf(output_file, "xMAX[%d] ", i);
         }
         for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "OverallxMAX[%d] ", i);
             fprintf(output_file, "OverallxMIN[%d] ", i);
+            fprintf(output_file, "OverallxMAX[%d] ", i);
         }
         for (int i = 0; i < nrms; i++) {
             fprintf(output_file, "xRMS[%d] ", rmsindex[i]);
@@ -604,12 +604,12 @@ void EH_write_fbifurc_results(FILE *output_file, int dim, int np, int trans, dou
     else if (mode == 3) {
         fprintf(output_file, "%.10f ", varpar);
         for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "%.10lf ", xmax[i]);
             fprintf(output_file, "%.10lf ", xmin[i]);
+            fprintf(output_file, "%.10lf ", xmax[i]);
         }
         for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "%.10lf ", overallxmax[i]);
             fprintf(output_file, "%.10lf ", overallxmin[i]);
+            fprintf(output_file, "%.10lf ", overallxmax[i]);
         }
         for (int i = 0; i < nrms; i++) {
             fprintf(output_file, "%.10lf ", xrms[rmsindex[i]]);
@@ -677,36 +677,64 @@ void EH_p_write_fdyndiag_results(FILE *output_file, int dim, int nrms, int *rmsi
     }
 }
 
-void EH_p_write_dyndiag_results(FILE *output_file, int dim, int nrms, int *rmsindex, double **results, int pixels) {
+void EH_p_write_dyndiag_results(FILE *output_file, int dim, int nrms, int *rmsindex, double **results, int pixels, int ncustomvalues, char **customnames, int nprintf, int *printfindex) {
     // Header
     fprintf(output_file, "%s %s %s %s ", "CparY", "CparX", "Attractor", "DiffAttrac");
     for (int i = 0; i < dim; i++) {
-        fprintf(output_file, "xmax[%d] ", i);
+        fprintf(output_file, "xMAX[%d] ", i);
     }
     for (int i = 0; i < dim; i++) {
-        fprintf(output_file, "xmin[%d] ", i);
+        fprintf(output_file, "xMIN[%d] ", i);
     }
-    for (int i = 0; i < nrms; i++) {
-        fprintf(output_file, "xRMS[%d] ", rmsindex[i]);
+    for (int i = 0; i < dim; i++) {
+        fprintf(output_file, "OverallxMAX[%d] ", i);
     }
-    for (int i = 0; i < nrms; i++) {
-        fprintf(output_file, "OverallxRMS[%d] ", rmsindex[i]);
+    for (int i = 0; i < dim; i++) {
+        fprintf(output_file, "OverallxMIN[%d] ", i);
+    }
+    if (nrms > 0) {
+        for (int i = 0; i < nrms; i++) {
+            fprintf(output_file, "xRMS[%d] ", rmsindex[i]);
+        }
+        for (int i = 0; i < nrms; i++) {
+            fprintf(output_file, "OverallxRMS[%d] ", rmsindex[i]);
+        }
+    }
+    // If it has any custom calculations, add custom header
+    if (ncustomvalues > 0) { 
+        for (int i = 0; i < nprintf; i++) {
+            fprintf(output_file, "%s ", customnames[printfindex[i]]);
+        } 
     }
     fprintf(output_file, "\n");
     // Write Results
     for (int i = 0; i < pixels; i++) {
         fprintf(output_file, "%.10lf %.10lf %d %d ", results[i][0], results[i][1], (int)results[i][2], (int)results[i][3]);
         for (int j = 0; j < dim; j++) {
-            fprintf(output_file, "%.10lf ", results[i][j+4]);
+            fprintf(output_file, "%.10lf ", results[i][j+4]); // xmax
         }
         for (int j = 0; j < dim; j++) {
-            fprintf(output_file, "%.10lf ", results[i][j+4+dim]);
+            fprintf(output_file, "%.10lf ", results[i][j+4+dim]); // xmin
         }
-        for (int j = 0; j < nrms; j++) {
-            fprintf(output_file, "%.10lf ", results[i][j+4+(2*dim)]);
+        for (int j = 0; j < dim; j++) {
+            fprintf(output_file, "%.10lf ", results[i][j+4+(2*dim)]); // overallxmax
         }
-        for (int j = 0; j < nrms; j++) {
-            fprintf(output_file, "%.10lf ", results[i][j+4+(2*dim)+nrms]);
+        for (int j = 0; j < dim; j++) {
+            fprintf(output_file, "%.10lf ", results[i][j+4+(3*dim)]); // overallxmin
+        }
+        if (nrms > 0) {
+            for (int j = 0; j < nrms; j++) {
+                fprintf(output_file, "%.10lf ", results[i][j+4+(4*dim)]);
+            }
+            for (int j = 0; j < nrms; j++) {
+                fprintf(output_file, "%.10lf ", results[i][j+4+(4*dim)+nrms]);
+            }
+        }
+        // If it has any custom calculations, add custom values
+        if (ncustomvalues > 0) {
+            for (int j = 0; j < nprintf; j++) {
+                fprintf(output_file, "%.10lf ", results[i][j+4+(4*dim)+(2*nrms)]);
+            }
         }
         fprintf(output_file, "\n");
     }

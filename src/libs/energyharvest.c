@@ -537,8 +537,6 @@ void EH_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, in
                              nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 0);
     EH_write_fbifurc_results(output_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, poinc, diffAttrac,
                              nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 2);
-    //write_results(output_poinc_file, dim, np, trans, par[parindex], (*x), xmin, xmax, LE, attrac, poinc, diffAttrac, nrms, rmsindex, xrms, overallxrms, 0);
-    //write_results(output_file, dim, np, trans, par[parindex], (*x), xmin, xmax, LE, attrac, poinc, diffAttrac, nrms, rmsindex, xrms, overallxrms, 2);
     // Starts to increment bifurcation control parameter
     for (int k = 0; k < (int)parrange[2]; k++) {
         par[parindex] = parrange[0] + k*varstep; // Increment value
@@ -640,8 +638,6 @@ void EH_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, in
                              nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 1);
         EH_write_fbifurc_results(output_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, poinc, diffAttrac,
                              nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 3);
-        //write_results(output_poinc_file, dim, np, trans, par[parindex], (*x), xmin, xmax, LE, attrac, poinc, diffAttrac, nrms, rmsindex, xrms, overallxrms, 1);
-        //write_results(output_file, dim, np, trans, par[parindex], (*x), xmin, xmax, LE, attrac, poinc, diffAttrac, nrms, rmsindex, xrms, overallxrms, 3);
         // Progress Monitor
         if (parrange[2] > 100) {
             if (k % 50 == 0) {
@@ -657,13 +653,244 @@ void EH_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, in
     // Free memory    
     free(f); free(cum); free(s_cum); free(lambda); free(s_lambda);
     free(znorm); free(gsc); free(LE); free(tmp_attrac); free(IC);
-    free(xmax); free(xmin);
+    free(xmax); free(xmin); free(overallxmax); free(overallxmin);
     for (int i = 0; i < np - trans; i++) {
         free(poinc[i]);
     }
     free(poinc);
     free(xrms); free(overallxrms);
 }
+
+void EH_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
+                                    int indexX, int indexY, double *parrange, double *par, int npar, int nrms, int *rmsindex,
+                                    void (*edosys)(int, double *, double, double *, double *),
+                                    int ncustomvalues, int nprintf, int *printfindex,
+                                    void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
+                                    int mode), int bifmode) {
+    // Maximum length of custom names, if there is custom calculations
+    size_t nchars = 20;
+    // Declare matrix do store results
+    int pixels = parrange[2]*parrange[5];  // Number of results
+    double **results = malloc(pixels * sizeof **results);
+    for (int i = 0; i < pixels; i++) {
+        //results[i] = malloc((4 + (3*dim)) * sizeof **results);  // 4 for params, attrac, diffratac/ dim for xmax/ dim for xmin / dim for LE
+        results[i] = malloc((4 + (4*dim) + (2*nrms) + nprintf) * sizeof **results);
+    }
+    // Declare rk4 timestep, final time, short initial time, pi and varstep
+    double h;
+    const double pi = 4 * atan(1);  // Pi number definition
+    // Declare and define increment of control parameters
+    double varstep[2];        
+    varstep[0] = (parrange[1] - parrange[0])/(parrange[2] - 1); // -1 in the denominator ensures the input resolution
+    varstep[1] = (parrange[4] - parrange[3])/(parrange[5] - 1); // -1 in the denominator ensures the input resolution
+    // Declare variable to flag if all directions present same periodicity or not (0 = all the same, 1 = not the same)
+    int diffAttrac = -1;
+    // Declare variable to store attractor
+    int attrac;
+    // Allocate variable to store the names of the custom values
+    char **customnames = malloc(ncustomvalues * sizeof *customnames);
+    for (int i = 0; i < ncustomvalues; i++) {
+        customnames[i] = malloc(nchars * sizeof *customnames);
+    }
+    // Start of Parallel Block
+    #pragma omp parallel default(none) shared(dim, bifmode, ndiv, np, trans, maxper, varstep, npar, results, edosys, customfunc, customnames, nchars, pi, rmsindex, nrms, printfindex, nprintf, ncustomvalues) \
+                                       private(t, h, attrac) \
+                                       firstprivate(x, indexX, indexY, parrange, par, diffAttrac)
+    {   
+        //Get number of threads
+        int ID = omp_get_thread_num();
+        // Allocate memory for x` = f(x)
+        double *f = malloc(dim * sizeof *f);
+        // Declare vector and allocate memory to store poincare map values: poinc[number of permanent regime forcing periods][dimension original system]
+        double **poinc = malloc((np - trans) * sizeof **poinc);
+        for (int i = 0; i < np - trans; i++) {
+            poinc[i] = malloc(dim * sizeof **poinc);
+        }
+        // Declare vector for temporary storage of periodicity values to check if all directions are equal
+        int *tmp_attrac = malloc(dim * sizeof *tmp_attrac);
+        // Store Initial Conditions
+        double t0 = t;
+        double *IC = malloc(dim * sizeof *IC);
+        for (int i = 0; i < dim; i++) {
+            IC[i] = (*x)[i];
+        }
+        // Declare memory to store min and max values
+        double *xmax = malloc(dim * sizeof *xmax);
+        double *xmin = malloc(dim * sizeof *xmin);
+        double *overallxmin = malloc(dim * sizeof *overallxmin);
+        double *overallxmax = malloc(dim * sizeof *overallxmax);
+        // Allocate RMS variables
+        double *xrms = malloc(dim * sizeof *xrms);
+        double *overallxrms = malloc(dim * sizeof *overallxrms);
+        // Allocate variable to store custom values
+        double *customvalues = malloc(ncustomvalues * sizeof *customvalues);
+        // Mumber of integration steps
+        int N = np*ndiv;
+        // Convert function arguments as local (private) variables
+        double *X = convert_argument_to_private(*x, dim);
+        double *PAR = convert_argument_to_private(par, npar);
+        // Check if there is any custom names to be inserted on the header of the output file
+        if (ncustomvalues > 0) {
+            customfunc(X, PAR, t, xrms, xmin, xmax, N, ncustomvalues, customnames, nchars, customvalues, 0);
+        }
+        // Index to identify position to write results
+        int index;                                          
+        // Declare counter for parallelized loop
+        int k, m;
+        #pragma omp for schedule(static) private(k, m)
+        // Starts the parallel loop for Y control parameter
+        for (k = 0; k < (int)parrange[5]; k++) {
+            PAR[indexY] = parrange[3] + k*varstep[1]; // Increment value
+            // Reset Initial conditions for the beggining of a horizontal line
+            for (int i = 0; i < dim; i++) {
+                X[i] = IC[i];
+            }
+            // Starts the loop for X control parameter
+            for (m = 0; m < (int)parrange[2]; m++) {
+                PAR[indexX] = parrange[0] + m*varstep[0]; // Increment Value
+                // Check the mode of the diagram
+                if (bifmode == 1) {
+                    // Reset Initial conditions in each diagram step
+                    for (int i = 0; i < dim; i++) {
+                        X[i] = IC[i];
+                    }
+                }
+                // Reset Variables
+                t = t0;
+                for (int i = 0; i < dim; i++) {
+                    xrms[i] = 0.0;
+                    overallxrms[i] = 0.0;
+                    xmin[i] = 0.0;
+                    overallxmin[i] = X[i];
+                    xmax[i] = 0.0;
+                    overallxmax[i] = X[i];
+                }
+                if (ncustomvalues > 0) {
+                    for (int i = 0; i < ncustomvalues; i++) {
+                        customvalues[i] = 0.0;
+                    }
+                }
+                // Vary timestep if varpar = par[0], varying also final time and short initial time
+                h = (2 * pi) / (ndiv * PAR[0]);              // par[0] = OMEGA
+                // Call Runge-Kutta 4th order integrator N = nP * nDiv times
+                for (int i = 0; i < np; i++) {
+                    for (int j = 0; j < ndiv; j++) {
+                        rk4(dim, X, t, h, PAR, f, edosys);
+                        t = t + h;
+                        // Apply poincare map at permanent regime
+                        if (i >= trans) {
+                            // Get max and min values at permanent regime
+                            for (int q = 0; q < dim; q++) {
+                                // Initialize xmax[dim] and xmin[dim] with first values of x[dim] at permanent regime
+                                if (i == trans && j == 0) {
+                                    xmax[q] = X[q];
+                                    xmin[q] = X[q];
+                                }
+                                max_value(X[q], &xmax[q]);
+                                min_value(X[q], &xmin[q]);
+                            }
+                            // Accumulate squared values to RMS computation in permanent regime
+                            if (nrms > 0) {
+                                for (int q = 0; q < nrms; q++) {
+                                    xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], X[rmsindex[q]], N, 0);
+                                }
+                            }
+                            // Choose any point in the trajectory for poincare section placement
+                            if (j == 1) {
+                                // Stores poincare values in poinc[np - trans][dim] vector
+                                for (int p = 0; p < dim; p++) {
+                                    poinc[i - trans][p] = X[p];
+                                }
+                            }
+                        }
+                        // Get overall max and min values
+                        for (int q = 0; q < dim; q++) {
+                            max_value(X[q], &overallxmax[q]);
+                            min_value(X[q], &overallxmin[q]);
+                        }
+                        // Accumulate squared values for RMS computation for all time domain
+                        if (nrms > 0) {
+                            for (int q = 0; q < nrms; q++) {
+                                overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], X[rmsindex[q]], N, 0);
+                            }
+                        }
+                        // Perform "table" type custom calculations if there is calculations to be done
+                        if (ncustomvalues > 0) {
+                            customfunc(X, PAR, t, xrms, xmin, xmax, N, ncustomvalues, customnames, nchars, customvalues, 1);
+                        }
+                    }
+                }
+                // Compute RMS values of state variables
+                if (nrms > 0) {
+                    for (int q = 0; q < nrms; q++) {
+                        xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], X[rmsindex[q]], N, 1);
+                        overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], X[rmsindex[q]], N, 1);
+                    }
+                }
+                // Perform "end" type custom calculations if there is calculations to be done
+                if (ncustomvalues > 0) {
+                    customfunc(X, PAR, t, xrms, xmin, xmax, N, ncustomvalues, customnames, nchars, customvalues, 2);
+                }
+                // Verify the type of motion of the system
+                attrac = check_periodicity(dim, np, poinc, trans, tmp_attrac, &diffAttrac, maxper);
+                // Write results in matrix
+                index = (int)parrange[2]*k + m;
+                results[index][0] = PAR[indexY];
+                results[index][1] = PAR[indexX];
+                results[index][2] = (double)attrac;
+                results[index][3] = (double)diffAttrac;
+                for (int r = 4; r < dim + 4; r++) {
+                    results[index][r] = xmax[r-4];
+                }
+                for (int r = dim + 4; r < 4 + (2*dim); r++) {
+                    results[index][r] = xmin[r - 4 - dim];
+                }
+                for (int r = 4 + (2*dim); r < 4 + (3*dim); r++) {
+                    results[index][r] = overallxmax[r - 4 - (2*dim)];
+                }
+                for (int r = 4 + (3*dim); r < 4 + (4*dim); r++) {
+                    results[index][r] = overallxmin[r - 4 - (3*dim)];
+                }
+                for (int r = 4 + (4*dim); r < 4 + (4*dim) + nrms; r++) {
+                    results[index][r] = xrms[rmsindex[r - 4 - (4*dim)]];
+                }
+                for (int r = 4 + (4*dim) + nrms; r < 4 + (4*dim) + (2*nrms); r++) {
+                    results[index][r] = overallxrms[rmsindex[r - 4 - (4*dim) - nrms]];
+                }
+                for (int r = 4 + (4*dim) + (2*nrms); r < 4 + (4*dim) + (2*nrms) + nprintf; r ++) {
+                    results[index][r] = customvalues[printfindex[r - 4 - (4*dim) - (2*nrms)]];
+                }
+            }
+            // Progress Monitor
+            if (ID == 0) {
+                progress_bar(0, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
+                if (k == ((int)parrange[5] - 1)/omp_get_num_threads() ) {
+                    progress_bar(1, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
+                }
+            }
+        }
+        // Free memory    
+        free(f);
+        free(tmp_attrac); free(IC);
+        free(xmax); free(xmin); free(overallxmax); free(overallxmin);
+        for (int i = 0; i < np - trans; i++) {
+            free(poinc[i]);
+        }
+        free(poinc);
+        free(xrms); free(overallxrms);
+    } // End of Parallel Block
+
+    // Write results in file
+    printf("\n\n  Writing Results in Output File...\n");
+    //write_results(output_file, dim, nrms, rmsindex, results, pixels);
+    EH_p_write_dyndiag_results(output_file, dim, nrms, rmsindex, results, pixels, ncustomvalues, customnames, nprintf, printfindex);
+    // Free memory
+    for (int i = 0; i < pixels; i++) {
+        free(results[i]);
+    }
+    free(results);
+}
+
 
 void EH_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
                                          int indexX, int indexY, double *parrange, double *par, int npar, int nrms, int *rmsindex,
@@ -855,182 +1082,6 @@ void EH_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int 
         // Free memory    
         free(f); free(cum); free(s_cum); free(lambda); free(s_lambda);
         free(znorm); free(gsc); free(LE); free(tmp_attrac); free(IC);
-        free(xmax); free(xmin);
-        for (int i = 0; i < np - trans; i++) {
-            free(poinc[i]);
-        }
-        free(poinc);
-        free(xrms); free(overallxrms);
-    } // End of Parallel Block
-    
-    // Write results in file
-    printf("\n\n  Writing Results in Output File...\n");
-    write_results(output_file, dim, nrms, rmsindex, results, pixels);
-
-    // Free memory
-    for (int i = 0; i < pixels; i++) {
-        free(results[i]);
-    }
-    free(results);
-}
-
-void EH_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
-                                         int indexX, int indexY, double *parrange, double *par, int npar, int nrms, int *rmsindex,
-                                         void (*edosys)(int, double *, double, double *, double *), int bifmode, 
-                                         void (*write_results)(FILE *output_file, int dim, int nrms, int *rmsindex, double **results, int pixels)) {
-    // Declare matrix do store results
-    int pixels = parrange[2]*parrange[5];  // Number of results
-    double **results = malloc(pixels * sizeof **results);
-    for (int i = 0; i < pixels; i++) {
-        //results[i] = malloc((4 + (3*dim)) * sizeof **results);  // 4 for params, attrac, diffratac/ dim for xmax/ dim for xmin / dim for LE
-        results[i] = malloc((4 + (2*dim) + (2*nrms)) * sizeof **results);
-    }
-    // Declare rk4 timestep, final time, short initial time, pi and varstep
-    double h;
-    const double pi = 4 * atan(1);  // Pi number definition
-    // Declare and define increment of control parameters
-    double varstep[2];        
-    varstep[0] = (parrange[1] - parrange[0])/(parrange[2] - 1); // -1 in the denominator ensures the input resolution
-    varstep[1] = (parrange[4] - parrange[3])/(parrange[5] - 1); // -1 in the denominator ensures the input resolution
-    // Declare variable to flag if all directions present same periodicity or not (0 = all the same, 1 = not the same)
-    int diffAttrac = -1;
-    // Declare variable to store attractor
-    int attrac;
-    // Start of Parallel Block
-    #pragma omp parallel default(none) shared(dim, bifmode, ndiv, np, trans, maxper, varstep, npar, results, edosys, pi, rmsindex, nrms) \
-                                       private(t, h, attrac) \
-                                       firstprivate(x, indexX, indexY, parrange, par, diffAttrac)
-    {   
-        //Get number of threads
-        int ID = omp_get_thread_num();
-        // Allocate memory for x` = f(x)
-        double *f = malloc(dim * sizeof *f);
-        // Declare vector and allocate memory to store poincare map values: poinc[number of permanent regime forcing periods][dimension original system]
-        double **poinc = malloc((np - trans) * sizeof **poinc);
-        for (int i = 0; i < np - trans; i++) {
-            poinc[i] = malloc(dim * sizeof **poinc);
-        }
-        // Declare vector for temporary storage of periodicity values to check if all directions are equal
-        int *tmp_attrac = malloc(dim * sizeof *tmp_attrac);
-        // Store Initial Conditions
-        double t0 = t;
-        double *IC = malloc(dim * sizeof *IC);
-        for (int i = 0; i < dim; i++) {
-            IC[i] = (*x)[i];
-        }
-        // Allocate RMS variables
-        double *xrms = malloc(dim * sizeof *xrms);
-        double *overallxrms = malloc(dim * sizeof *overallxrms);
-        // Mumber of integration steps
-        int N = np*ndiv;
-        // Declare memory to store min and max values
-        double *xmax = malloc(dim * sizeof *xmax);
-        double *xmin = malloc(dim * sizeof *xmin);
-        // Convert function arguments as local (private) variables
-        double *X = convert_argument_to_private(*x, dim);
-        double *PAR = convert_argument_to_private(par, npar);
-        // Index to identify position to write results
-        int index;                                          
-        // Declare counter for parallelized loop
-        int k, m;
-        #pragma omp for schedule(static) private(k, m)
-        // Starts the parallel loop for Y control parameter
-        for (k = 0; k < (int)parrange[5]; k++) {
-            PAR[indexY] = parrange[3] + k*varstep[1]; // Increment value
-            // Reset Initial conditions for the beggining of a horizontal line
-            for (int i = 0; i < dim; i++) {
-                X[i] = IC[i];
-            }
-            // Starts the loop for X control parameter
-            for (m = 0; m < (int)parrange[2]; m++) {
-                PAR[indexX] = parrange[0] + m*varstep[0]; // Increment Value
-                // Reset Variables
-                t = t0;
-                for (int i = 0; i < dim; i++) {
-                    xrms[i] = 0.0;
-                    overallxrms[i] = 0.0;
-                }
-                // Check the mode of the diagram
-                if (bifmode == 1) {
-                    // Reset Initial conditions in each diagram step
-                    for (int i = 0; i < dim; i++) {
-                        X[i] = IC[i];
-                    }
-                }
-                // Vary timestep if varpar = par[0], varying also final time and short initial time
-                h = (2 * pi) / (ndiv * PAR[0]);              // par[0] = OMEGA
-                // Call Runge-Kutta 4th order integrator N = nP * nDiv times
-                for (int i = 0; i < np; i++) {
-                    for (int j = 0; j < ndiv; j++) {
-                        rk4(dim, X, t, h, PAR, f, edosys);
-                        t = t + h;
-                        // Apply poincare map at permanent regime
-                        if (i >= trans) {
-                            // Get max and min values at permanent regime
-                            for (int q = 0; q < dim; q++) {
-                                // Initialize xmax[dim] and xmin[dim] with first values of x[dim] at permanent regime
-                                if (i == trans && j == 0) {
-                                    xmax[q] = X[q];
-                                    xmin[q] = X[q];
-                                }
-                                max_value(X[q], &xmax[q]);
-                                min_value(X[q], &xmin[q]);
-                            }
-                            // Accumulate squared values to RMS computation in permanent regime
-                            for (int q = 0; q < nrms; q++) {
-                                xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], X[rmsindex[q]], N, 0);
-                            }
-                            // Choose any point in the trajectory for poincare section placement
-                            if (j == 1) {
-                                // Stores poincare values in poinc[np - trans][dim] vector
-                                for (int p = 0; p < dim; p++) {
-                                    poinc[i - trans][p] = X[p];
-                                }
-                            }
-                        }
-                        // Accumulate squared values for RMS computation for all time domain
-                        for (int q = 0; q < nrms; q++) {
-                            overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], X[rmsindex[q]], N, 0);
-                        }
-                    }
-                }
-                // Compute RMS values of state variables
-                for (int q = 0; q < nrms; q++) {
-                    xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], X[rmsindex[q]], N, 1);
-                    overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], X[rmsindex[q]], N, 1);
-                }
-                // Verify the type of motion of the system
-                attrac = check_periodicity(dim, np, poinc, trans, tmp_attrac, &diffAttrac, maxper);
-                // Write results in matrix
-                index = (int)parrange[2]*k + m;
-                results[index][0] = PAR[indexY];
-                results[index][1] = PAR[indexX];
-                results[index][2] = (double)attrac;
-                results[index][3] = (double)diffAttrac;
-                for (int r = 4; r < dim + 4; r++) {
-                    results[index][r] = xmax[r-4];
-                }
-                for (int r = dim + 4; r < 4 + (2*dim); r++) {
-                    results[index][r] = xmin[r - 4 - dim];
-                }
-                for (int r = 4 + (2*dim); r < 4 + (2*dim) + nrms; r++) {
-                    results[index][r] = xrms[rmsindex[r - 4 - (2*dim)]];
-                }
-                for (int r = 4 + (2*dim) + nrms; r < 4 + (2*dim) + (2*nrms); r++) {
-                    results[index][r] = overallxrms[rmsindex[r - 4 - (2*dim) - nrms]];
-                }
-            }
-            // Progress Monitor
-            if (ID == 0) {
-                progress_bar(0, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
-                if (k == ((int)parrange[5] - 1)/omp_get_num_threads() ) {
-                    progress_bar(1, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
-                }
-            }
-        }
-        // Free memory    
-        free(f);
-        free(tmp_attrac); free(IC);
         free(xmax); free(xmin);
         for (int i = 0; i < np - trans; i++) {
             free(poinc[i]);

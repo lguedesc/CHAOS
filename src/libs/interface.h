@@ -11,7 +11,7 @@ unsigned int choose_option(char **options, size_t n, size_t maxlength, char *cat
 void invalid_option(unsigned int option, char* category, size_t maxlength);
 void end_of_execution(size_t maxlength);
 void identify_simulation(unsigned int toolbox, unsigned int *system, unsigned int *module, char **toolboxesNames, char **systemNames, char** moduleNames, size_t numofsystems, size_t maxlength, size_t numofmodules);
-
+int int_length(int value);
 // Simulation Prints
 void fpartition(FILE *output_file, int mode, size_t maxlength);
 void fwrite_module_and_system(FILE *output_file, char *funcname, char *modulename, size_t maxlength);
@@ -40,8 +40,14 @@ void fwrite_prog_parameters_bifurcation(FILE* output_file, char *funcname, int d
 void write_prog_parameters_fbifurcation(int dim, int npar, int np, int ndiv, int trans, int maxper, size_t maxlength, double percname);
 void fwrite_prog_parameters_fbifurcation(FILE *output_file, char *funcname, int dim, int npar, int np, int ndiv, int trans, int maxper, size_t maxlength, double percname);
 
+void write_prog_parameters_dyndiag(int dim, int npar, int np, int ndiv, int trans, size_t maxlength, double percname);
+void fwrite_prog_parameters_dyndiag(FILE *output_file, char* funcname, int dim, int npar, int np, int ndiv, int trans, size_t maxlength, double percname);
+
 void write_bifurcation_info(double *parrange, int parindex, int bifmode, size_t maxlength, double percname);
 void fwrite_bifurcation_info(FILE* output_file, double *parrange, int parindex, int bifmode, size_t maxlength, double percname);
+
+void write_dyndiag_info(double *parrange, int indexX, int indexY, int bifmode, size_t maxlength, double percname);
+void fwrite_dyndiag_info(FILE *output_file, double *parrange, int indexX, int indexY, int bifmode, size_t maxlength, double percname);
 
 void print_RMS(int nRMS, int *rmsindex, double *xRMS, double *overallxRMS, size_t maxlength, double percname);
 void fprint_RMS(FILE *output_file, int nRMS, int *rmsindex, double *xRMS, double *overallxRMS, size_t maxlength, double percname);

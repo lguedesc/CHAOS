@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 void clear_screen() {
     #ifdef _WIN32
@@ -126,6 +127,10 @@ void identify_simulation(unsigned int toolbox, unsigned int *system, unsigned in
         option_header(toolboxesNames[toolbox - 1], maxlength);
         invalid_option((*system), "System", maxlength);
     }
+}
+
+int int_length(int value) {
+    return floor(log10(abs(value)));
 }
 
 // Simulation Prints
@@ -457,6 +462,97 @@ void fwrite_prog_parameters_fbifurcation(FILE *output_file, char *funcname, int 
     fprintf(output_file, "%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
     fprintf(output_file, "%-*s %-*d\n", spcname, "  Max Periodicity Considered:", spcvalue, maxper);
     fprintf(output_file, "%-*s %-*s\n", spcname, "  Timestep Value:", spcvalue, "(2*pi)/(nDiv*par[0])");
+}
+
+void write_prog_parameters_dyndiag(int dim, int npar, int np, int ndiv, int trans, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    printf("\n  Program Parameters\n");
+    partition(2, maxlength);
+    printf("%-*s %-*d\n", spcname, "  Dimension:", spcvalue, dim);
+    printf("%-*s %-*d\n", spcname, "  Number of Parameters:", spcvalue, npar);
+    printf("%-*s %-*d\n", spcname, "  Forcing Periods:", spcvalue, np);
+    printf("%-*s %-*d\n", spcname, "  Timesteps per Period:", spcvalue, ndiv);
+    printf("%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
+    printf("%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
+    printf("%-*s %-*s\n", spcname, "  Timestep Value:", spcvalue, "(2*pi)/(nDiv*par[0])");
+}
+
+void fwrite_prog_parameters_dyndiag(FILE *output_file, char* funcname, int dim, int npar, int np, int ndiv, int trans, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    fwrite_module_and_system(output_file, funcname, "Dynamical Response Diagram", maxlength);
+    fprintf(output_file, "\n  Program Parameters\n");
+    fpartition(output_file, 2, maxlength);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Dimension:", spcvalue, dim);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Number of Parameters:", spcvalue, npar);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Forcing Periods:", spcvalue, np);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Timesteps per Period:", spcvalue, ndiv);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
+    fprintf(output_file, "%-*s %-*s\n", spcname, "  Timestep Value:", spcvalue, "(2*pi)/(nDiv*par[0])");
+}
+
+void write_dyndiag_info(double *parrange, int indexX, int indexY, int bifmode, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength;  // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;       // Space for value of variable
+    partition(2, maxlength);
+    printf("  Dynamical Diagram Parameters\n");
+    partition(2, maxlength);
+    if (bifmode == 0) {
+        printf("%-*s %-*s\n", spcname, "  Diagram Mode:", spcvalue, "Following Attractor");
+    }
+    else if (bifmode == 1) {
+        printf("%-*s %-*s\n", spcname, "  Diagram Mode:", spcvalue, "Reseting Initial Conditions");
+    } 
+    else {
+        printf("\n  Invalid Diagram Mode of %d...\nChange to 0 or 1 in the input file and run the program again.\nExiting Program...!\n", bifmode);
+        exit(1);
+    }
+    printf("%-*s %g x %-*g\n", spcname, "  Resolution:", parrange[2], spcvalue - 3 - int_length((int)parrange[2]), parrange[5]);
+    printf("\n");
+    printf("%-*s %-*d\n", spcname, "  Control Parameter Index (x):", spcvalue, indexX);
+    printf("%-*s %-*g\n", spcname, "  Initial Control Parameter (x):", spcvalue, parrange[0]);
+    printf("%-*s %-*g\n", spcname, "  Final Control Parameter (x):", spcvalue, parrange[1]);
+    printf("%-*s %-*g\n", spcname, "  Control Parameter Step (x):", spcvalue, (parrange[1] - parrange[0]) / (parrange[2] - 1));
+    printf("%-*s %-*g\n", spcname, "  Total Number of Steps (x):", spcvalue, parrange[2]);
+    printf("\n");
+    printf("%-*s %-*d\n", spcname, "  Control Parameter Index (y):", spcvalue, indexY);
+    printf("%-*s %-*g\n", spcname, "  Initial Control Parameter (y):", spcvalue, parrange[3]);
+    printf("%-*s %-*g\n", spcname, "  Final Control Parameter (y):", spcvalue, parrange[4]);
+    printf("%-*s %-*g\n", spcname, "  Control Parameter Step (y):", spcvalue, (parrange[4] - parrange[3]) / (parrange[5] - 1));
+    printf("%-*s %-*g\n", spcname, "  Total Number of Steps (y):", spcvalue, parrange[5]);
+}
+
+void fwrite_dyndiag_info(FILE *output_file, double *parrange, int indexX, int indexY, int bifmode, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength;  // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;       // Space for value of variable
+    fpartition(output_file, 2, maxlength);
+    fprintf(output_file, "  Dynamical Diagram Parameters\n");
+    fpartition(output_file, 2, maxlength);
+    if (bifmode == 0) {
+        fprintf(output_file, "%-*s %-*s\n", spcname, "  Diagram Mode:", spcvalue, "Following Attractor");
+    }
+    else if (bifmode == 1) {
+        fprintf(output_file, "%-*s %-*s\n", spcname, "  Diagram Mode:", spcvalue, "Reseting Initial Conditions");
+    } 
+    else {
+        fprintf(output_file, "\n  Invalid Diagram Mode of %d...\nChange to 0 or 1 in the input file and run the program again.\nExiting Program...!\n", bifmode);
+        exit(1);
+    }
+    fprintf(output_file, "%-*s %g x %-*g\n", spcname, "  Resolution:", parrange[2], spcvalue - 3 - int_length((int)parrange[2]), parrange[5]);
+    fprintf(output_file, "\n");
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Control Parameter Index (x):", spcvalue, indexX);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Initial Control Parameter (x):", spcvalue, parrange[0]);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Final Control Parameter (x):", spcvalue, parrange[1]);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Control Parameter Step (x):", spcvalue, (parrange[1] - parrange[0]) / (parrange[2] - 1));
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Total Number of Steps (x):", spcvalue, parrange[2]);
+    fprintf(output_file, "\n");
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Control Parameter Index (y):", spcvalue, indexY);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Initial Control Parameter (y):", spcvalue, parrange[3]);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Final Control Parameter (y):", spcvalue, parrange[4]);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Control Parameter Step (y):", spcvalue, (parrange[4] - parrange[3]) / (parrange[5] - 1));
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Total Number of Steps (y):", spcvalue, parrange[5]);
 }
 
 void print_attractor(int attrac, int maxper, size_t maxlength, double percname) {

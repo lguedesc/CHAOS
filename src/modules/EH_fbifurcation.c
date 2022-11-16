@@ -147,15 +147,13 @@ static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  in
             fscanf(input, "%d\n", &(*printfindex)[i]);
         }
     }
-    
     // Close input file
     fclose(input);
-    /* The user is responsible to free (x), (par) or (parrange) after the function call */
+    /* The user is responsible to free everything allocated after the function call */
 }
 
 static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int parindex, int nrms, int *rmsindex, int bifmode, char* funcname,
                        int ncustomvalues, int nprintf, int *printfindex, size_t maxlength, double percname, char* mode) {
-    //Get time and date
     if (strcmp(mode, "screen") == 0) {   
         write_prog_parameters_fbifurcation(dim, npar, np, ndiv, trans, maxper, maxlength, percname);
         write_initial_conditions(dim, x, t, maxlength, percname);

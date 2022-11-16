@@ -54,7 +54,7 @@ void EH_forcedbasin(char *funcname, char* outputname, void (*edosys)(int, double
     //double time_spent = 0.0;
     //clock_t time_i = clock();
     // Call solution
-    EH_forced_basin_of_attraction_2D(output_dyndiag, DIM, nP, nDiv, trans, maxPer, t, &x, indexX, indexY, icRange, par, nPar, nRMS, rmsindex, edosys, EH_p_write_dyndiag_results);
+    //EH_forced_basin_of_attraction_2D(output_dyndiag, DIM, nP, nDiv, trans, maxPer, t, &x, indexX, indexY, icRange, par, nPar, nRMS, rmsindex, edosys, EH_p_write_dyndiag_results);
     
     // Close output file
     fclose(output_dyndiag);
