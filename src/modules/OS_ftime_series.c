@@ -7,16 +7,16 @@
 #include "../libs/odesystems.h"
 #include "../libs/nldyn.h"
 #include "../libs/iofiles.h"
-#include "../libs/energyharvest.h"
+#include "../libs/nlosc.h"
 #include "../libs/interface.h"
-#include "EH_ftime_series.h"
+#include "OS_ftime_series.h"
 
 static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper, int *np, int *ndiv, int* trans, int *nrms, double *t, double **par, double **x, int **rmsindex,
                                int *ncustomvalues, int *nprintf, int *nprintscr, int **printfindex, int **printscrindex);
 static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, int nrms, double h, double t, double *x, double *par, int *rmsindex, char* funcname, 
                        int ncustomvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex, size_t maxlength, double percname, char* mode);
 
-void EH_ftime_series(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, int, int, char **, size_t, double *, int)) {
+void OS_ftime_series(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, int, int, char **, size_t, double *, int)) {
     
     // Parameters related to printing information
     size_t maxLen = 71;             // Max length of the info printed on the screen and on info file
@@ -72,7 +72,7 @@ void EH_ftime_series(char *funcname, char* outputname, void (*edosys)(int, doubl
     print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, nCustomValues, nPrintf, printfindex, nPrintscr, printscrindex, maxLen, percName, "screen");
     print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, nCustomValues, nPrintf, printfindex, nPrintscr, printscrindex, maxLen, percName, "file");
     // Call solution
-    EH_full_timeseries_solution(output_ftimeseries, output_poinc, DIM, nP, nDiv, trans, &attractor, maxPer, t, &x, h, par, nRMS, rmsindex, &xRMS, &overallxRMS, &xmin, &xmax, 
+    OS_full_timeseries_solution(output_ftimeseries, output_poinc, DIM, nP, nDiv, trans, &attractor, maxPer, t, &x, h, par, nRMS, rmsindex, &xRMS, &overallxRMS, &xmin, &xmax, 
                                 &overallxmin, &overallxmax, edosys, nCustomValues, &customNames, &customValues, nPrintf, printfindex, nPrintscr, printscrindex, customfunc);
     // Print min and max values on screen and in info file
     print_minmax(xmin, xmax, overallxmin, overallxmax, DIM, maxLen, percName);

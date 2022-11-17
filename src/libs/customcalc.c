@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <stdarg.h>
-#include "energyharvest.h"
+#include "nlosc.h"
+#include "nldyn.h"
 
 // Methods
 void assign_names(char **strings, const int nvalues, char **names, size_t maxstrlen) {

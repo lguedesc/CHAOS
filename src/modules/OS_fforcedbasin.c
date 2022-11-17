@@ -7,16 +7,16 @@
 #include "../libs/odesystems.h"
 #include "../libs/nldyn.h"
 #include "../libs/iofiles.h"
-#include "../libs/energyharvest.h"
+#include "../libs/nlosc.h"
 #include "../libs/interface.h"
-#include "EH_fforcedbasin.h"
+#include "OS_fforcedbasin.h"
 
 static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **icrange, int *indexX, int *indexY, double **x, int *nrms, int **rmsindex,
                                 int *ncustomvalues, int *nprintf, int **printfindex);
 static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *icrange, int indexX, int indexY, int nrms, int *rmsindex,
                         int ncustomvalues, int nprintf, int *printfindex, size_t maxlength, double percname, char* funcname, char* mode);
 
-void EH_fforcedbasin(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, int, int, char **, size_t, double *, int)) {
+void OS_fforcedbasin(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, int, int, char **, size_t, double *, int)) {
     // Parameters related to printing information
     size_t maxLen = 71;             // Max length of the info printed on the screen and on info file
     double percName = 0.6;          // Percentage of space occuped by the name of the quantity printed
@@ -60,7 +60,7 @@ void EH_fforcedbasin(char *funcname, char* outputname, void (*edosys)(int, doubl
     print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, icRange, indexX, indexY, nRMS, rmsindex, nCustomValues, nPrintf, printfindex, maxLen, percName, funcname, "screen");
     print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, icRange, indexX, indexY, nRMS, rmsindex, nCustomValues, nPrintf, printfindex, maxLen, percName, funcname, "file");
     // Call solution
-    EH_full_forced_basin_of_attraction_2D_solution(output_ffbasin, DIM, nP, nDiv, trans, maxPer, t, &x, indexX, indexY, icRange, par, nPar, nRMS, rmsindex, edosys,
+    OS_full_forced_basin_of_attraction_2D_solution(output_ffbasin, DIM, nP, nDiv, trans, maxPer, t, &x, indexX, indexY, icRange, par, nPar, nRMS, rmsindex, edosys,
                                                     nCustomValues, nPrintf, printfindex, customfunc);
 
     // Close output file

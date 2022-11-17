@@ -7,14 +7,14 @@
 #include "../libs/odesystems.h"
 #include "../libs/nldyn.h"
 #include "../libs/iofiles.h"
-#include "../libs/energyharvest.h"
-#include "EH_time_series.h"
+#include "../libs/nlosc.h"
+#include "OS_time_series.h"
 
 static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, int nrms, double h, double t, double *x, double *par, int *rmsindex, char* funcname, 
                        int ncustomvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex, size_t maxlength, double percname, char* mode);
 static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int *trans, int *nrms, double *t, double **par, double **x, int **rmsindex, int *ncustomvalues, int *nprintf, int *nprintscr, int **printfindex, int **printscrindex);
 
-void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, int, int, char **, size_t, double *, int)) {
+void OS_timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, int, int, char **, size_t, double *, int)) {
     
     // Parameters related to printing information
     size_t maxLen = 71;             // Max length of the info printed on the screen and on info file
@@ -72,7 +72,7 @@ void EH_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     clock_t time_i = clock();
     */
     // Call solution
-    EH_rk4_solution(output_rk4, DIM, nP, nDiv, trans, t, x, h, par, nRMS, rmsindex, &xRMS, &overallxRMS, &xmin, &xmax, &overallxmin, &overallxmax, edosys,  
+    OS_rk4_solution(output_rk4, DIM, nP, nDiv, trans, t, x, h, par, nRMS, rmsindex, &xRMS, &overallxRMS, &xmin, &xmax, &overallxmin, &overallxmax, edosys,  
                     nCustomValues, &customNames, &customValues, nPrintf, printfindex, nPrintscr, printscrindex, customfunc);    
     /*
     clock_t time_f = clock();

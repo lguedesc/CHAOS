@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <stdarg.h>
 #include <string.h>
 #include "iofiles.h"
 #include "nldyn.h"
@@ -31,22 +30,8 @@ double RMS(double *cum, double measure, int N, int mode) {
     }
 }
 
-void EH_print_RMS(FILE *info, int nRMS, int *rmsindex, double *xRMS, double *overallxRMS) {
-    // Print RMS calculations on screen and in file
-    for (int q = 0; q < nRMS; q++) {
-        printf("%s%d%-22s%s%-20g\n", "  xRMS[", rmsindex[q], "]:", " ", xRMS[rmsindex[q]]);
-        fprintf(info, "%s%d%-22s%s%-20g\n", "  xRMS[", rmsindex[q], "]:", " ", xRMS[rmsindex[q]]);
-    }
-    for (int q = 0; q < nRMS; q++) {
-        printf("%s%d%-14s%s%-20g\n", "  Overall xRMS[", rmsindex[q], "]:", " ", overallxRMS[rmsindex[q]]);
-        fprintf(info, "%s%d%-14s%s%-20g\n", "  Overall xRMS[", rmsindex[q], "]:", " ", overallxRMS[rmsindex[q]]);
-    }
-    printf("  -------------------------------------------------\n");
-    fprintf(info, "  -------------------------------------------------\n");
-}
-
 // Solutions
-void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double *x, double h, double *par, int nrms, int *rmsindex, double **xrms, double **overallxrms, 
+void OS_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double *x, double h, double *par, int nrms, int *rmsindex, double **xrms, double **overallxrms, 
                      double **xmin, double **xmax, double **overallxmin, double **overallxmax, void (*edosys)(int, double *, double, double *, double *),  
                      int ncustomvalues, char ***customnames, double **customvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex,
                      void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode)) {
@@ -154,7 +139,7 @@ void EH_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
     free(f); 
 }
 
-void EH_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int *attrac, int maxper, double t, double **x, double h, double *par, 
+void OS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int *attrac, int maxper, double t, double **x, double h, double *par, 
                                  int nrms, int *rmsindex, double **xrms, double **overallxrms, double **xmin, double **xmax, double **overallxmin, double **overallxmax,
                                  void (*edosys)(int, double *, double, double *, double *), 
                                  int ncustomvalues, char ***customnames, double **customvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex,
@@ -313,7 +298,7 @@ void EH_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poi
     free(poinc);
 }
 
-void EH_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, double t, double *x, int parindex, 
+void OS_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, double t, double *x, int parindex, 
                         double *parrange, double *par, int nrms, int *rmsindex, void (*edosys)(int, double *, double, double *, double *), 
                         int ncustomvalues, int nprintf, int *printfindex,
                         void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
@@ -460,14 +445,13 @@ void EH_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int
     // Free Memory
     free(f); free(IC); free(xmax); free(xmin); free(xrms); free(overallxrms);
     free(overallxmin); free(overallxmax); free(customvalues);
-    /* (INVESTIGATE ISSUE LATER - DESCRIBED IN TODOLIST.TXT)
     for (int i = 0; i < ncustomvalues; i++) {
             free(customnames[i]);
         }
-    free(customnames);*/
+    free(customnames);
 }
 
-void EH_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int maxper, double t,
+void OS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int maxper, double t,
                                   double **x, int parindex, double *parrange, double *par, int nrms, int *rmsindex, void (*edosys)(int, double *, double, double *, double *), 
                                   int ncustomvalues, int nprintf, int *printfindex,
                                   void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
@@ -661,14 +645,13 @@ void EH_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, in
     free(poinc);
     free(xrms); free(overallxrms);
     free(customvalues);
-    /* (INVESTIGATE ISSUE LATER - DESCRIBED IN TODOLIST.TXT)
     for (int i = 0; i < ncustomvalues; i++) {
             free(customnames[i]);
         }
-    free(customnames);*/
+    free(customnames);
 }
 
-void EH_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
+void OS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
                                     int indexX, int indexY, double *parrange, double *par, int npar, int nrms, int *rmsindex,
                                     void (*edosys)(int, double *, double, double *, double *),
                                     int ncustomvalues, int nprintf, int *printfindex,
@@ -896,15 +879,14 @@ void EH_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv,
         free(results[i]);
     }
     free(results);
-    /* (INVESTIGATE ISSUE LATER - DESCRIBED IN TODOLIST.TXT)
     for (int i = 0; i < ncustomvalues; i++) {
             free(customnames[i]);
         }
-    free(customnames);*/
+    free(customnames);
 }
 
 
-void EH_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
+void OS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
                                         int indexX, int indexY, double *parrange, double *par, int npar, int nrms, int *rmsindex,
                                         void (*edosys)(int, double *, double, double *, double *),
                                         int ncustomvalues, int nprintf, int *printfindex,
@@ -1160,14 +1142,13 @@ void EH_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int 
         free(results[i]);
     }
     free(results);
-    /* (INVESTIGATE ISSUE LATER - DESCRIBED IN TODOLIST.TXT)
     for (int i = 0; i < ncustomvalues; i++) {
             free(customnames[i]);
         }
-    free(customnames);*/
+    free(customnames);
 }
 
-void EH_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
+void OS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
                                                     int indexX, int indexY, double *icrange, double *par, int npar, int nrms, int *rmsindex, 
                                                     void (*edosys)(int, double *, double, double *, double *), 
                                                     int ncustomvalues, int nprintf, int *printfindex,
@@ -1179,7 +1160,7 @@ void EH_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim, 
     int pixels = icrange[2]*icrange[5];  // Number of results
     double **results = malloc(pixels * sizeof **results);
     for (int i = 0; i < pixels; i++) {
-        results[i] = malloc((4 + (4*dim) + (2*nrms) + nprintf) * sizeof **results); 
+        results[i] = malloc((4 + (5*dim) + (2*nrms) + nprintf) * sizeof **results); 
     }
     // Declare rk4 timestep, final time, short initial time and pi 
     double h, tf, s_T0;
@@ -1359,8 +1340,8 @@ void EH_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim, 
                 attrac = get_attractor(poinc, LE, dim, np, trans, tmp_attrac, &diffAttrac, maxper);
                 // Write results in matrix
                 index = (int)icrange[2]*k + m;
-                results[index][0] = PAR[indexY];
-                results[index][1] = PAR[indexX];
+                results[index][0] = IC[indexY];
+                results[index][1] = IC[indexX];
                 results[index][2] = (double)attrac;
                 results[index][3] = (double)diffAttrac;
                 for (int r = 4; r < dim + 4; r++) {
@@ -1389,13 +1370,12 @@ void EH_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim, 
                 }
                 // Progress Monitor
                 if (ID == 0) {
-                    //printf("PAR[%d] = %lf\n", indexX, PAR[indexX]);
-                    //printf("%-5s%-3d%-7s%-3d%-12s%-11lf%-11s%-12lf%-14s%-2d%-15s%-2d%-10s%-11lf%-10s%-11lf\n", "[k = ", k, "] [m = ", m, "]: parY = ", PAR[indexY], ", parX = ", PAR[indexX], ", Attractor = ", attrac, ", diffAttrac = ", diffAttrac, ", LE[0] = ", LE[0], ", LE[1] = ", LE[1]);
                     progress_bar(0, (double)k, 0, (icrange[5]-1)/omp_get_num_threads());
                     if (k == ((int)icrange[5] - 1)/omp_get_num_threads() ) {
                         progress_bar(1, (double)k, 0, (icrange[5]-1)/omp_get_num_threads());
                     }
                 }
+                //printf("results[%d][1] = IC[%d] | %lf = %lf\n", index, indexX, results[index][1], IC[indexX]);
             }
         }
         // Free memory    
@@ -1419,14 +1399,8 @@ void EH_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim, 
         free(results[i]);
     }
     free(results);
-    
-    /* (INVESTIGATE ISSUE LATER - described in todolist.txt )
-    for (int i = 0; i < ncustomvalues; i++) {
-        printf("%s\n", customnames[i]);
-    }
-    printf("freeing names...");
     for (int i = 0; i < ncustomvalues; i++) {
             free(customnames[i]);
         }
-    free(customnames);*/
+    free(customnames);
 }

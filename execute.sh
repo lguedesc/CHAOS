@@ -13,10 +13,10 @@ read option
 echo "====================================================================="
 if [ $option -eq 1 ];
 then 
-    icc -std=c17 -qopenmp -o CHAOS -O3 src/main.c src/libs/odesystems.c src/libs/interface.c src/libs/iofiles.c src/libs/nldyn.c src/libs/energyharvest.c src/libs/customcalc.c src/modules/convergence_test.c src/modules/time_series.c src/modules/poinc_map.c src/modules/lyap_exp_wolf.c src/modules/ftime_series.c src/modules/bifurcation.c src/modules/fbifurcation.c src/modules/dyndiag.c src/modules/fdyndiag.c src/modules/epbasin.c src/modules/forcedbasin.c src/modules/EH_time_series.c src/modules/EH_ftime_series.c src/modules/EH_bifurcation.c src/modules/EH_fbifurcation.c src/modules/EH_dyndiag.c src/modules/EH_fdyndiag.c src/modules/EH_fforcedbasin.c
+    icc -std=c17 -qopenmp -o CHAOS -O3 src/main.c src/libs/odesystems.c src/libs/interface.c src/libs/iofiles.c src/libs/nldyn.c src/libs/nlosc.c src/libs/customcalc.c src/modules/convergence_test.c src/modules/time_series.c src/modules/poinc_map.c src/modules/lyap_exp_wolf.c src/modules/ftime_series.c src/modules/bifurcation.c src/modules/fbifurcation.c src/modules/dyndiag.c src/modules/fdyndiag.c src/modules/epbasin.c src/modules/forcedbasin.c src/modules/OS_time_series.c src/modules/OS_ftime_series.c src/modules/OS_bifurcation.c src/modules/OS_fbifurcation.c src/modules/OS_dyndiag.c src/modules/OS_fdyndiag.c src/modules/OS_fforcedbasin.c
 elif [ $option -eq 2 ]
 then 
-    icc -std=c17 -qopenmp -o CHAOS -O3 src/main.c src/libs/odesystems.c src/libs/interface.c src/libs/iofiles.c src/libs/nldyn.c src/libs/energyharvest.c src/libs/customcalc.c src/modules/convergence_test.c src/modules/time_series.c src/modules/poinc_map.c src/modules/lyap_exp_wolf.c src/modules/ftime_series.c src/modules/bifurcation.c src/modules/fbifurcation.c src/modules/dyndiag.c src/modules/fdyndiag.c src/modules/epbasin.c src/modules/forcedbasin.c src/modules/EH_time_series.c src/modules/EH_ftime_series.c src/modules/EH_bifurcation.c src/modules/EH_fbifurcation.c src/modules/EH_dyndiag.c src/modules/EH_fdyndiag.c src/modules/EH_fforcedbasin.c
+    icc -std=c17 -qopenmp -o CHAOS -O3 src/main.c src/libs/odesystems.c src/libs/interface.c src/libs/iofiles.c src/libs/nldyn.c src/libs/nlosc.c src/libs/customcalc.c src/modules/convergence_test.c src/modules/time_series.c src/modules/poinc_map.c src/modules/lyap_exp_wolf.c src/modules/ftime_series.c src/modules/bifurcation.c src/modules/fbifurcation.c src/modules/dyndiag.c src/modules/fdyndiag.c src/modules/epbasin.c src/modules/forcedbasin.c src/modules/OS_time_series.c src/modules/OS_ftime_series.c src/modules/OS_bifurcation.c src/modules/OS_fbifurcation.c src/modules/OS_dyndiag.c src/modules/OS_fdyndiag.c src/modules/OS_fforcedbasin.c
     ./CHAOS
 elif [ $option -eq 3 ]
 then 
@@ -70,7 +70,7 @@ then
         python -B -m EPBasin.out.plot_epbasin
     elif [ $plt -eq 10 ]
     then
-        python -B -m ForcBasin.out.plot_forcedbasin
+        python -B -m FForcBasin.out.plot_forcedbasin
     elif [ $plt -eq 0 ]
     then
         exit 0
