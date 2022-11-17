@@ -43,6 +43,9 @@ void fwrite_prog_parameters_fbifurcation(FILE *output_file, char *funcname, int 
 void write_prog_parameters_dyndiag(int dim, int npar, int np, int ndiv, int trans, size_t maxlength, double percname);
 void fwrite_prog_parameters_dyndiag(FILE *output_file, char* funcname, int dim, int npar, int np, int ndiv, int trans, size_t maxlength, double percname);
 
+void write_prog_parameters_fdyndiag(int dim, int npar, int np, int ndiv, int maxper, int trans, size_t maxlength, double percname);
+void fwrite_prog_parameters_fdyndiag(FILE *output_file, char *funcname, int dim, int npar, int np, int ndiv, int maxper, int trans, size_t maxlength, double percname);
+
 void write_bifurcation_info(double *parrange, int parindex, int bifmode, size_t maxlength, double percname);
 void fwrite_bifurcation_info(FILE* output_file, double *parrange, int parindex, int bifmode, size_t maxlength, double percname);
 

@@ -284,7 +284,7 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
             EH_dyndiag(funcname, outputname, edosys, customfunc);
             break;
         case 9:
-            EH_fdyndiag(funcname, outputname, edosys);
+            EH_fdyndiag(funcname, outputname, edosys, customfunc);
             break;
         case 10:
             epbasin(funcname, outputname, edosys);

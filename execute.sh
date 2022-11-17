@@ -33,8 +33,9 @@ then
     echo "5 - Bifurcation Diagram"
     echo "6 - Full Bifurcation Diagram"
     echo "7 - Dynamical Diagram"
-    echo "8 - Basin of Attraction (Equilibrium Point)"
-    echo "9 - Basin of Attraction (Forced)"
+    echo "8 - Full Dynamical Diagram"
+    echo "9 - Basin of Attraction (Equilibrium Point)"
+    echo "10 - Basin of Attraction (Forced)"
     echo "0 - EXIT"
     echo "====================================================================="
     printf "Plot Module: "
@@ -63,8 +64,11 @@ then
         python -B -m DynDiagram.out.plot_dyndiag
     elif [ $plt -eq 8 ]
     then
-        python -B -m EPBasin.out.plot_epbasin
+        python -B -m FDynDiagram.out.plot_fdyndiag
     elif [ $plt -eq 9 ]
+    then
+        python -B -m EPBasin.out.plot_epbasin
+    elif [ $plt -eq 10 ]
     then
         python -B -m ForcBasin.out.plot_forcedbasin
     elif [ $plt -eq 0 ]

@@ -149,7 +149,7 @@ static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  in
     /* The user is responsible to free everything allocated after the function call */
 }
 
-static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int indexX, int indexY, int nrms, int *rmsindex, int bifmode,int ncustomvalues, int nprintf, int *printfindex, size_t maxlength, double percname, char* funcname, char* mode) {
+static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int indexX, int indexY, int nrms, int *rmsindex, int bifmode, int ncustomvalues, int nprintf, int *printfindex, size_t maxlength, double percname, char* funcname, char* mode) {
     if (strcmp(mode, "screen") == 0) {   
         write_prog_parameters_dyndiag(dim, npar, np, ndiv, trans, maxlength, percname);
         write_initial_conditions(dim, x, t, maxlength, percname);

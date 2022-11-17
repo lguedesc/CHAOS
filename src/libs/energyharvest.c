@@ -659,6 +659,11 @@ void EH_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, in
     }
     free(poinc);
     free(xrms); free(overallxrms);
+    free(customvalues);
+    for (int i = 0; i < ncustomvalues; i++) {
+            free(customnames[i]);
+        }
+    free(customnames);
 }
 
 void EH_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
@@ -878,30 +883,38 @@ void EH_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv,
         }
         free(poinc);
         free(xrms); free(overallxrms);
+        free(customvalues);
     } // End of Parallel Block
 
     // Write results in file
     printf("\n\n  Writing Results in Output File...\n");
-    //write_results(output_file, dim, nrms, rmsindex, results, pixels);
     EH_p_write_dyndiag_results(output_file, dim, nrms, rmsindex, results, pixels, ncustomvalues, customnames, nprintf, printfindex);
     // Free memory
     for (int i = 0; i < pixels; i++) {
         free(results[i]);
     }
     free(results);
+    for (int i = 0; i < ncustomvalues; i++) {
+            free(customnames[i]);
+        }
+    free(customnames);
 }
 
 
 void EH_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
-                                         int indexX, int indexY, double *parrange, double *par, int npar, int nrms, int *rmsindex,
-                                         void (*edosys)(int, double *, double, double *, double *), int bifmode, 
-                                         void (*write_results)(FILE *output_file, int dim, int nrms, int *rmsindex, double **results, int pixels)) {
+                                        int indexX, int indexY, double *parrange, double *par, int npar, int nrms, int *rmsindex,
+                                        void (*edosys)(int, double *, double, double *, double *),
+                                        int ncustomvalues, int nprintf, int *printfindex,
+                                        void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
+                                        int mode), int bifmode) {
+    // Maximum length of custom names, if there is custom calculations
+    size_t nchars = 20;
     // Declare matrix do store results
     int pixels = parrange[2]*parrange[5];  // Number of results
     double **results = malloc(pixels * sizeof **results);
     for (int i = 0; i < pixels; i++) {
         //results[i] = malloc((4 + (3*dim)) * sizeof **results);  // 4 for params, attrac, diffratac/ dim for xmax/ dim for xmin / dim for LE
-        results[i] = malloc((4 + (3*dim) + (2*nrms)) * sizeof **results);
+        results[i] = malloc((4 + (5*dim) + (2*nrms) + nprintf) * sizeof **results);
     }
     // Declare rk4 timestep, final time, short initial time, pi and varstep
     double h, tf, s_T0;
@@ -918,8 +931,13 @@ void EH_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int 
     int attrac;
     // Prepare x vector to include perturbed values
     realloc_vector(x, ndim);
+    // Allocate variable to store the names of the custom values
+    char **customnames = malloc(ncustomvalues * sizeof *customnames);
+    for (int i = 0; i < ncustomvalues; i++) {
+        customnames[i] = malloc(nchars * sizeof *customnames);
+    }
     // Start of Parallel Block
-    #pragma omp parallel default(none) shared(dim, bifmode, ndiv, np, trans, ndim, maxper, varstep, npar, results, edosys, pi, rmsindex, nrms) \
+    #pragma omp parallel default(none) shared(dim, bifmode, ndiv, np, trans, ndim, maxper, varstep, npar, results, edosys, customfunc, customnames, nchars, pi, rmsindex, nrms, printfindex, nprintf, ncustomvalues) \
                                        private(t, h, tf, s_T0, attrac) \
                                        firstprivate(x, indexX, indexY, parrange, par, diffAttrac)
     {   
@@ -949,17 +967,25 @@ void EH_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int 
         for (int i = 0; i < dim; i++) {
             IC[i] = (*x)[i];
         }
-        // Allocate RMS variables
-        double *xrms = malloc(dim * sizeof *xrms);
-        double *overallxrms = malloc(dim * sizeof *overallxrms);
-        // Mumber of integration steps
-        int N = np*ndiv;
         // Declare memory to store min and max values
         double *xmax = malloc(dim * sizeof *xmax);
         double *xmin = malloc(dim * sizeof *xmin);
+        double *overallxmin = malloc(dim * sizeof *overallxmin);
+        double *overallxmax = malloc(dim * sizeof *overallxmax);
+        // Allocate RMS variables
+        double *xrms = malloc(dim * sizeof *xrms);
+        double *overallxrms = malloc(dim * sizeof *overallxrms);
+        // Allocate variable to store custom values
+        double *customvalues = malloc(ncustomvalues * sizeof *customvalues);
+        // Mumber of integration steps
+        int N = np*ndiv;
         // Convert function arguments as local (private) variables
         double *X = convert_argument_to_private(*x, ndim);
         double *PAR = convert_argument_to_private(par, npar);
+        // Check if there is any custom names to be inserted on the header of the output file
+        if (ncustomvalues > 0) {
+            customfunc(X, PAR, t, xrms, xmin, xmax, N, ncustomvalues, customnames, nchars, customvalues, 0);
+        }
         // Index to identify position to write results
         int index;                                          
         // Declare counter for parallelized loop
@@ -975,6 +1001,13 @@ void EH_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int 
             // Starts the loop for X control parameter
             for (m = 0; m < (int)parrange[2]; m++) {
                 PAR[indexX] = parrange[0] + m*varstep[0]; // Increment Value
+                // Check the mode of the diagram
+                if (bifmode == 1) {
+                    // Reset Initial conditions in each diagram step
+                    for (int i = 0; i < dim; i++) {
+                        X[i] = IC[i];
+                    }
+                }
                 // Reset Variables
                 t = t0;
                 for (int i = 0; i < dim; i++) {
@@ -983,19 +1016,16 @@ void EH_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int 
                     LE[i] = 0.0;
                     xrms[i] = 0.0;
                     overallxrms[i] = 0.0;
+                    xmin[i] = 0.0;
+                    overallxmin[i] = X[i];
+                    xmax[i] = 0.0;
+                    overallxmax[i] = X[i];
                 }
-                // Check the mode of the diagram
-                if (bifmode == 1) {
-                    // Reset Initial conditions in each diagram step
-                    for (int i = 0; i < dim; i++) {
-                        X[i] = IC[i];
+                if (ncustomvalues > 0) {
+                    for (int i = 0; i < ncustomvalues; i++) {
+                        customvalues[i] = 0.0;
                     }
                 }
-                // Reset initial values to xmax and xmin based on initial values of x
-                /*for (int i = 0; i < dim; i++) {
-                    xmax[i] = X[i];
-                    xmin[i] = X[i];
-                }*/
                 // Vary timestep if varpar = par[0], varying also final time and short initial time
                 h = (2 * pi) / (ndiv * PAR[0]);              // par[0] = OMEGA
                 tf = h*np*ndiv;                              // Final time
@@ -1021,8 +1051,10 @@ void EH_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int 
                                 min_value(X[q], &xmin[q]);
                             }
                             // Accumulate squared values to RMS computation in permanent regime
-                            for (int q = 0; q < nrms; q++) {
-                                xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], X[rmsindex[q]], N, 0);
+                            if (nrms > 0) {
+                                for (int q = 0; q < nrms; q++) {
+                                    xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], X[rmsindex[q]], N, 0);
+                                }
                             }
                             // Choose any point in the trajectory for poincare section placement
                             if (j == 1) {
@@ -1032,16 +1064,33 @@ void EH_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int 
                                 }
                             }
                         }
+                        // Get overall max and min values
+                        for (int q = 0; q < dim; q++) {
+                            max_value(X[q], &overallxmax[q]);
+                            min_value(X[q], &overallxmin[q]);
+                        }
                         // Accumulate squared values for RMS computation for all time domain
-                        for (int q = 0; q < nrms; q++) {
-                            overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], X[rmsindex[q]], N, 0);
+                        if (nrms > 0) {
+                            for (int q = 0; q < nrms; q++) {
+                                overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], X[rmsindex[q]], N, 0);
+                            }
+                        }
+                        // Perform "table" type custom calculations if there is calculations to be done
+                        if (ncustomvalues > 0) {
+                            customfunc(X, PAR, t, xrms, xmin, xmax, N, ncustomvalues, customnames, nchars, customvalues, 1);
                         }
                     }
                 }
                 // Compute RMS values of state variables
-                for (int q = 0; q < nrms; q++) {
-                    xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], X[rmsindex[q]], N, 1);
-                    overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], X[rmsindex[q]], N, 1);
+                if (nrms > 0) {
+                    for (int q = 0; q < nrms; q++) {
+                        xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], X[rmsindex[q]], N, 1);
+                        overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], X[rmsindex[q]], N, 1);
+                    }
+                }
+                // Perform "end" type custom calculations if there is calculations to be done
+                if (ncustomvalues > 0) {
+                    customfunc(X, PAR, t, xrms, xmin, xmax, N, ncustomvalues, customnames, nchars, customvalues, 2);
                 }
                 // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
                 store_LE(dim, lambda, s_lambda, LE);
@@ -1062,11 +1111,20 @@ void EH_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int 
                 for (int r = 4 + (2*dim); r < 4 + (3*dim); r++) {
                     results[index][r] = xmin[r - 4 - (2*dim)];
                 }
-                for (int r = 4 + (3*dim); r < 4 + (3*dim) + nrms; r++) {
-                    results[index][r] = xrms[rmsindex[r - 4 - (3*dim)]];
+                for (int r = 4 + (3*dim); r < 4 + (4*dim); r++) {
+                    results[index][r] = overallxmax[r - 4 - (3*dim)];
                 }
-                for (int r = 4 + (3*dim) + nrms; r < 4 + (3*dim) + (2*nrms); r++) {
-                    results[index][r] = overallxrms[rmsindex[r - 4 - (3*dim) - nrms]];
+                for (int r = 4 + (4*dim); r < 4 + (5*dim); r++) {
+                    results[index][r] = overallxmin[r - 4 - (4*dim)];
+                }
+                for (int r = 4 + (5*dim); r < 4 + (5*dim) + nrms; r++) {
+                    results[index][r] = xrms[rmsindex[r - 4 - (5*dim)]];
+                }
+                for (int r = 4 + (5*dim) + nrms; r < 4 + (5*dim) + (2*nrms); r++) {
+                    results[index][r] = overallxrms[rmsindex[r - 4 - (5*dim) - nrms]];
+                }
+                for (int r = 4 + (5*dim) + (2*nrms); r < 4 + (5*dim) + (2*nrms) + nprintf; r ++) {
+                    results[index][r] = customvalues[printfindex[r - 4 - (5*dim) - (2*nrms)]];
                 }
             }
             // Progress Monitor
@@ -1082,23 +1140,27 @@ void EH_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int 
         // Free memory    
         free(f); free(cum); free(s_cum); free(lambda); free(s_lambda);
         free(znorm); free(gsc); free(LE); free(tmp_attrac); free(IC);
-        free(xmax); free(xmin);
+        free(xmax); free(xmin); free(overallxmax); free(overallxmin);
         for (int i = 0; i < np - trans; i++) {
             free(poinc[i]);
         }
         free(poinc);
         free(xrms); free(overallxrms);
+        free(customvalues);
     } // End of Parallel Block
     
     // Write results in file
     printf("\n\n  Writing Results in Output File...\n");
-    write_results(output_file, dim, nrms, rmsindex, results, pixels);
-
+    EH_p_write_fdyndiag_results(output_file, dim, nrms, rmsindex, results, pixels, ncustomvalues, customnames, nprintf, printfindex);
     // Free memory
     for (int i = 0; i < pixels; i++) {
         free(results[i]);
     }
     free(results);
+    for (int i = 0; i < ncustomvalues; i++) {
+            free(customnames[i]);
+        }
+    free(customnames);
 }
 
 void EH_forced_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,

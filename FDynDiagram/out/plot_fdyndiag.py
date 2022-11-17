@@ -134,19 +134,19 @@ save = False
 system = "bistable_EH"
 ext = ".pdf"
 
-readpath = "FDynDiagram/out/" + system + "_fdyndiag(2).csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "FDynDiagram/out/" + system + "_fdyndiag(1).csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "FDynDiagram/figs"; savepath = pltconf.convert_dir(savepath)
 
 raw_data = pd.read_csv(readpath, delimiter = " ")
 
 x1, y1, z1 = process_data(raw_data, 'CparY', 'CparX', 'Attractor')
-x2, y2, z2 = process_data(raw_data, 'CparY', 'CparX', 'LE[0]')
+x2, y2, z2 = process_data(raw_data, 'CparY', 'CparX', 'xMAX[0]')
 x3, y3, z3 = process_data(raw_data, 'CparY', 'CparX', 'LE[1]')
 #x4, y4, z4 = process_data(raw_data, 'CparY', 'CparX', 'LE[2]')
 #x5, y5, z5 = process_data(raw_data, 'CparY', 'CparX', 'xRMS[2]')
 #x6, y6, z6 = process_data(raw_data, 'CparY', 'CparX', 'OverallxRMS[2]')
-x7, y7, z7 = process_data(raw_data, 'CparY', 'CparX', 'xmax[0]')
-x8, y8, z8 = process_data(raw_data, 'CparY', 'CparX', 'xmin[0]')
+x7, y7, z7 = process_data(raw_data, 'CparY', 'CparX', 'xMAX[0]')
+x8, y8, z8 = process_data(raw_data, 'CparY', 'CparX', 'xMIN[0]')
 
 # =========================================================================== #
 #                Create custom colormaps and define colormap parameters       #
