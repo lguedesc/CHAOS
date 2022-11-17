@@ -1,3 +1,4 @@
+*** FUTURE FEATURES ***
 1. Finish the general dynamical systems toolbox (Lorenz, Lotk-Volterra, Halvorsen, Rossler, etc) - Add missing modules and change timestep to be defined by the user, not by number of divisions
 2. Make a Simplified Version of the Forced Basin of Attraction based only on poincare map, without lyapunov.
 3. Implement Runge-Kutta-Fehlberg (RK45) Method and integrate with the existing modules, letting the user decide which integrator he/she wants to use.
@@ -6,13 +7,12 @@
 6. Implement Geometric Poincaré Map for systems that don't have harmonic external forcing terms.
 7. Implement Lyapunov Dimension (Kaplan-Yorke Dimension) and Kolmogorov-Sinai Entropy
 8. Implement Harmonic Balance Method to find all solution branches of a parameter domain.
-9. See if f is really necessary in rk4 arguments.
-
 
 *** URGENT!!! ***
-1. Add max and min calculations in all EH modules
-2. Add overall max and min calculations in all EH modules
-3. Add dependency of customcalc function to max, min, overall max and overall min Values
-4. Transform EH Toolbox in Oscillators Toolbox
-5. Change bifmode to be inserted on top of input file for all bifurcation/dynamical diagram modules
-6. Eficiencia media de entrada
+1. Transform EH Toolbox in Oscillators Toolbox
+2. Change bifmode to be inserted on top of input file for all bifurcation/dynamical diagram modules
+3. Eficiencia media de entrada
+
+*** KNOWN ISSUES AND POSSIBLE BUGS ***
+1. Investigate segmentation fault error that pops up sometimes after trying to print or free customnames in the end of solution functions
+2. See if f is really necessary in rk4 arguments.

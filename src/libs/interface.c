@@ -586,6 +586,78 @@ void fwrite_prog_parameters_fdyndiag(FILE *output_file, char *funcname, int dim,
     fprintf(output_file, "%-*s %-*s\n", spcname, "  Timestep Value:", spcvalue, "(2*pi)/(nDiv*par[0])");
 }
 
+void write_prog_parameters_fforcbasin(int dim, int npar, int np, int ndiv, int maxper, int trans, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    printf("\n  Program Parameters\n");
+    partition(2, maxlength);
+    printf("%-*s %-*d\n", spcname, "  Dimension:", spcvalue, dim);
+    printf("%-*s %-*d\n", spcname, "  Number of Parameters:", spcvalue, npar);
+    printf("%-*s %-*d\n", spcname, "  Forcing Periods:", spcvalue, np);
+    printf("%-*s %-*d\n", spcname, "  Timesteps per Period:", spcvalue, ndiv);
+    printf("%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
+    printf("%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
+    printf("%-*s %-*d\n", spcname, "  Max Periodicity Considered:", spcvalue, maxper);
+    printf("%-*s %-*s\n", spcname, "  Timestep Value:", spcvalue, "(2*pi)/(nDiv*par[0])");
+}
+
+void fwrite_prog_parameters_fforcbasin(FILE *output_file, char *funcname, int dim, int npar, int np, int ndiv, int maxper, int trans, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    fwrite_module_and_system(output_file, funcname, "Full Basin of Attraction (Forced)", maxlength);
+    fprintf(output_file, "\n  Program Parameters\n");
+    fpartition(output_file, 2, maxlength);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Dimension:", spcvalue, dim);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Number of Parameters:", spcvalue, npar);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Forcing Periods:", spcvalue, np);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Timesteps per Period:", spcvalue, ndiv);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Max Periodicity Considered:", spcvalue, maxper);
+    fprintf(output_file, "%-*s %-*s\n", spcname, "  Timestep Value:", spcvalue, "(2*pi)/(nDiv*par[0])");
+}
+
+void write_fforcbasin_info(double *icrange, int indexX, int indexY, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength;  // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;       // Space for value of variable
+    partition(2, maxlength);
+    printf("  Basin of Attraction (Forced) Parameters\n");
+    partition(2, maxlength);
+    printf("%-*s %g x %-*g\n", spcname, "  Resolution:", icrange[2], spcvalue - 3 - int_length((int)icrange[2]), icrange[5]);
+    printf("\n");
+    printf("%-*s %-*d\n", spcname, "  Initial Condition Index (x):", spcvalue, indexX);
+    printf("%-*s %-*g\n", spcname, "  Initial Value (x):", spcvalue, icrange[0]);
+    printf("%-*s %-*g\n", spcname, "  Final Value (x):", spcvalue, icrange[1]);
+    printf("%-*s %-*g\n", spcname, "  Initial Contition Step (x):", spcvalue, (icrange[1] - icrange[0]) / (icrange[2] - 1));
+    printf("%-*s %-*g\n", spcname, "  Total Number of Steps (x):", spcvalue, icrange[2]);
+    printf("\n");
+    printf("%-*s %-*d\n", spcname, "  Initial Condition Index (y):", spcvalue, indexY);
+    printf("%-*s %-*g\n", spcname, "  Initial Value (y):", spcvalue, icrange[3]);
+    printf("%-*s %-*g\n", spcname, "  Final Value (y):", spcvalue, icrange[4]);
+    printf("%-*s %-*g\n", spcname, "  Initial Condition Step (y):", spcvalue, (icrange[4] - icrange[3]) / (icrange[5] - 1));
+    printf("%-*s %-*g\n", spcname, "  Total Number of Steps (y):", spcvalue, icrange[5]);
+}
+
+void fwrite_fforcbasin_info(FILE *output_file, double *icrange, int indexX, int indexY, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength;  // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;       // Space for value of variable
+    fpartition(output_file, 2, maxlength);
+    fprintf(output_file, "  Basin of Attraction (Forced) Parameters\n");
+    fpartition(output_file, 2, maxlength);
+    fprintf(output_file, "%-*s %g x %-*g\n", spcname, "  Resolution:", icrange[2], spcvalue - 3 - int_length((int)icrange[2]), icrange[5]);
+    fprintf(output_file, "\n");
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Initial Condition Index (x):", spcvalue, indexX);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Initial Value (x):", spcvalue, icrange[0]);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Final Value (x):", spcvalue, icrange[1]);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Initial Contition Step (x):", spcvalue, (icrange[1] - icrange[0]) / (icrange[2] - 1));
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Total Number of Steps (x):", spcvalue, icrange[2]);
+    fprintf(output_file, "\n");
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Initial Condition Index (y):", spcvalue, indexY);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Initial Value (y):", spcvalue, icrange[3]);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Final Value (y):", spcvalue, icrange[4]);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Initial Condition Step (y):", spcvalue, (icrange[4] - icrange[3]) / (icrange[5] - 1));
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Total Number of Steps (y):", spcvalue, icrange[5]);
+}
 
 void print_attractor(int attrac, int maxper, size_t maxlength, double percname) {
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable

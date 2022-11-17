@@ -21,7 +21,7 @@
 #include "modules/EH_fbifurcation.h"
 #include "modules/EH_dyndiag.h"
 #include "modules/EH_fdyndiag.h"
-#include "modules/EH_forcedbasin.h"
+#include "modules/EH_fforcedbasin.h"
 #include "modules/convergence_test.h"
 
 
@@ -290,7 +290,7 @@ void execute_EH_modules(unsigned int module, void (*edosys)(int, double *, doubl
             epbasin(funcname, outputname, edosys);
             break;
         case 11:
-            EH_forcedbasin(funcname, outputname, edosys);
+            EH_fforcedbasin(funcname, outputname, edosys, customfunc);
             break;    
         default:
             printf("Invalid Module\n");
