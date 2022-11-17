@@ -38,7 +38,7 @@ void partition(int mode, size_t maxlength) {
 
 void welcome_header(size_t maxlength) {
     //clear_screen();
-    char *message = "Welcome to CHAOS, a Nonlinear Dynamics Package for Harmonically Forced Systems";
+    char *message = "Welcome to CHAOS, a Numerical Package for Nonlinear Dynamical Systems";
     partition(1, maxlength);
     int padlen = (maxlength - strlen(message)) / 2;
     printf("%*s%s%*s\n", padlen-1, "", message, padlen, "");
