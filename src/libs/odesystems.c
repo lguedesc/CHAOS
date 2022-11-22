@@ -280,12 +280,12 @@ void bistable_EH(int dim, double *x, double t, double *par, double *f) {
        beta  = par[4]   |                */
     if (dim == 3) {
         f[0] = x[1];
-        f[1] = par[1]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] + par[5]*x[2];
+        f[1] = par[1]*par[0]*par[0]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] + par[5]*x[2];
         f[2] = -par[6]*x[2] - par[7]*x[1];
     }
     else if (dim == 12) {
         f[0] = x[1];
-        f[1] = par[1]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] + par[5]*x[2];
+        f[1] = par[1]*par[0]*par[0]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] + par[5]*x[2];
         f[2] = -par[6]*x[2] - par[7]*x[1];
         for (int i = 0; i < 3; i ++) {
             f[3 + i] = x[6 + i];
@@ -415,7 +415,6 @@ void pend_oscillator_wout_pend_EH(int dim, double *x, double t, double *par, dou
         exit(1);
     }
 }
-
 
 // Not Implemented
 void duffing_cldyn(int dim, double *x, double t, double *par, double *f) {
