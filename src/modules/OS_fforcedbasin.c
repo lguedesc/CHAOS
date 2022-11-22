@@ -149,15 +149,13 @@ static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  in
 
 static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *icrange, int indexX, int indexY, int nrms, int *rmsindex,
                         int ncustomvalues, int nprintf, int *printfindex, size_t maxlength, double percname, char* funcname, char* mode) {
-    //Get time and date
-    time_t tm;
-    time(&tm);
-
+    
+    char *type = "Forced";
     if (strcmp(mode, "screen") == 0) {
         write_prog_parameters_fforcbasin(dim, npar, np, ndiv, maxper, trans, maxlength, percname);
         write_initial_conditions(dim, x, t, maxlength, percname);
         write_sys_parameters(npar, par, maxlength, percname);
-        write_fforcbasin_info(icrange, indexX, indexY, maxlength, percname);
+        write_basin_info(type, icrange, indexX, indexY, maxlength, percname);
         write_RMS_calculations_info(nrms, rmsindex, maxlength, percname);
         write_custom_info_calculations(ncustomvalues, nprintf, printfindex, 0, NULL, maxlength, percname);     
     } 
@@ -165,7 +163,7 @@ static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int nd
         fwrite_prog_parameters_fforcbasin(info, funcname, dim, npar, np, ndiv, maxper, trans, maxlength, percname);
         fwrite_initial_conditions(info, dim, x, t, maxlength, percname);
         fwrite_sys_parameters(info, npar, par, maxlength, percname);
-        fwrite_fforcbasin_info(info, icrange, indexX, indexY, maxlength, percname);
+        fwrite_basin_info(type, info, icrange, indexX, indexY, maxlength, percname);
         fwrite_RMS_calculations_info(info, nrms, rmsindex, maxlength, percname);
         fwrite_custom_info_calculations(info, ncustomvalues, nprintf, printfindex, 0, NULL, maxlength, percname);
     }

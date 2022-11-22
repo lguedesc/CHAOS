@@ -8,7 +8,7 @@ from src.libs import plotconfig as pltconf
 pltconf.plot_params(True, 10, 0.5)
 
 save = False
-system = "bistable_EH"
+system = "duffing"
 #system2 = "duffing_cldyn"
 ext = ".pdf"
 
@@ -39,10 +39,10 @@ ax = fig.add_subplot(1,1,1)
 
 ax.plot(df['Time'], df['LE[0]'], rasterized = True, color = "red", linewidth = 1, zorder = 1, label = "$\lambda_1 \mathrm{(TanMap)}$")
 ax.plot(df['Time'], df['LE[1]'], rasterized = True, color = "blue", linewidth = 1, zorder = 1, label = "$\lambda_2 \mathrm{(TanMap)}$")
-ax.plot(df['Time'], df['LE[2]'], rasterized = True, color = "green", linewidth = 1, zorder = 1, label = "$\lambda_3 \mathrm{(TanMap)}$")
+#x.plot(df['Time'], df['LE[2]'], rasterized = True, color = "green", linewidth = 1, zorder = 1, label = "$\lambda_3 \mathrm{(TanMap)}$")
 ax.plot(df['Time'], df['sLE[0]'], rasterized = True, color = "black", linewidth = 1, zorder = 1, label = "$\lambda_1 \mathrm{(TanMap)}$")
 ax.plot(df['Time'], df['sLE[1]'], rasterized = True, color = "orange", linewidth = 1, zorder = 1, label = "$\lambda_2 \mathrm{(TanMap)}$")
-ax.plot(df['Time'], df['sLE[2]'], rasterized = True, color = "magenta", linewidth = 1, zorder = 1, label = "$\lambda_3 \mathrm{(TanMap)}$")
+#ax.plot(df['Time'], df['sLE[2]'], rasterized = True, color = "magenta", linewidth = 1, zorder = 1, label = "$\lambda_3 \mathrm{(TanMap)}$")
 #ax.plot(df2['Time'], df2['LE[0]'], rasterized = True, color = "black", linestyle = "dashed", linewidth = 0.5, zorder = 2, label = "$\lambda_1 \mathrm{(ClDyn)}$")
 #ax.plot(df2['Time'], df2['LE[1]'], rasterized = True, color = "orange", linestyle = "dashed", linewidth = 0.5, zorder = 2, label = "$\lambda_2 \mathrm{(ClDyn)}$")
 ax.hlines(0, df['Time'].min(), df['Time'].max(), color = "black", linewidth = 1)

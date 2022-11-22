@@ -8,9 +8,5 @@
 7. Implement Lyapunov Dimension (Kaplan-Yorke Dimension) and Kolmogorov-Sinai Entropy
 8. Implement Harmonic Balance Method to find all solution branches of a parameter domain.
 
-*** URGENT!!! ***
-1. Change bifmode to be inserted on top of input file for all bifurcation/dynamical diagram modules
-3. Eficiencia media de entrada
-
 *** KNOWN ISSUES AND POSSIBLE BUGS ***
-2. See if f is really necessary in rk4 arguments.
+1. See if f is really necessary in rk4 arguments.

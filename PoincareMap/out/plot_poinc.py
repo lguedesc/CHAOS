@@ -12,7 +12,7 @@ save = False
 system = "duffing"
 ext = ".pdf"
 
-readpath = "PoincareMap/out/" + system + "_poinc(1).csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "PoincareMap/out/" + system + "_poinc(2).csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "PoincareMap/figs"; savepath = pltconf.convert_dir(savepath)
         
 df = pd.read_csv(readpath, delimiter = " ")

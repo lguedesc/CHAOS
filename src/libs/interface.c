@@ -355,6 +355,66 @@ void fwrite_prog_parameters_ftimeseries(FILE* output_file, char *funcname, int d
     fprintf(output_file, "%-*s %-*d\n", spcname, "  Max Periodicity Considered:", spcvalue, maxper);
 }
 
+void write_prog_parameters_strobopoinc(int dim, int npar, int np, int ndiv, int trans, double h, size_t maxlength,  double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    printf("\n  Program Parameters\n");
+    partition(2, maxlength);
+    printf("%-*s %-*d\n", spcname, "  Dimension:", spcvalue, dim);
+    printf("%-*s %-*d\n", spcname, "  Number of Parameters:", spcvalue, npar);
+    printf("%-*s %-*d\n", spcname, "  Forcing Periods:", spcvalue, np);
+    printf("%-*s %-*d\n", spcname, "  Timesteps per Period:", spcvalue, ndiv);
+    printf("%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
+    printf("%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
+    printf("%-*s %-*g\n", spcname, "  Timestep Value:", spcvalue, h);
+}
+
+void fwrite_prog_parameters_strobopoinc(FILE* output_file, char *funcname, int dim, int npar, int np, int ndiv, int trans, double h, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    fwrite_module_and_system(output_file, funcname, "Stroboscopic Poincaré Map", maxlength);
+    fprintf(output_file, "\n  Program Parameters\n");
+    fpartition(output_file, 2, maxlength);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Dimension:", spcvalue, dim);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Number of Parameters:", spcvalue, npar);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Forcing Periods:", spcvalue, np);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Timesteps per Period:", spcvalue, ndiv);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Timestep Value:", spcvalue, h);
+}
+
+void write_prog_parameters_lyapunov(int dim, int npar, int np, int ndiv, int trans, double h, size_t maxlength,  double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    printf("\n  Program Parameters\n");
+    partition(2, maxlength);
+    printf("%-*s %-*d\n", spcname, "  Dimension:", spcvalue, dim);
+    printf("%-*s %-*d\n", spcname, "  Number of Parameters:", spcvalue, npar);
+    printf("%-*s %-*d\n", spcname, "  Forcing Periods:", spcvalue, np);
+    printf("%-*s %-*d\n", spcname, "  Timesteps per Period:", spcvalue, ndiv);
+    printf("%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
+    printf("%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
+    printf("%-*s %-*g\n", spcname, "  Timestep Value:", spcvalue, h);
+}
+
+void fwrite_prog_parameters_lyapunov(FILE *output_file, char *funcname, int dim, int npar, int np, int ndiv, int trans, double h, size_t maxlength,  double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    fwrite_module_and_system(output_file, funcname, "Lyapunov Exponents (Wolf)", maxlength);
+    fprintf(output_file, "\n  Program Parameters\n");
+    fpartition(output_file, 2, maxlength);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Dimension:", spcvalue, dim);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Number of Parameters:", spcvalue, npar);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Forcing Periods:", spcvalue, np);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Timesteps per Period:", spcvalue, ndiv);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
+    fprintf(output_file, "%-*s %-*g\n", spcname, "  Timestep Value:", spcvalue, h);
+}
+
+
+
 void write_prog_parameters_bifurcation(int dim, int npar, int np, int ndiv, int trans, size_t maxlength, double percname) {
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
@@ -617,11 +677,38 @@ void fwrite_prog_parameters_fforcbasin(FILE *output_file, char *funcname, int di
     fprintf(output_file, "%-*s %-*s\n", spcname, "  Timestep Value:", spcvalue, "(2*pi)/(nDiv*par[0])");
 }
 
-void write_fforcbasin_info(double *icrange, int indexX, int indexY, size_t maxlength, double percname) {
+void write_prog_parameters_epbasin(int dim, int npar, int np, int ndiv, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    printf("\n  Program Parameters\n");
+    partition(2, maxlength);
+    printf("%-*s %-*d\n", spcname, "  Dimension:", spcvalue, dim);
+    printf("%-*s %-*d\n", spcname, "  Number of Parameters:", spcvalue, npar);
+    printf("%-*s %-*d\n", spcname, "  Forcing Periods:", spcvalue, np);
+    printf("%-*s %-*d\n", spcname, "  Timesteps per Period:", spcvalue, ndiv);
+    printf("%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
+    printf("%-*s %-*s\n", spcname, "  Timestep Value:", spcvalue, "(2*pi)/(nDiv*par[0])");
+}
+
+void fwrite_prog_parameters_epbasin(FILE *output_file, char *funcname, int dim, int npar, int np, int ndiv, size_t maxlength, double percname) {
+    int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
+    int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
+    fwrite_module_and_system(output_file, funcname, "Basin of Attraction (Fixed Points)", maxlength);
+    fprintf(output_file, "\n  Program Parameters\n");
+    fpartition(output_file, 2, maxlength);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Dimension:", spcvalue, dim);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Number of Parameters:", spcvalue, npar);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Forcing Periods:", spcvalue, np);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Timesteps per Period:", spcvalue, ndiv);
+    fprintf(output_file, "%-*s %-*d\n", spcname, "  Total Number of Timesteps:", spcvalue, np*ndiv);
+    fprintf(output_file, "%-*s %-*s\n", spcname, "  Timestep Value:", spcvalue, "(2*pi)/(nDiv*par[0])");
+}
+
+void write_basin_info(char *type, double *icrange, int indexX, int indexY, size_t maxlength, double percname) {
     int spcname = maxlength - (1 - percname)*maxlength;  // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;       // Space for value of variable
     partition(2, maxlength);
-    printf("  Basin of Attraction (Forced) Parameters\n");
+    printf("  Basin of Attraction (%s) Parameters\n", type);
     partition(2, maxlength);
     printf("%-*s %g x %-*g\n", spcname, "  Resolution:", icrange[2], spcvalue - 3 - int_length((int)icrange[2]), icrange[5]);
     printf("\n");
@@ -638,11 +725,11 @@ void write_fforcbasin_info(double *icrange, int indexX, int indexY, size_t maxle
     printf("%-*s %-*g\n", spcname, "  Total Number of Steps (y):", spcvalue, icrange[5]);
 }
 
-void fwrite_fforcbasin_info(FILE *output_file, double *icrange, int indexX, int indexY, size_t maxlength, double percname) {
+void fwrite_basin_info(char* type, FILE *output_file, double *icrange, int indexX, int indexY, size_t maxlength, double percname) {
     int spcname = maxlength - (1 - percname)*maxlength;  // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;       // Space for value of variable
     fpartition(output_file, 2, maxlength);
-    fprintf(output_file, "  Basin of Attraction (Forced) Parameters\n");
+    fprintf(output_file, "  Basin of Attraction (%s) Parameters\n", type);
     fpartition(output_file, 2, maxlength);
     fprintf(output_file, "%-*s %g x %-*g\n", spcname, "  Resolution:", icrange[2], spcvalue - 3 - int_length((int)icrange[2]), icrange[5]);
     fprintf(output_file, "\n");
@@ -669,7 +756,7 @@ void print_attractor(int attrac, int maxper, size_t maxlength, double percname) 
     sprintf(number, "%d", attrac);
 
     if (attrac < maxper) { 
-        printf("%-*s %s%d%-*s\n", spcname, "  Type of Motion:", "Period-", attrac, spcvalue - 8 - strlen(number) - 1, "T");
+        printf("%-*s %s%d%-*s\n", spcname, "  Type of Motion:", "Period-", attrac, (int)(spcvalue - 8 - strlen(number) - 1), "T");
     }
     else if (attrac == maxper) {
         printf("%-*s %-*s\n", spcname, "  Type of Motion:", spcvalue, "Many Periods");
@@ -698,7 +785,7 @@ void fprint_attractor(FILE *output_file, int attrac, int maxper, size_t maxlengt
     sprintf(number, "%d", attrac);
 
     if (attrac < maxper) { 
-        fprintf(output_file, "%-*s %s%d%-*s\n", spcname, "  Type of Motion:", "Period-", attrac, spcvalue - 8 - strlen(number) - 1, "T");
+        fprintf(output_file, "%-*s %s%d%-*s\n", spcname, "  Type of Motion:", "Period-", attrac, (int)(spcvalue - 8 - strlen(number) - 1), "T");
     }
     else if (attrac == maxper) {
         fprintf(output_file, "%-*s %-*s\n", spcname, "  Type of Motion:", spcvalue, "Many Periods");

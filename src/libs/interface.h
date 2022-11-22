@@ -34,6 +34,12 @@ void fwrite_prog_parameters_timeseries(FILE* output_file, char *funcname, int di
 void write_prog_parameters_ftimeseries(int dim, int npar, int maxper, int np, int ndiv, int trans, double h, size_t maxlength, double percname);
 void fwrite_prog_parameters_ftimeseries(FILE* output_file, char *funcname, int dim, int npar, int maxper, int np, int ndiv, int trans, double h, size_t maxlength, double percname);
 
+void write_prog_parameters_strobopoinc(int dim, int npar, int np, int ndiv, int trans, double h, size_t maxlength,  double percname);
+void fwrite_prog_parameters_strobopoinc(FILE* output_file, char *funcname, int dim, int npar, int np, int ndiv, int trans, double h, size_t maxlength, double percname);
+
+void write_prog_parameters_lyapunov(int dim, int npar, int np, int ndiv, int trans, double h, size_t maxlength,  double percname);
+void fwrite_prog_parameters_lyapunov(FILE *output_file, char *funcname, int dim, int npar, int np, int ndiv, int trans, double h, size_t maxlength,  double percname);
+
 void write_prog_parameters_bifurcation(int dim, int npar, int np, int ndiv, int trans, size_t maxlength, double percname);
 void fwrite_prog_parameters_bifurcation(FILE* output_file, char *funcname, int dim, int npar, int np, int ndiv, int trans, size_t maxlength, double percname);
 
@@ -49,14 +55,17 @@ void fwrite_prog_parameters_fdyndiag(FILE *output_file, char *funcname, int dim,
 void write_prog_parameters_fforcbasin(int dim, int npar, int np, int ndiv, int maxper, int trans, size_t maxlength, double percname);
 void fwrite_prog_parameters_fforcbasin(FILE *output_file, char *funcname, int dim, int npar, int np, int ndiv, int maxper, int trans, size_t maxlength, double percname);
 
+void write_prog_parameters_epbasin(int dim, int npar, int np, int ndiv, size_t maxlength, double percname);
+void fwrite_prog_parameters_epbasin(FILE *output_file, char *funcname, int dim, int npar, int np, int ndiv, size_t maxlength, double percname);
+
 void write_bifurcation_info(double *parrange, int parindex, int bifmode, size_t maxlength, double percname);
 void fwrite_bifurcation_info(FILE* output_file, double *parrange, int parindex, int bifmode, size_t maxlength, double percname);
 
 void write_dyndiag_info(double *parrange, int indexX, int indexY, int bifmode, size_t maxlength, double percname);
 void fwrite_dyndiag_info(FILE *output_file, double *parrange, int indexX, int indexY, int bifmode, size_t maxlength, double percname);
 
-void write_fforcbasin_info(double *icrange, int indexX, int indexY, size_t maxlength, double percname);
-void fwrite_fforcbasin_info(FILE *output_file, double *icrange, int indexX, int indexY, size_t maxlength, double percname);
+void write_basin_info(char *type, double *icrange, int indexX, int indexY, size_t maxlength, double percname);
+void fwrite_basin_info(char* type, FILE *output_file, double *icrange, int indexX, int indexY, size_t maxlength, double percname);
 
 void print_RMS(int nRMS, int *rmsindex, double *xRMS, double *overallxRMS, size_t maxlength, double percname);
 void fprint_RMS(FILE *output_file, int nRMS, int *rmsindex, double *xRMS, double *overallxRMS, size_t maxlength, double percname);

@@ -7,12 +7,17 @@
 #include "../libs/odesystems.h"
 #include "../libs/nldyn.h"
 #include "../libs/iofiles.h"
+#include "../libs/interface.h"
 #include "epbasin.h"
 
 static void read_params_and_IC(char *name, int *dim, int *npar,  int *np, int *ndiv, double *t, double **par, double **icrange, int *indexX, int *indexY, double **x);
-static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, double t, double *x, double *par, double *icrange, int indexX, int indexY, char* funcname, char* mode);
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, double t, double *x, double *par, double *icrange, int indexX, int indexY, char* funcname, size_t maxlength, double percname, char* mode);
 
 void epbasin(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
+    
+    // Parameters related to printing information
+    size_t maxLen = 71;             // Max length of the info printed on the screen and on info file
+    double percName = 0.6;          // Percentage of space occuped by the name of the quantity printed
     // Declare Program Parameters
     const double pi = 4 * atan(1);  // Pi number definition
     int DIM;                        // Dimension of the system
@@ -42,11 +47,9 @@ void epbasin(char *funcname, char* outputname, void (*edosys)(int, double *, dou
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);                            // Create info output file
     
     // Print information in screen and info output file
-    print_info(output_info, DIM, nPar, nP, nDiv, t, x, par, icRange, indexX, indexY, funcname, "screen");
-    print_info(output_info, DIM, nPar, nP, nDiv, t, x, par, icRange, indexX, indexY, funcname, "file");
-    // To store the runtime of the program
-    //double time_spent = 0.0;
-    //clock_t time_i = clock();
+    print_info(output_info, DIM, nPar, nP, nDiv, t, x, par, icRange, indexX, indexY, funcname, maxLen, percName, "screen");
+    print_info(output_info, DIM, nPar, nP, nDiv, t, x, par, icRange, indexX, indexY, funcname, maxLen, percName, "file");
+    
     // Call solution
     ep_basin_of_attraction_2D(output_epbasin, output_info, DIM, nP, nDiv, t, &x, indexX, indexY, icRange, par, nPar, edosys, p_write_epbasin_results);    
     // Close output file
@@ -57,11 +60,6 @@ void epbasin(char *funcname, char* outputname, void (*edosys)(int, double *, dou
     free(dir);
     free(input_filename);
     free(x); free(par); free(icRange);
-
-    // Calculate time of execution
-    //clock_t time_f = clock();
-    //time_spent += (double)(time_f - time_i) / CLOCKS_PER_SEC; 
-    //printf("The elapsed time is %f seconds", time_spent);
 
 }
 
@@ -115,87 +113,22 @@ static void read_params_and_IC(char *name, int *dim, int *npar,  int *np, int *n
     /* The user is responsible to free (x), (par) or (parrange) after the function call */
 }
 
-static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, double t, double *x, double *par, double *icrange, int indexX, int indexY, char* funcname, char* mode) {
-    //Get time and date
-    time_t tm;
-    time(&tm);
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, double t, double *x, double *par, double *icrange, int indexX, int indexY, char* funcname, size_t maxlength, double percname, char* mode) {
 
+    char *type = "Fixed Points";
     if (strcmp(mode, "screen") == 0) {
-        printf("\n%-30s%s%-4g%-3s%-4g\n", "  Resolution:", " ", icrange[2], " x ", icrange[5]);
-        printf("  -------------------------------------------------\n");
-        printf("  Program Parameters\n");
-        printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20d\n", "  Dimension:", " ", dim);
-        printf("%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
-        printf("%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
-        printf("%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
-        printf("%-30s%s%-20s\n", "  Timestep value:", " ", "(2*pi)/(nDiv*par[0])");
-        printf("  -------------------------------------------------\n");
-        printf("  Initial Conditions\n");
-        printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20g\n", "  Initial Time (t):", " ",  t);
-        for (int i = 0; i < dim; i++) {
-            printf("%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
-        }
-        printf("  -------------------------------------------------\n");
-        printf("  System Parameters\n");
-        printf("  -------------------------------------------------\n");
-        for (int i = 0; i < npar; i++) {
-            printf("%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
-        }
-        printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20d\n", "  Parameter Index (x):", " ", indexX);
-        printf("%-30s%s%-20g\n", "  Intial Parameter (x):", " ", icrange[0]);
-        printf("%-30s%s%-20g\n", "  Final Parameter (x):", " ", icrange[1]);
-        printf("%-30s%s%-20g\n", "  Increment Parameter (x):", " ", (icrange[1] - icrange[0]) / (icrange[2] - 1));
-        printf("%-30s%s%-20g\n", "  Number of Steps (x):", " ", icrange[2]);
-        printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20d\n", "  Parameter Index (y):", " ", indexY);
-        printf("%-30s%s%-20g\n", "  Intial Parameter (y):", " ", icrange[3]);
-        printf("%-30s%s%-20g\n", "  Final Parameter (y):", " ", icrange[4]);
-        printf("%-30s%s%-20g\n", "  Increment Parameter (y):", " ", (icrange[4] - icrange[3]) / (icrange[5] - 1));
-        printf("%-30s%s%-20g\n", "  Number of Steps (y):", " ", icrange[5]);
-        printf("  -------------------------------------------------\n");          
+        write_prog_parameters_epbasin(dim, npar, np, ndiv, maxlength, percname);
+        write_initial_conditions(dim, x, t, maxlength, percname);
+        write_sys_parameters(npar, par, maxlength, percname);
+        write_basin_info(type, icrange, indexX, indexY, maxlength, percname);
+        partition(2, maxlength);          
     } 
     else if (strcmp(mode, "file") == 0) {
-        fprintf(info, "  Date/Time:  %s", ctime(&tm)); 
-        fprintf(info, "\n  =================================================\n");
-        fprintf(info, "%-30s%s%-20s\n", "  Basin of Attraction (Fixed Point):", " ", funcname);
-        fprintf(info, "%-30s%s%-4g%-3s%-4g\n", "  Resolution:", " ", icrange[2], " x ", icrange[5]);
-        fprintf(info, "  =================================================\n\n");
-        fprintf(info, "  Program Parameters\n");
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20d\n", "  Dimension:", " ", dim);
-        fprintf(info, "%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
-        fprintf(info, "%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
-        fprintf(info, "%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
-        fprintf(info, "%-30s%s%-20s\n", "  Timestep value:", " ", "(2*pi)/(nDiv*par[0])");
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "  Initial Conditions\n");
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20g\n", "  Initial Time (t):", " ",  t);
-        for (int i = 0; i < dim; i++) {
-            fprintf(info, "%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
-        }
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "  System Parameters\n");
-        fprintf(info, "  -------------------------------------------------\n");
-        for (int i = 0; i < npar; i++) {
-            fprintf(info, "%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
-        }
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20d\n", "  Parameter Index (x):", " ", indexX);
-        fprintf(info, "%-30s%s%-20g\n", "  Intial Parameter (x):", " ", icrange[0]);
-        fprintf(info, "%-30s%s%-20g\n", "  Final Parameter (x):", " ", icrange[1]);
-        fprintf(info, "%-30s%s%-20g\n", "  Increment Parameter (x):", " ", (icrange[1] - icrange[0]) / (icrange[2] - 1));
-        fprintf(info, "%-30s%s%-20g\n", "  Number of Steps (x):", " ", icrange[2]);
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20d\n", "  Parameter Index (y):", " ", indexY);
-        fprintf(info, "%-30s%s%-20g\n", "  Intial Parameter (y):", " ", icrange[3]);
-        fprintf(info, "%-30s%s%-20g\n", "  Final Parameter (y):", " ", icrange[4]);
-        fprintf(info, "%-30s%s%-20g\n", "  Increment Parameter (y):", " ", (icrange[4] - icrange[3]) / (icrange[5] - 1));
-        fprintf(info, "%-30s%s%-20g\n", "  Number of Steps (y):", " ", icrange[5]);
-        fprintf(info, "  -------------------------------------------------\n"); 
+        fwrite_prog_parameters_epbasin(info, funcname, dim, npar, np, ndiv, maxlength, percname);
+        fwrite_initial_conditions(info, dim, x, t, maxlength, percname);
+        fwrite_sys_parameters(info, npar, par, maxlength, percname);
+        fwrite_basin_info(type, info, icrange, indexX, indexY, maxlength, percname);
+        fpartition(info, 2, maxlength);
     }
     else {
         printf("  Information could not be printed in file using mode (%s)...\n", mode);
