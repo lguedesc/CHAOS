@@ -50,7 +50,7 @@ save = False
 system = "bistable_EH"
 ext = ".pdf"
 
-readpath = "DynDiagram/out/" + system + "_dyndiag(7).csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "DynDiagram/out/" + system + "_dyndiag.csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "DynDiagram/figs"; savepath = pltconf.convert_dir(savepath)
 
 raw_data = pd.read_csv(readpath, delimiter = " ")
@@ -60,8 +60,8 @@ x2, y2, z2 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'xMAX[0]')
 x3, y3, z3 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'xMIN[0]')
 x4, y4, z4 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'ddxbRMS')
 x5, y5, z5 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'PoutAvg')
-x6, y6, z6 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'PinAvg')
-x7, y7, z7 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'EffAvg')
+x6, y6, z6 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'ddx[0]RMS')
+x7, y7, z7 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'OVRLLddx[0]RMS')
 x8, y8, z8 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'xRMS[2]')
 # =========================================================================== #
 #                           Define figure parameters                          #
@@ -118,8 +118,8 @@ customize_labels(ax2, r'(b) xMAX[0]', custom = '(b)')
 customize_labels(ax3, r'(d) xMIN[0]',  custom = '(b)')
 customize_labels(ax4, r'(c) ddxbRMS', custom = '(a)')
 customize_labels(ax5, r'(e) Pout', custom = '(a)')
-customize_labels(ax6, r'(f) Pin', custom = '(b)')
-customize_labels(ax7, r'(g) Eff', custom = '(c)')
+customize_labels(ax6, r'(f) ddx[0]RMS', custom = '(b)')
+customize_labels(ax7, r'(g) OVRLLddx[0]RMS', custom = '(c)')
 customize_labels(ax8, r'(h) xRMS[2]', custom = '(d)')
 # =========================================================================== #
 #                                Save Figure                                  #

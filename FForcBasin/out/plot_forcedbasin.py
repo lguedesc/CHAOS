@@ -134,7 +134,7 @@ save = False
 system = "bistable_EH"
 ext = ".pdf"
 
-readpath = "FForcBasin/out/" + system + "_fforcedbasin(44).csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "FForcBasin/out/" + system + "_fforcedbasin.csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "FForcBasin/figs"; savepath = pltconf.convert_dir(savepath)
 
 raw_data = pd.read_csv(readpath, delimiter = " ")
@@ -142,7 +142,7 @@ raw_data = pd.read_csv(readpath, delimiter = " ")
 x1, y1, z1 = process_data(raw_data, 'CparY', 'CparX', 'Attractor')
 x2, y2, z2 = process_data(raw_data, 'CparY', 'CparX', 'LE[0]')
 x3, y3, z3 = process_data(raw_data, 'CparY', 'CparX', 'LE[1]')
-x4, y4, z4 = process_data(raw_data, 'CparY', 'CparX', 'LE[2]')
+x4, y4, z4 = process_data(raw_data, 'CparY', 'CparX', 'ddx[0]RMS')
 x5, y5, z5 = process_data(raw_data, 'CparY', 'CparX', 'xRMS[2]')
 x6, y6, z6 = process_data(raw_data, 'CparY', 'CparX', 'PoutAvg')
 x7, y7, z7 = process_data(raw_data, 'CparY', 'CparX', 'xMAX[0]')

@@ -25,7 +25,7 @@
 #include "modules/convergence_test.h"
 
 void execute_OS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
-                        void (*customfunc)(double *, double *, double, double *, double *, double *, int, int, char **, size_t, double *, int),
+                        void (*customfunc)(double *, double *, double, double *, double *, double *, int, double, int, char **, size_t, double *, int),
                         char* outputname, char *funcname);
 void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
 
@@ -213,7 +213,7 @@ int main (void) {
 }
 
 void execute_OS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
-                        void (*customfunc)(double *, double *, double, double *, double *, double *, int, int, char **, size_t, double *, int),
+                        void (*customfunc)(double *, double *, double, double *, double *, double *, int, double, int, char **, size_t, double *, int),
                         char* outputname, char *funcname) {
     switch (module) {
         case 1:

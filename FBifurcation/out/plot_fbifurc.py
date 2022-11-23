@@ -12,11 +12,17 @@ pltconf.plot_params(True, 10, 0.5)
 save = False
 system = "bistable_EH"
 ext = ".pdf"
+num = 0
 
-readpath = "FBifurcation/out/" + system + "_fbifurc(4).csv"; readpath = pltconf.convert_dir(readpath)
-readpathpoinc = "FBifurcation/out/" + system + "_fbifurc_poinc(4).csv"; readpathpoinc = pltconf.convert_dir(readpathpoinc)
-savepath = "FBifurcation/figs"; savepath = pltconf.convert_dir(savepath)
-
+if num > 0:
+    readpath = "FBifurcation/out/" + system + f"_fbifurc({num}).csv"; readpath = pltconf.convert_dir(readpath)
+    readpathpoinc = "FBifurcation/out/" + system + f"_fbifurc_poinc({num}).csv"; readpathpoinc = pltconf.convert_dir(readpathpoinc)
+    savepath = "FBifurcation/figs"; savepath = pltconf.convert_dir(savepath)
+else:
+    readpath = "FBifurcation/out/" + system + "_fbifurc.csv"; readpath = pltconf.convert_dir(readpath)
+    readpathpoinc = "FBifurcation/out/" + system + "_fbifurc_poinc.csv"; readpathpoinc = pltconf.convert_dir(readpathpoinc)
+    savepath = "FBifurcation/figs"; savepath = pltconf.convert_dir(savepath)
+    
 df = pd.read_csv(readpath, delimiter = " ")
 dfpoinc = pd.read_csv(readpathpoinc, delimiter = " ")
 #=======================================================================#
@@ -83,12 +89,12 @@ ax6.plot(df['Cpar'], df['PoutAvg'], rasterized = True, color = 'red', zorder = 1
 ax6.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
 ax6.set_ylabel(r'$P_{\mathrm{out}}^{\mathrm{avg}}$')
 
-ax7.plot(df['Cpar'], df['PinAvg'], rasterized = True, color = 'red', zorder = 1)
+ax7.plot(df['Cpar'], df['ddx[0]RMS'], rasterized = True, color = 'red', zorder = 1)
 #ax7.plot(df['Cpar'], df['OverallxRMS[2]'], rasterized = True, color = 'blue', zorder = 1)
 ax7.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
 ax7.set_ylabel(r'$P_{\mathrm{in}}^{\mathrm{avg}}$')
 
-ax8.plot(df['Cpar'], df['EffAvg'], rasterized = True, color = 'red', zorder = 1)
+ax8.plot(df['Cpar'], df['OVRLLddx[0]RMS'], rasterized = True, color = 'red', zorder = 1)
 #ax8.plot(df['Cpar'], df['OverallxRMS[2]'], rasterized = True, color = 'blue', zorder = 1)
 ax8.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
 ax8.set_ylabel(r'$\eta^{\mathrm{avg}}$')

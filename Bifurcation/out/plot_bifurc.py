@@ -12,12 +12,17 @@ save = False
 system = "bistable_EH"
 ext = ".pdf"
 
-num = 9
+num = 2
 
-readpath = "Bifurcation/out/" + system + f"_bifurc({num}).csv"; readpath = pltconf.convert_dir(readpath)
-readpathpoinc = "Bifurcation/out/" + system + f"_bifurc_poinc({num}).csv"; readpathpoinc = pltconf.convert_dir(readpathpoinc)
-savepath = "Bifurcation/figs"; savepath = pltconf.convert_dir(savepath)
-        
+if num > 0:
+    readpath = "Bifurcation/out/" + system + f"_bifurc({num}).csv"; readpath = pltconf.convert_dir(readpath)
+    readpathpoinc = "Bifurcation/out/" + system + f"_bifurc_poinc({num}).csv"; readpathpoinc = pltconf.convert_dir(readpathpoinc)
+    savepath = "Bifurcation/figs"; savepath = pltconf.convert_dir(savepath)
+else:    
+    readpath = "Bifurcation/out/" + system + f"_bifurc.csv"; readpath = pltconf.convert_dir(readpath)
+    readpathpoinc = "Bifurcation/out/" + system + f"_bifurc_poinc.csv"; readpathpoinc = pltconf.convert_dir(readpathpoinc)
+    savepath = "Bifurcation/figs"; savepath = pltconf.convert_dir(savepath)
+    
 dfpoinc = pd.read_csv(readpathpoinc, delimiter = " ")
 df = pd.read_csv(readpath, delimiter = " ")
 
@@ -67,7 +72,7 @@ ax3.set_ylabel(r'$\nu$')
 ax3.set_xlabel(r'$\Omega$')
 ax3.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
 
-ax4.plot(df['Cpar'], df['EffAvg'], rasterized = True, color = 'blue', lw = 0.5, zorder = 1, label = "RMS")
+ax4.plot(df['Cpar'], df['ddxbRMS'], rasterized = True, color = 'blue', lw = 0.5, zorder = 1, label = "RMS")
 ax4.hlines(0, df['Cpar'].min(), df['Cpar'].max(), lw = 0.2, color = 'black')
 ax4.set_ylabel(r'customvalue')
 ax4.set_xlabel(r'$\Omega$')

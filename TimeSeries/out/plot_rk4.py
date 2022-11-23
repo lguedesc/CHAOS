@@ -17,7 +17,7 @@ save = False
 system = "bistable_EH"
 ext = ".pdf"
 
-readpath = "TimeSeries/out/" + system + "_rk4(15).csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "TimeSeries/out/" + system + "_rk4.csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "TimeSeries/figs"; savepath = pltconf.convert_dir(savepath)
         
 df = pd.read_csv(readpath, delimiter = " ")
@@ -46,7 +46,7 @@ ax1.set_ylabel(r'$x$')
 ax1.set_xlabel(r'$\tau$')
 ax1.set_xlim(df['Time'].min(), df['Time'].max())
 
-ax2.plot(df['Time'], df['x[1]'], rasterized = True, color = "blue", linewidth = 0.5, zorder = 1)
+ax2.plot(df['Time'], df['OVRLLddx[0]'], rasterized = True, color = "blue", linewidth = 0.5, zorder = 1)
 ax2.set_ylabel(r'$\dot{x}$')
 ax2.set_xlabel(r'$\tau$')
 ax2.set_xlim(df['Time'].min(), df['Time'].max())
