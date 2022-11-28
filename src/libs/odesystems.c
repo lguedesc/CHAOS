@@ -12,7 +12,6 @@
 /* To be added EH */
 // Nonsmooth EH
 // 2 Nonlinear DoF EH
-// Oscillator-Pendulum Energy Harvester
 
 // General Nonlinear Systems
 void halvorsen(int dim, double *x, double t, double *par, double *f) {
