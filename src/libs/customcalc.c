@@ -7,7 +7,7 @@
 #include "nldyn.h"
 
 // Methods
-void assign_names(char **strings, const int nvalues, char **names, size_t maxstrlen) {
+static void assign_names(char **strings, const int nvalues, char **names, size_t maxstrlen) {
     // Get every row of strings and copy to names
     for (int i = 0; i < nvalues; i++) {
         if (strlen(strings[i]) + 1 >= maxstrlen) {
@@ -19,21 +19,49 @@ void assign_names(char **strings, const int nvalues, char **names, size_t maxstr
     }
 }
 
-void spins(double previous_angle, double current_angle, double *positive_spin, double *negative_spin) {
-    if (current_angle > previous_angle) {
-        (*positive_spin) = (*positive_spin) + fabs(current_angle);
+static void spins(double *previous_angle, double *current_angle, double angle, double *positive_spin, double *negative_spin, int index) {
+    // Store previous and current angle
+    if (index == 0) {
+        (*previous_angle) = angle;
+        (*current_angle) = angle;
     }
-    else if (current_angle < previous_angle) {
-        (*negative_spin) = (*negative_spin) + fabs(current_angle);
+    else {
+        (*previous_angle) = (*current_angle);
+        (*current_angle) = angle;
+    }
+    // Check if the current angle is smaller or bigger than the previous angle and account the advance or retreat of the angle
+    if ((*current_angle) > (*previous_angle)) {
+        (*positive_spin) = (*positive_spin) + fabs((*current_angle));
+    }
+    else if ((*current_angle) < (*previous_angle)) {
+        (*negative_spin) = (*negative_spin) + fabs((*current_angle));
+    }
+}
+
+static void time_to_flip(double t, double *initial_angle, double current_angle, double *tflip, int *mark, int index) {
+    if (mark == 0) {
+        const double pi = 4 * atan(1);  // Pi number definition
+        // If is the first index, give the value of the initial condition
+        if (index == 0) {
+            (*initial_angle) = current_angle;
+        } 
+        // If flipping happens, store the time and mark as done
+        if ((current_angle >= (*initial_angle) + 2*pi) || (current_angle <= (*initial_angle) - 2*pi)) {
+            (*tflip) = t;
+            (*mark) = 1;
+        }
+    }
+    else {
+        return;
     }
 }
 
 // Custom Calculations
-void customcalc(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
     return;
 }
 
-void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
     // Mode to define names to be printed in the output file
     if (mode == 0) {    
         char *names[] = {   "ddx[0]",
@@ -115,7 +143,7 @@ void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, doub
     }
 }
 
-void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
     /* OMEGA   = par[0]   |   zeta_z    = par[5]   |   l         = par[10]   |   chi_PZ = par[15]       |   x[0] = x       |   x[5] = dphi/dt
        gamma   = par[1]   |   zeta_t    = par[6]   |   varphi_PZ = par[11]   |   chi_EM = par[16]       |   x[1] = dx/dt   |   x[6] = v
        mu      = par[2]   |   OMEGA_s   = par[7]   |   kappa_PZ  = par[12]   |                          |   x[2] = z       |   x[7] = i
@@ -148,7 +176,11 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
                             "OVRLL_ddX_RMS", "OVRLL_ddZ_RMS", "OVRLL_ddPhi_RMS",
                             "OVRLL_Xcm_RMS", "OVRLL_Zcm_RMS", "OVRLL_dXcm_RMS", "OVRLL_dZcm_RMS", "OVRLL_ddXcm_RMS", "OVRLL_ddZcm_RMS",
                             "OVRLL_Xb_RMS", "OVRLL_Zb_RMS", "OVRLL_dXb_RMS", "OVRLL_dZb_RMS", "OVRLL_ddXb_RMS", "OVRLL_ddZb_RMS",
-                            "PoutPZ_Avg", "PoutEM_Avg"};
+                            "PoutPZ_Avg", "PoutEM_Avg",
+                            "prev_ang", "curnt_ang", "pos_spin", "neg_spin",
+                            "OVRLL_prev_ang", "OVRLL_curnt_ang", "OVRLL_pos_spin", "OVRLL_neg_spin",
+                            "init_angle", "tflip", "mark_if_flips"
+                            };
         // Assign names to custom values
         assign_names(names, ncustomvalues, customnames, maxstrlen);
     }
@@ -198,6 +230,11 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
         for (int i = 0; i < 6; i++) { // From customvalue[30] to customvalue[35]
             customvalue[30+i] = RMS(&customvalue[30+i], customvalue[3+i], (int)(N*steadystateperc), 0);
         }     
+
+        /* Compute positive and negative spinning of the pendulum */
+        // "prev_ang", "curnt_ang", "pos_spin", "neg_spin"
+        spins(&customvalue[110], &customvalue[111], x[4], &customvalue[112], &customvalue[113], currenttimestep);
+         
     }
     // Mode to perform calculations over the entire time series (transient + steady state)
     else if (mode == 2) {
@@ -261,6 +298,17 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
         for (int i = 0; i < 6; i++) { // From customvalue[78] to customvalue[83]
             customvalue[78+i] = RMS(&customvalue[78+i], customvalue[45+i], N, 0);
         }
+        
+        /* Compute positive and negative spinning of the pendulum */
+        // "OVRLL_prev_ang", "OVRLL_curnt_ang", "OVRLL_pos_spin", "OVRLL_neg_spin"
+        spins(&customvalue[114], &customvalue[115], x[4], &customvalue[116], &customvalue[117], currenttimestep);
+
+
+        /* Time To Flip Calculations */ 
+        // "init_angle", "tflip", "mark_if_flips"
+        time_to_flip(t, &customvalue[118], x[4], &customvalue[119], (int *)(&customvalue[120]), currenttimestep);
+
+    
     } 
     // Mode to perform calculations at the end of the time series    
     else if (mode == 3) {
@@ -288,8 +336,6 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
         customvalue[108] = (par[15]*par[11]/par[12])*xrms[6];
         // Peak to Peak Average Electrical Output Power of the Electromagnetic Converter
         customvalue[109] = (par[16]*par[13]/par[14])*xrms[7];
-        // !!!! TRY TO CALCULATE THE NUMBER OF FLIPS OF THE PENDULUM !!!!
-        // !!!! ALSO DETERMINE THE AMOUNT OF ELAPSED TIME THE PENDULUM FLIPS OVER !!!!
     }
     else {
         printf("DEBUG WARNING: Custom Function using mode = %d, please use 0, 1, 2 or 3", mode);
@@ -298,7 +344,7 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
 
 
 
-void customcalc_pend_oscillator_EH_old(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc_pend_oscillator_EH_old(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
     /* OMEGA   = par[0]   |   zeta_z    = par[5]   |   l         = par[10]   |   chi_PZ = par[15]       |   x[0] = x       |   x[5] = dphi/dt
        gamma   = par[1]   |   zeta_t    = par[6]   |   varphi_PZ = par[11]   |   chi_EM = par[16]       |   x[1] = dx/dt   |   x[6] = v
        mu      = par[2]   |   OMEGA_s   = par[7]   |   kappa_PZ  = par[12]   |                          |   x[2] = z       |   x[7] = i
@@ -511,7 +557,7 @@ void customcalc_pend_oscillator_EH_old(double *x, double *par, double t, double 
     }
 }
 
-void customcalc_bistable_EH_old2(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc_bistable_EH_old2(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
     // Check if mode is equal to "table"
     if (mode == 0) {    // Mode to define names to be printed in the output file
         char *names[] = {   "ddx[0]",
@@ -571,7 +617,7 @@ void customcalc_bistable_EH_old2(double *x, double *par, double t, double *xrms,
     }
 }
 
-void customcalc_bistable_EH_old(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc_bistable_EH_old(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
     // Check if mode is equal to "table"
     if (mode == 0) {
         // Names to be printed in the output file

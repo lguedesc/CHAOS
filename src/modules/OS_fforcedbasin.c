@@ -16,7 +16,7 @@ static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  in
 static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *icrange, int indexX, int indexY, int nrms, int *rmsindex,
                         int ncustomvalues, int nprintf, int *printfindex, size_t maxlength, double percname, char* funcname, char* mode);
 
-void OS_fforcedbasin(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, int, double, int, char **, size_t, double *, int)) {
+void OS_fforcedbasin(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, int, int, double, int, char **, size_t, double *, int)) {
     // Parameters related to printing information
     size_t maxLen = 71;             // Max length of the info printed on the screen and on info file
     double percName = 0.6;          // Percentage of space occuped by the name of the quantity printed
