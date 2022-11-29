@@ -10,3 +10,6 @@
 
 *** KNOWN ISSUES AND POSSIBLE BUGS ***
 1. See if f is really necessary in rk4 arguments.
+
+*** SPECIFIC FROM CUSTOMCALC ***
+Check why time to flip is not working

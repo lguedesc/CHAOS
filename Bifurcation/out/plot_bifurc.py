@@ -3,16 +3,17 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pandas as pd
 import os
+from matplotlib.ticker import FormatStrFormatter
 from src.libs import plotconfig as pltconf
 
 pltconf.plot_params(True, 10, 0.5)
 
 save = False
 
-system = "bistable_EH"
+system = "pend_oscillator_EH"
 ext = ".pdf"
 
-num = 2
+num = 1
 
 if num > 0:
     readpath = "Bifurcation/out/" + system + f"_bifurc({num}).csv"; readpath = pltconf.convert_dir(readpath)
@@ -29,7 +30,7 @@ df = pd.read_csv(readpath, delimiter = " ")
 #=======================================================================#
 # Figure Parameters                                                     #
 #=======================================================================#
-x_inches2 = 150*(1/25.4)     # [mm]*constant
+x_inches2 = 200*(1/25.4)     # [mm]*constant
 y_inches2 = x_inches2*(0.4)
 
 if save == True:
@@ -37,47 +38,40 @@ if save == True:
 else:
     dpi = 200
 
-fig = plt.figure(1, figsize = (x_inches2,y_inches2), dpi = dpi, constrained_layout = True)
-fig.set_constrained_layout_pads(hspace=0, wspace=0.1)
-grid = fig.add_gridspec(2, 4)
-
-ax1 = fig.add_subplot(grid[0,:-2])
-ax2 = fig.add_subplot(grid[1,:-2])
-ax3 = fig.add_subplot(grid[0,2:4])
-ax4 = fig.add_subplot(grid[1,2:4])
-
 size = 0.25
 
-ax1.scatter(dfpoinc['Cpar'], dfpoinc['x[0]'], rasterized = True, color = "black", s = size, linewidths = 0, marker = 'o', zorder = 2)
-ax1.plot(df['Cpar'], df['xMAX[0]'], rasterized = True, color = 'cyan', lw = 0.5, zorder = 1)
-ax1.plot(df['Cpar'], df['xMIN[0]'], rasterized = True, color = 'cyan', lw = 0.5, zorder = 1)
-ax1.fill_between(df['Cpar'], df['xMAX[0]'], df['xMIN[0]'], color = "cyan", zorder = 0)
-ax1.set_ylabel(r'$x$')
-ax1.set_xlabel(r'$\Omega$')
-ax1.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
+cols = 4
+rows = 2
 
-ax2.scatter(dfpoinc['Cpar'], dfpoinc['x[2]'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)
-ax2.plot(df['Cpar'], df['xMAX[1]'], rasterized = True, color = 'cyan', lw = 0.5, zorder = 1)
-ax2.plot(df['Cpar'], df['xMIN[1]'], rasterized = True, color = 'cyan', lw = 0.5, zorder = 1)
-ax2.fill_between(df['Cpar'], df['xMAX[1]'], df['xMIN[1]'], color = "cyan", zorder = 0)
-ax2.set_ylabel(r'$\dot{x}$')
-ax2.set_xlabel(r'$\Omega$')
-ax2.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
+fig, axs = plt.subplots(rows, cols, figsize = (x_inches2,y_inches2), dpi = dpi, constrained_layout = True)
+fig.set_constrained_layout_pads(hspace=0, wspace=0.1)
 
-ax3.scatter(dfpoinc['Cpar'], dfpoinc['x[2]'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)
-ax3.plot(df['Cpar'], df['xMAX[2]'], rasterized = True, color = 'orangered', lw = 0.5, zorder = 1)
-ax3.plot(df['Cpar'], df['xMIN[2]'], rasterized = True, color = 'orangered', lw = 0.5, zorder = 1)
-ax3.fill_between(df['Cpar'], df['xMAX[2]'], df['xMIN[2]'], color = "lightsalmon", zorder = 0)
-ax3.set_ylabel(r'$\nu$')
-ax3.set_xlabel(r'$\Omega$')
-ax3.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
+n = [0, 1, 2, 3, 4, 5, 6, 7]
+i = 0
+mycolors = ['lightblue', 'lightblue', 'lightgreen', 'lightgreen', 'lightsalmon', 'lightsalmon', 'orange', 'gold']
+rmscolors = ['blue', 'blue', 'darkgreen', 'darkgreen', 'red', 'red', 'orangered', 'orange']
+for col in range(cols):
+    for row in range(rows):
+        ax = axs[row, col]
+        ax.scatter(dfpoinc['Cpar'], dfpoinc[f'x[{n[i]}]'], rasterized = True, color = "black", s = size, linewidths = 0, marker = '.', zorder = 2)
+        ax.plot(df['Cpar'], df[f'xMAX[{n[i]}]'], rasterized = True, color = mycolors[i], lw = 0.5, zorder = 1)
+        ax.plot(df['Cpar'], df[f'xMIN[{n[i]}]'], rasterized = True, color = mycolors[i], lw = 0.5, zorder = 1)
+        ax.plot(df['Cpar'], df[f'xRMS[{n[i]}]'], rasterized = True, color = rmscolors[i], lw = 0.5, zorder = 3)
+        ax.fill_between(df['Cpar'], df[f'xMAX[{n[i]}]'], df[f'xMIN[{n[i]}]'], color = mycolors[i], zorder = 0)
+        ax.set_ylabel(f'$x_{n[i]}$')
+        ax.set_xlabel(r'$\Omega$')
+        ax.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
+        ax.set_xticks([0.01, 1, 2])
+        ax.xaxis.set_major_formatter(FormatStrFormatter('%.g'))
+        i = i + 1
 
-ax4.plot(df['Cpar'], df['ddxbRMS'], rasterized = True, color = 'blue', lw = 0.5, zorder = 1, label = "RMS")
-ax4.hlines(0, df['Cpar'].min(), df['Cpar'].max(), lw = 0.2, color = 'black')
-ax4.set_ylabel(r'customvalue')
-ax4.set_xlabel(r'$\Omega$')
-ax4.set_xlim(df['Cpar'].min(), df['Cpar'].max())
-#ax4.legend()
+fig2, axs2 = plt.subplots(rows, cols, figsize = (x_inches2,y_inches2), dpi = dpi, constrained_layout = True)
+fig.set_constrained_layout_pads(hspace=0, wspace=0.1)
+
+axs2[0, 0].plot(df['Cpar'], df[f'ddX_MIN'], rasterized = True, color = 'red', lw = 0.5, zorder = 1)
+axs2[0, 0].plot(df['Cpar'], df[f'ddX_MAX'], rasterized = True, color = 'red', lw = 0.5, zorder = 1)
+axs2[0, 0].fill_between(df['Cpar'], df[f'ddX_MAX'], df[f'ddX_MIN'], color = 'red', zorder = 0)
+
 
 #========================================================================#
 # Show and Save Figure                                                   #

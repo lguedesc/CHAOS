@@ -19,10 +19,10 @@ static void assign_names(char **strings, const int nvalues, char **names, size_t
     }
 }
 
-static void spins(double *previous_angle, double *current_angle, double angle, double *positive_spin, double *negative_spin, int index) {
+static void spins(double initial_angle, double *previous_angle, double *current_angle, double angle, double *positive_spin, double *negative_spin, int index) {
     // Store previous and current angle
     if (index == 0) {
-        (*previous_angle) = angle;
+        (*previous_angle) = initial_angle;
         (*current_angle) = angle;
     }
     else {
@@ -38,15 +38,11 @@ static void spins(double *previous_angle, double *current_angle, double angle, d
     }
 }
 
-static void time_to_flip(double t, double *initial_angle, double current_angle, double *tflip, int *mark, int index) {
+static void time_to_flip(double t, double initial_angle, double current_angle, double *tflip, int *mark) {
     if (mark == 0) {
         const double pi = 4 * atan(1);  // Pi number definition
-        // If is the first index, give the value of the initial condition
-        if (index == 0) {
-            (*initial_angle) = current_angle;
-        } 
         // If flipping happens, store the time and mark as done
-        if ((current_angle >= (*initial_angle) + 2*pi) || (current_angle <= (*initial_angle) - 2*pi)) {
+        if ((current_angle >= initial_angle + 2*pi) || (current_angle <= initial_angle - 2*pi)) {
             (*tflip) = t;
             (*mark) = 1;
         }
@@ -56,12 +52,39 @@ static void time_to_flip(double t, double *initial_angle, double current_angle, 
     }
 }
 
+
+// Methods for pend_oscillator_EH
+static double pend_oscillator_XCM(double X, double rho, double l, double Phi) {
+    return ((X + rho*l*sin(Phi))/(1 + rho)); 
+}
+
+static double pend_oscillator_ZCM(double Z, double rho, double l, double Phi) {
+    return (Z + rho*l*cos(Phi)/(1 + rho));
+}
+
+static double pend_oscillator_dXCM(double dX, double rho, double l, double Phi, double dPhi) {
+    return ((dX + rho*l*dPhi*cos(Phi))/(1 + rho));
+}
+
+static double pend_oscillator_dZCM(double dZ, double rho, double l, double Phi, double dPhi) {
+    return ((dZ - rho*l*dPhi*sin(Phi))/(1 + rho));
+}
+
+static double pend_oscillator_ddXCM(double ddX, double rho, double l, double Phi, double dPhi, double ddPhi) {
+    return ((ddX + rho*l*(ddPhi*cos(Phi) - dPhi*dPhi*sin(Phi)))/(1 + rho));
+}
+
+static double pend_oscillator_ddZCM(double ddZ, double rho, double l, double Phi, double dPhi, double ddPhi) {
+    return ((ddZ - rho*l*(ddPhi*sin(Phi) + dPhi*dPhi*cos(Phi)))/(1 + rho));
+}
+
+
 // Custom Calculations
-void customcalc(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
     return;
 }
 
-void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
     // Mode to define names to be printed in the output file
     if (mode == 0) {    
         char *names[] = {   "ddx[0]",
@@ -143,7 +166,7 @@ void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, doub
     }
 }
 
-void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
     /* OMEGA   = par[0]   |   zeta_z    = par[5]   |   l         = par[10]   |   chi_PZ = par[15]       |   x[0] = x       |   x[5] = dphi/dt
        gamma   = par[1]   |   zeta_t    = par[6]   |   varphi_PZ = par[11]   |   chi_EM = par[16]       |   x[1] = dx/dt   |   x[6] = v
        mu      = par[2]   |   OMEGA_s   = par[7]   |   kappa_PZ  = par[12]   |                          |   x[2] = z       |   x[7] = i
@@ -179,7 +202,7 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
                             "PoutPZ_Avg", "PoutEM_Avg",
                             "prev_ang", "curnt_ang", "pos_spin", "neg_spin",
                             "OVRLL_prev_ang", "OVRLL_curnt_ang", "OVRLL_pos_spin", "OVRLL_neg_spin",
-                            "init_angle", "tflip", "mark_if_flips"
+                            "tflip", "mark_if_flips"
                             };
         // Assign names to custom values
         assign_names(names, ncustomvalues, customnames, maxstrlen);
@@ -195,32 +218,52 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
         // Phi Acceleration of the system in steady state regime ("ddPhi")
         customvalue[2] = -(1 + par[3])*(2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7]) + (1/par[10])*((2*par[4]*x[1] + par[7]*par[7]*x[0])*cos(x[4]) - (2*par[5]*x[3] + x[2] - par[15]*x[6])*sin(x[4]));
         // Displacement of the center of mass in X direction ("Xcm")
-        customvalue[3] = (x[0] + par[3]*par[10]*sin(x[4]))/(1 + par[3]);
+        customvalue[3] = pend_oscillator_XCM(x[0], par[3], par[10], x[4]);          // (x[0] + par[3]*par[10]*sin(x[4]))/(1 + par[3]);
         // Displacement of the center of mass in Z direction ("Zcm")
-        customvalue[4] = (x[2] + par[3]*par[10]*cos(x[4]))/(1 + par[3]);
+        customvalue[4] = pend_oscillator_ZCM(x[2], par[3], par[10], x[4]);          // (x[2] + par[3]*par[10]*cos(x[4]))/(1 + par[3]);
         // Velocity of the center of mass in X direction ("dXcm")
-        customvalue[5] = (x[1] + par[3]*par[10]*x[5]*cos(x[4]))/(1 + par[3]);
+        customvalue[5] = pend_oscillator_dXCM(x[1], par[3], par[10], x[4], x[5]);   // (x[1] + par[3]*par[10]*x[5]*cos(x[4]))/(1 + par[3]);
         // Velocity of the center of mass in Z direction ("dZcm")
-        customvalue[6] = (x[3] - par[3]*par[10]*x[5]*sin(x[4]))/(1 + par[3]);
+        customvalue[6] = pend_oscillator_dZCM(x[3], par[3], par[10], x[4], x[5]);   // (x[3] - par[3]*par[10]*x[5]*sin(x[4]))/(1 + par[3]);
         // Acceleration of the center of mass in X direction ("ddXcm")
-        customvalue[7] = (customvalue[0] + par[3]*par[10]* (customvalue[2]*cos(x[4]) - x[5]*x[5]*sin(x[4])))/(1 + par[3]);
+        customvalue[7] = pend_oscillator_ddXCM(customvalue[0], par[3], par[10], x[4], x[5], customvalue[2]);  //(customvalue[0] + par[3]*par[10]* (customvalue[2]*cos(x[4]) - x[5]*x[5]*sin(x[4])))/(1 + par[3]);
         // Acceleration of the center of mass in Z direction ("ddZcm")
-        customvalue[8] = (customvalue[1] - par[3]*par[10]* (customvalue[2]*sin(x[4]) + x[5]*x[5]*cos(x[4])))/(1 + par[3]);
+        customvalue[8] = pend_oscillator_ddZCM(customvalue[1], par[3], par[10], x[4], x[5], customvalue[2]);  //(customvalue[1] - par[3]*par[10]* (customvalue[2]*sin(x[4]) + x[5]*x[5]*cos(x[4])))/(1 + par[3]);
         // Minimum values of the accelerations in steady state regime ("ddX_MIN", "ddZ_MIN", "ddPhi_MIN")
         for (int i = 0; i < 3; i++) { // From customvalue[9] to customvalue[11]
-            min_value(customvalue[i], &customvalue[9+i]);
+            if (currenttimestep == N*steadystateperc) {
+                customvalue[9+i] = customvalue[i];    
+            }
+            else {
+                min_value(customvalue[i], &customvalue[9+i]);
+            }
         }
         // Maximum values of the accelerations in steady state regime ("ddX_MAX", "ddZ_MAX", "ddPhi_MAX")
         for (int i = 0; i < 3; i++) { // From customvalue[12] to customvalue[14]
-            max_value(customvalue[i], &customvalue[12+i]);
+            if (currenttimestep == N*steadystateperc) {
+                customvalue[12+i] = customvalue[i];
+            }
+            else {
+                max_value(customvalue[i], &customvalue[12+i]);
+            }            
         }
         // Minimum values of the values of the center of mass in steady state regime ("Xcm_MIN", "Zcm_MIN", "dXcm_MIN", "dZcm_MIN", "ddXcm_MIN", "ddZcm_MIN")
         for (int i = 0; i < 6; i++) { // From customvalue[15] to customvalue[20]
-            min_value(customvalue[3+i], &customvalue[15+i]);
+            if (currenttimestep == N*steadystateperc) {
+                customvalue[15+i] = customvalue[3+i];
+            }
+            else {
+                min_value(customvalue[3+i], &customvalue[15+i]);
+            }
         }
         // Maximum values of the values of the center of mass in steady state regime ("Xcm_MAX", "Zcm_MAX", "dXcm_MAX", "dZcm_MAX", "ddXcm_MAX", "ddZcm_MAX")
         for (int i = 0; i < 6; i++) { // From customvalue[21] to customvalue[26]
-            max_value(customvalue[3+i], &customvalue[21+i]);
+            if (currenttimestep == N*steadystateperc) {
+                customvalue[21+i] = customvalue[3+i];
+            }
+            else {
+                max_value(customvalue[3+i], &customvalue[21+i]);
+            }
         }
         // Accumulate the value of the square of accelerations of the system in steady state regime ("Sum(ddX^2)", "Sum(ddZ^2)", "Sum(ddPhi^2)")
         for (int i = 0; i < 3; i++) { // From customvalue[27] to customvalue[29]
@@ -231,10 +274,9 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
             customvalue[30+i] = RMS(&customvalue[30+i], customvalue[3+i], (int)(N*steadystateperc), 0);
         }     
 
-        /* Compute positive and negative spinning of the pendulum */
+        /* Compute positive and negative spinning of the pendulum in steady state regime */
         // "prev_ang", "curnt_ang", "pos_spin", "neg_spin"
-        spins(&customvalue[110], &customvalue[111], x[4], &customvalue[112], &customvalue[113], currenttimestep);
-         
+        spins(x[4], &customvalue[110], &customvalue[111], x[4], &customvalue[112], &customvalue[113], currenttimestep);
     }
     // Mode to perform calculations over the entire time series (transient + steady state)
     else if (mode == 2) {
@@ -247,17 +289,17 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
         // Overall Phi Acceleration of the system ("OVRLL_ddPhi")
         customvalue[38] = -(1 + par[3])*(2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7]) + (1/par[10])*((2*par[4]*x[1] + par[7]*par[7]*x[0])*cos(x[4]) - (2*par[5]*x[3] + x[2] - par[15]*x[6])*sin(x[4]));
         // Overall displacement of the center of mass in X direction ("OVRLL_Xcm")
-        customvalue[39] = (x[0] + par[3]*par[10]*sin(x[4]))/(1 + par[3]); 
+        customvalue[39] = pend_oscillator_XCM(x[0], par[3], par[10], x[4]);            //(x[0] + par[3]*par[10]*sin(x[4]))/(1 + par[3]); 
         // Overall displacement of the center of mass in Z direction ("OVRLL_Zcm")
-        customvalue[40] = (x[2] + par[3]*par[10]*cos(x[4]))/(1 + par[3]);
+        customvalue[40] = pend_oscillator_ZCM(x[2], par[3], par[10], x[4]);            //(x[2] + par[3]*par[10]*cos(x[4]))/(1 + par[3]);
         // Overall velocity of the center of mass in X direction ("OVRLL_dXcm")
-        customvalue[41] = (x[1] + par[3]*par[10]*x[5]*cos(x[4]))/(1 + par[3]);
+        customvalue[41] = pend_oscillator_dXCM(x[1], par[3], par[10], x[4], x[5]);     //(x[1] + par[3]*par[10]*x[5]*cos(x[4]))/(1 + par[3]);
         // Overall velocity of the center of mass in Z direction ("OVRLL_dZcm")
-        customvalue[42] = (x[3] - par[3]*par[10]*x[5]*sin(x[4]))/(1 + par[3]);
+        customvalue[42] = pend_oscillator_dZCM(x[3], par[3], par[10], x[4], x[5]);     //(x[3] - par[3]*par[10]*x[5]*sin(x[4]))/(1 + par[3]);
         // Overall Acceleration of the center of mass in X direction ("OVRLL_ddXcm")
-        customvalue[43] = (customvalue[36] + par[3]*par[10]*(customvalue[38]*cos(x[4]) - x[5]*x[5]*sin(x[4])))/(1 + par[3]);
+        customvalue[43] = pend_oscillator_ddXCM(customvalue[36], par[3], par[10], x[4], x[5], customvalue[38]); //(customvalue[36] + par[3]*par[10]*(customvalue[38]*cos(x[4]) - x[5]*x[5]*sin(x[4])))/(1 + par[3]);
         // Overall Acceleration of the center of mass in Z direction ("OVRLL_ddZcm")
-        customvalue[44] = (customvalue[37] - par[3]*par[10]*(customvalue[38]*sin(x[4]) + x[5]*x[5]*cos(x[4])))/(1 + par[3]);
+        customvalue[44] = pend_oscillator_ddZCM(customvalue[37], par[3], par[10], x[4], x[5], customvalue[38]);   //(customvalue[37] - par[3]*par[10]*(customvalue[38]*sin(x[4]) + x[5]*x[5]*cos(x[4])))/(1 + par[3]);
         // Overall Input Base Excitation Displacement in X direction ("OVRLL_Xb")
         customvalue[45] = rb*sin((pi/180)*par[2]);
         // Overall Input Base Excitation Displacement in Z direction ("OVRLL_Zb")
@@ -271,21 +313,36 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
         // Overall Input Base Excitation Acceleration in Z direction ("OVRLL_ddZb")
         customvalue[50] = ddrb*cos((pi/180)*par[2]);
         // Overall Minimum values of the accelerations of the system ("OVRLL_ddX_MIN", "OVRLL_ddZ_MIN", "OVRLL_ddPhi_MIN")
-        for (int i = 0; i < 3; i++) {  // From customvalue[51] to customvalue[53]
+        for (int i = 0; i < 3; i++) {  // From customvalue[51] to customvalue[53]            
             min_value(customvalue[36+i], &customvalue[51+i]);
         }
         // Overall Maximum values of the accelerations of the system ("OVRLL_ddX_MAX", "OVRLL_ddZ_MAX", "OVRLL_ddPhi_MAX")
         for (int i = 0; i < 3; i++) {  // From customvalue[54] to customvalue[56]
             max_value(customvalue[36+i], &customvalue[54+i]);
         }
-        // Overall Minimum values of the values of the center of mass ("OVRLL_Xcm_MIN", "OVRLL_Zcm_MIN", "OVRLL_dXcm_MIN", "OVRLL_dZcm_MIN", "OVRLL_ddXcm_MIN", "OVRLL_ddZcm_MIN")
+        /* Overall Minimum values of the values of the center of mass ("OVRLL_Xcm_MIN", "OVRLL_Zcm_MIN", "OVRLL_dXcm_MIN", "OVRLL_dZcm_MIN", "OVRLL_ddXcm_MIN", "OVRLL_ddZcm_MIN") */
+        if (currenttimestep == 0) {  // Identify initial conditions of the center of mass variables
+            customvalue[57] = pend_oscillator_XCM(IC[0], par[3], par[10], IC[4]);
+            customvalue[58] = pend_oscillator_ZCM(IC[2], par[3], par[10], IC[4]);
+            customvalue[59] = pend_oscillator_dXCM(IC[1], par[3], par[10], IC[4], IC[5]);
+            customvalue[60] = pend_oscillator_dZCM(IC[3], par[3], par[10], IC[4], IC[5]);
+            // customvalue[61] and customvalue[62] are already zero and don't require calculations of initial condition
+        }
         for (int i = 0; i < 6; i++) { // From customvalue[57] to customvalue[62]
             min_value(customvalue[39+i], &customvalue[57+i]);
         }
-        // Overall Maximum values of the values of the center of mass ("OVRLL_Xcm_MAX", "OVRLL_Zcm_MAX", "OVRLL_dXcm_MAX", "OVRLL_dZcm_MAX", "OVRLL_ddXcm_MAX", "OVRLL_ddZcm_MAX")
+        /* Overall Maximum values of the values of the center of mass ("OVRLL_Xcm_MAX", "OVRLL_Zcm_MAX", "OVRLL_dXcm_MAX", "OVRLL_dZcm_MAX", "OVRLL_ddXcm_MAX", "OVRLL_ddZcm_MAX") */
+        if (currenttimestep == 0) {  // Identify initial conditions of the center of mass variables
+            customvalue[63] = pend_oscillator_XCM(IC[0], par[3], par[10], IC[4]);
+            customvalue[64] = pend_oscillator_ZCM(IC[2], par[3], par[10], IC[4]);
+            customvalue[65] = pend_oscillator_dXCM(IC[1], par[3], par[10], IC[4], IC[5]);
+            customvalue[66] = pend_oscillator_dZCM(IC[3], par[3], par[10], IC[4], IC[5]);
+            // customvalue[67] and customvalue[68] are already zero and don't require calculations of initial conditions
+        }
         for (int i = 0; i < 6; i++) { // From customvalue[63] to customvalue[68]
             min_value(customvalue[39+i], &customvalue[63+i]);
         }
+
         // Accumulate the value of the square of the overall accelerations of the system ("Sum(OVRLL_ddX^2)", "Sum(OVRLL_ddZ^2)", "Sum(OVRLL_ddPhi^2)")
         for (int i = 0; i < 3; i++) { // From customvalue[69] to customvalue[71]
             customvalue[69+i] = RMS(&customvalue[69+i], customvalue[36+i], N, 0);
@@ -301,13 +358,11 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
         
         /* Compute positive and negative spinning of the pendulum */
         // "OVRLL_prev_ang", "OVRLL_curnt_ang", "OVRLL_pos_spin", "OVRLL_neg_spin"
-        spins(&customvalue[114], &customvalue[115], x[4], &customvalue[116], &customvalue[117], currenttimestep);
-
+        spins(IC[4], &customvalue[114], &customvalue[115], x[4], &customvalue[116], &customvalue[117], currenttimestep);
 
         /* Time To Flip Calculations */ 
-        // "init_angle", "tflip", "mark_if_flips"
-        time_to_flip(t, &customvalue[118], x[4], &customvalue[119], (int *)(&customvalue[120]), currenttimestep);
-
+        // "tflip", "mark_if_flips"
+        time_to_flip(t, IC[4], x[4], &customvalue[118], (int *)&customvalue[119]);
     
     } 
     // Mode to perform calculations at the end of the time series    
@@ -344,7 +399,7 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
 
 
 
-void customcalc_pend_oscillator_EH_old(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc_pend_oscillator_EH_old(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
     /* OMEGA   = par[0]   |   zeta_z    = par[5]   |   l         = par[10]   |   chi_PZ = par[15]       |   x[0] = x       |   x[5] = dphi/dt
        gamma   = par[1]   |   zeta_t    = par[6]   |   varphi_PZ = par[11]   |   chi_EM = par[16]       |   x[1] = dx/dt   |   x[6] = v
        mu      = par[2]   |   OMEGA_s   = par[7]   |   kappa_PZ  = par[12]   |                          |   x[2] = z       |   x[7] = i
@@ -557,7 +612,7 @@ void customcalc_pend_oscillator_EH_old(double *x, double *par, double t, double 
     }
 }
 
-void customcalc_bistable_EH_old2(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc_bistable_EH_old2(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
     // Check if mode is equal to "table"
     if (mode == 0) {    // Mode to define names to be printed in the output file
         char *names[] = {   "ddx[0]",
@@ -617,7 +672,7 @@ void customcalc_bistable_EH_old2(double *x, double *par, double t, double *xrms,
     }
 }
 
-void customcalc_bistable_EH_old(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc_bistable_EH_old(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
     // Check if mode is equal to "table"
     if (mode == 0) {
         // Names to be printed in the output file

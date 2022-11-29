@@ -34,11 +34,17 @@ double RMS(double *cum, double measure, int N, int mode) {
 void OS_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double *x, double h, double *par, int nrms, int *rmsindex, double **xrms, double **overallxrms, 
                      double **xmin, double **xmax, double **overallxmin, double **overallxmax, void (*edosys)(int, double *, double, double *, double *),  
                      int ncustomvalues, char ***customnames, double **customvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex,
-                     void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode)) {
+                     void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode)) {
     // Maximum length of custom names, if there is custom calculations
     size_t nchars = 20;
     // Allocate x` = f(x)
     double *f = malloc(dim * sizeof *f);
+    // Allocate memory and store initial conditions
+    double t0 = t;
+    double *IC = malloc(dim * sizeof *IC);
+    for (int i = 0; i < dim; i++) {
+        IC[i] = x[i];
+    }
     // Allocate RMS variables
     (*xrms) = malloc(dim * sizeof **xrms);
     (*overallxrms) = malloc(dim * sizeof **overallxrms);
@@ -47,7 +53,7 @@ void OS_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
         (*xrms)[i] = 0.0;
         (*overallxrms)[i] = 0.0;
     }
-    // Declare memory to store min, max, overall min and overall max values
+    // Allocate memory to store min, max, overall min and overall max values
     (*xmax) = malloc(dim * sizeof **xmax);
     (*xmin) = malloc(dim * sizeof **xmin);
     (*overallxmax) = malloc(dim * sizeof **xmin);
@@ -80,7 +86,7 @@ void OS_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
     int currenttimestep = 0;
     // Check if there is any custom names to be inserted on the header of the output file
     if (ncustomvalues > 0) {
-        customfunc(x, par, t, (*xrms), (*xmin), (*xmax), N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 0);
+        customfunc(x, par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 0);
     }
     // Make the header of the output file
     EH_write_timeseries_results(output_file, dim, t, x, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 1);
@@ -112,7 +118,7 @@ void OS_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
                 }
                 // Perform custom calculations in steady state regime (if there is calculations to be done)
                 if (ncustomvalues > 0) {
-                    customfunc(x, par, t, (*xrms), (*xmin), (*xmax), N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 1);    
+                    customfunc(x, par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 1);    
                 }
             }
             // Get overall max and min values
@@ -129,7 +135,7 @@ void OS_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
             }
             // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
             if (ncustomvalues > 0) {
-                customfunc(x, par, t, (*xrms), (*xmin), (*xmax), N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 2);
+                customfunc(x, par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 2);
             }
             // Write results in output file
             EH_write_timeseries_results(output_file, dim, t, x, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 2);
@@ -144,21 +150,27 @@ void OS_rk4_solution(FILE *output_file, int dim, int np, int ndiv, int trans, do
     }
     // Perform custom calculations at the end of the time series (if there is calculations to be done)
     if (ncustomvalues > 0) {
-        customfunc(x, par, t, (*xrms), (*xmin), (*xmax), N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 3);
+        customfunc(x, par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 3);
     }
     // Free Memory
-    free(f); 
+    free(f); free(IC);
 }
 
 void OS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int *attrac, int maxper, double t, double **x, double h, double *par, 
                                  int nrms, int *rmsindex, double **xrms, double **overallxrms, double **xmin, double **xmax, double **overallxmin, double **overallxmax,
                                  void (*edosys)(int, double *, double, double *, double *), 
                                  int ncustomvalues, char ***customnames, double **customvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex,
-                                 void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode)) {
+                                 void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode)) {
     // Maximum length of custom names, if there is custom calculations
     size_t nchars = 20;
     // Allocate memory for x` = f(x)
     double *f = malloc(dim * sizeof *f);
+    // Allocate memory and store initial conditions
+    double t0 = t;
+    double *IC = malloc(dim * sizeof *IC);
+    for (int i = 0; i < dim; i++) {
+        IC[i] = (*x)[i];
+    }
     // Allocate memory for vectors necessary for lyapunov exponents calculation
     double *cum = malloc(dim * sizeof *cum);            // Cumulative Vector
     double *lambda = malloc(dim *sizeof *lambda);       // Lyapunov Exponents vector
@@ -227,7 +239,7 @@ void OS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poi
     int currenttimestep = 0;
     // Check if there is any custom names to be inserted on the header of the output file
     if (ncustomvalues > 0) {
-        customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 0);
+        customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 0);
     }
     // Make the header of output files
     EH_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 1);
@@ -267,7 +279,7 @@ void OS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poi
                 }
                 // Perform custom calculations in steady state regime (if there is calculations to be done)
                 if (ncustomvalues > 0) {
-                    customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 1);    
+                    customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 1);    
                 }
             }
             // Get overall max and min values
@@ -284,7 +296,7 @@ void OS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poi
             }
             // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
             if (ncustomvalues > 0) {
-                customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 2);
+                customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 2);
             }       
             // Write Results in output file
             EH_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 2);
@@ -307,11 +319,11 @@ void OS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poi
     }
     // Perform "end" type custom calculations if there is calculations to be done
     if (ncustomvalues > 0) {
-        customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 3);
+        customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 3);
     }
     // Free memory    
     free(f); free(cum); free(s_cum); free(lambda); free(s_lambda);
-    free(znorm); free(gsc); free(LE); free(tmp_attrac);
+    free(znorm); free(gsc); free(LE); free(tmp_attrac); free(IC);
     for (int i = 0; i < np - trans; i++) {
         free(poinc[i]);
     }
@@ -321,7 +333,7 @@ void OS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poi
 void OS_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, double t, double *x, int parindex, 
                         double *parrange, double *par, int nrms, int *rmsindex, void (*edosys)(int, double *, double, double *, double *), 
                         int ncustomvalues, int nprintf, int *printfindex,
-                        void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
+                        void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
                         int mode), int bifmode) {
     // Maximum length of custom names, if there is custom calculations
     size_t nchars = 20;
@@ -362,7 +374,7 @@ void OS_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int
     int currenttimestep = 0;
     // Check if there is any custom names to be inserted on the header of the output file
     if (ncustomvalues > 0) {
-        customfunc(x, par, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 0);
+        customfunc(x, par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 0);
     }
     // Make the header of the output file
     EH_write_bifurc_results(output_poinc_file, dim, par[parindex], x, xmin, xmax, overallxmin, overallxmax, nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 0);    
@@ -426,7 +438,7 @@ void OS_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int
                     }
                     // Perform custom calculations in steady state regime (if there is calculations to be done)
                     if (ncustomvalues > 0) {
-                        customfunc(x, par, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 1);    
+                        customfunc(x, par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 1);    
                     }
                 }
                 // Get overall max and min values
@@ -442,7 +454,7 @@ void OS_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int
                 }
                 // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
                 if (ncustomvalues > 0) {
-                    customfunc(x, par, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 2);
+                    customfunc(x, par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 2);
                 }
             }
         }
@@ -455,7 +467,7 @@ void OS_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int
         }
         // Perform custom calculations at the end of the time series (if there is calculations to be done)
         if (ncustomvalues > 0) {
-            customfunc(x, par, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 3);
+            customfunc(x, par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 3);
         }
         // Print results in output file
         EH_write_bifurc_results(output_file, dim, par[parindex], x, xmin, xmax, overallxmin, overallxmax, nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 3);
@@ -484,7 +496,7 @@ void OS_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int
 void OS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int maxper, double t,
                                   double **x, int parindex, double *parrange, double *par, int nrms, int *rmsindex, void (*edosys)(int, double *, double, double *, double *), 
                                   int ncustomvalues, int nprintf, int *printfindex,
-                                  void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
+                                  void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
                                   int mode), int bifmode) {
     // Maximum length of custom names, if there is custom calculations
     size_t nchars = 20;
@@ -549,7 +561,7 @@ void OS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, in
     int currenttimestep = 0;
     // Check if there is any custom names to be inserted on the header of the output file
     if (ncustomvalues > 0) {
-        customfunc((*x), par, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 0);
+        customfunc((*x), par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 0);
     }
     // Make the header of output files
     EH_write_fbifurc_results(output_poinc_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, poinc, diffAttrac,
@@ -617,7 +629,7 @@ void OS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, in
                     }
                     // Perform custom calculations in steady state regime (if there is calculations to be done)
                     if (ncustomvalues > 0) {
-                        customfunc((*x), par, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 1);    
+                        customfunc((*x), par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 1);    
                     }
                     // Choose any point in the trajectory for poincare section placement
                     if (j == 1) {
@@ -640,7 +652,7 @@ void OS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, in
                 }
                 // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
                 if (ncustomvalues > 0) {
-                    customfunc((*x), par, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 2);
+                    customfunc((*x), par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 2);
                 }
             }
         }
@@ -651,7 +663,7 @@ void OS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, in
         }
         // Perform custom calculations at the end of the time series (if there is calculations to be done)
         if (ncustomvalues > 0) {
-            customfunc((*x), par, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 3);
+            customfunc((*x), par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 3);
         }
         // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
         store_LE(dim, lambda, s_lambda, LE);
@@ -694,7 +706,7 @@ void OS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv,
                                     int indexX, int indexY, double *parrange, double *par, int npar, int nrms, int *rmsindex,
                                     void (*edosys)(int, double *, double, double *, double *),
                                     int ncustomvalues, int nprintf, int *printfindex,
-                                    void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
+                                    void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
                                     int mode), int bifmode) {
     // Maximum length of custom names, if there is custom calculations
     size_t nchars = 20;
@@ -764,7 +776,7 @@ void OS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv,
         int currenttimestep = 0;
         // Check if there is any custom names to be inserted on the header of the output file
         if (ncustomvalues > 0) {
-            customfunc(X, PAR, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 0);
+            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 0);
         }
         // Index to identify position to write results
         int index;                                          
@@ -831,7 +843,7 @@ void OS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv,
                             }
                             // Perform custom calculations in steady state regime (if there is calculations to be done)
                             if (ncustomvalues > 0) {
-                                customfunc(X, PAR, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 1);
+                                customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 1);
                             }
                             // Choose any point in the trajectory for poincare section placement
                             if (j == 1) {
@@ -854,7 +866,7 @@ void OS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv,
                         }
                         // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
                         if (ncustomvalues > 0) {
-                            customfunc(X, PAR, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 2);
+                            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 2);
                         }
                     }
                 }
@@ -867,7 +879,7 @@ void OS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv,
                 }
                 // Perform custom calculations at the end of the time series (if there is calculations to be done)
                 if (ncustomvalues > 0) {
-                    customfunc(X, PAR, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 3);
+                    customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 3);
                 }
                 // Verify the type of motion of the system
                 attrac = check_periodicity(dim, np, poinc, trans, tmp_attrac, &diffAttrac, maxper);
@@ -938,7 +950,7 @@ void OS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int 
                                         int indexX, int indexY, double *parrange, double *par, int npar, int nrms, int *rmsindex,
                                         void (*edosys)(int, double *, double, double *, double *),
                                         int ncustomvalues, int nprintf, int *printfindex,
-                                        void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
+                                        void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
                                         int mode), int bifmode) {
     // Maximum length of custom names, if there is custom calculations
     size_t nchars = 20;
@@ -1021,7 +1033,7 @@ void OS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int 
         int currenttimestep = 0;
         // Check if there is any custom names to be inserted on the header of the output file
         if (ncustomvalues > 0) {
-            customfunc(X, PAR, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 0);
+            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 0);
         }
         // Index to identify position to write results
         int index;                                          
@@ -1096,7 +1108,7 @@ void OS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int 
                             }
                             // Perform custom calculations in steady state regime (if there is calculations to be done)
                             if (ncustomvalues > 0) {
-                                customfunc(X, PAR, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 1);
+                                customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 1);
                             }
                             // Choose any point in the trajectory for poincare section placement
                             if (j == 1) {
@@ -1119,7 +1131,7 @@ void OS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int 
                         }
                         // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
                         if (ncustomvalues > 0) {
-                            customfunc(X, PAR, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 2);
+                            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 2);
                         }
                     }
                 }
@@ -1132,7 +1144,7 @@ void OS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int 
                 }
                 // Perform custom calculations at the end of the time series (if there is calculations to be done)
                 if (ncustomvalues > 0) {
-                    customfunc(X, PAR, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 3);
+                    customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 3);
                 }
                 // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
                 store_LE(dim, lambda, s_lambda, LE);
@@ -1209,7 +1221,7 @@ void OS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim, 
                                                     int indexX, int indexY, double *icrange, double *par, int npar, int nrms, int *rmsindex, 
                                                     void (*edosys)(int, double *, double, double *, double *), 
                                                     int ncustomvalues, int nprintf, int *printfindex,
-                                                    void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
+                                                    void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
                                                     int mode)) {
     // Maximum length of custom names, if there is custom calculations
     size_t nchars = 20;
@@ -1292,7 +1304,7 @@ void OS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim, 
         int currenttimestep = 0;
         // Check if there is any custom names to be inserted on the header of the output file
         if (ncustomvalues > 0) {
-            customfunc(X, PAR, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 0);
+            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 0);
         }
         // Index to identify position to write results
         int index;                                          
@@ -1362,7 +1374,7 @@ void OS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim, 
                             }
                             // Perform custom calculations in steady state regime (if there is calculations to be done)
                             if (ncustomvalues > 0) {
-                                customfunc(X, PAR, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 1);
+                                customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 1);
                             }
                             // Choose any point in the trajectory for poincare section placement
                             if (j == 1) {
@@ -1385,7 +1397,7 @@ void OS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim, 
                         }
                         // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
                         if (ncustomvalues > 0) {
-                            customfunc(X, PAR, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 2);
+                            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 2);
                         }
                     }
                 }
@@ -1398,7 +1410,7 @@ void OS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim, 
                 }
                 // Perform custom calculations at the end of the time series (if there is calculations to be done)
                 if (ncustomvalues > 0) {
-                    customfunc(X, PAR, t, xrms, xmin, xmax, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 3);
+                    customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 3);
                 }
                 // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
                 store_LE(dim, lambda, s_lambda, LE);

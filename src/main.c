@@ -25,7 +25,7 @@
 #include "modules/convergence_test.h"
 
 void execute_OS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
-                        void (*customfunc)(double *, double *, double, double *, double *, double *, int, int, double, int, char **, size_t, double *, int),
+                        void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, size_t, double *, int),
                         char* outputname, char *funcname);
 void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
 
@@ -73,7 +73,7 @@ void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, doub
 #define OS_OUTPUTNAME_9 "tristable_EH"
 
 #define OS_FUNC_10 pend_oscillator_EH
-#define OS_CUSTOM_10 customcalc                 
+#define OS_CUSTOM_10 customcalc_pend_oscillator_EH                 
 #define OS_OUTPUTNAME_10 "pend_oscillator_EH"
 
 #define OS_FUNC_11 pend_oscillator_wout_pend_EH
@@ -213,7 +213,7 @@ int main (void) {
 }
 
 void execute_OS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
-                        void (*customfunc)(double *, double *, double, double *, double *, double *, int, int, double, int, char **, size_t, double *, int),
+                        void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, size_t, double *, int),
                         char* outputname, char *funcname) {
     switch (module) {
         case 1:
