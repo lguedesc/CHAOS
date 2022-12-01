@@ -6,7 +6,7 @@
 # load modules
 module load compiler/2021.2.0
 # change directory
-cd 
+cd multidirect_EH/CHAOS
 # environment (if necessary)
 export OMP_NUM_THREADS=48
 # compile
