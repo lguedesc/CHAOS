@@ -226,9 +226,9 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
         // Velocity of the center of mass in Z direction ("dZcm")
         customvalue[6] = pend_oscillator_dZCM(x[3], par[3], par[10], x[4], x[5]);   // (x[3] - par[3]*par[10]*x[5]*sin(x[4]))/(1 + par[3]);
         // Acceleration of the center of mass in X direction ("ddXcm")
-        customvalue[7] = pend_oscillator_ddXCM(customvalue[0], par[3], par[10], x[4], x[5], customvalue[2]);  //(customvalue[0] + par[3]*par[10]* (customvalue[2]*cos(x[4]) - x[5]*x[5]*sin(x[4])))/(1 + par[3]);
+        customvalue[7] = pend_oscillator_ddXCM(f[1], par[3], par[10], x[4], x[5], f[5]);  //(customvalue[0] + par[3]*par[10]* (customvalue[2]*cos(x[4]) - x[5]*x[5]*sin(x[4])))/(1 + par[3]);
         // Acceleration of the center of mass in Z direction ("ddZcm")
-        customvalue[8] = pend_oscillator_ddZCM(customvalue[1], par[3], par[10], x[4], x[5], customvalue[2]);  //(customvalue[1] - par[3]*par[10]* (customvalue[2]*sin(x[4]) + x[5]*x[5]*cos(x[4])))/(1 + par[3]);
+        customvalue[8] = pend_oscillator_ddZCM(f[3], par[3], par[10], x[4], x[5], f[5]);  //(customvalue[1] - par[3]*par[10]* (customvalue[2]*sin(x[4]) + x[5]*x[5]*cos(x[4])))/(1 + par[3]);
         // Minimum values of the accelerations in steady state regime ("ddX_MIN", "ddZ_MIN", "ddPhi_MIN")
         for (int i = 0; i < 3; i++) { // From customvalue[9] to customvalue[11]
             if (currenttimestep == N*steadystateperc) {

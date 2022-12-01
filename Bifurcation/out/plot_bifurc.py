@@ -9,12 +9,22 @@ from src.libs import plotconfig as pltconf
 
 pltconf.plot_params(True, 10, 0.5)
 
+def remainder_dataframe(dataframe, divisor):
+    # Find the exact values
+    exactvalue = dataframe/divisor
+    # Round the exact values to the closest integer
+    n = round(exactvalue)
+    # Find the remainder
+    remainder = dataframe - n*divisor
+    return remainder
+
+
 save = False
 
 system = "pend_oscillator_EH"
 ext = ".pdf"
 
-num = 2
+num = 1
 
 if num > 0:
     readpath = "Bifurcation/out/" + system + f"_bifurc({num}).csv"; readpath = pltconf.convert_dir(readpath)
@@ -46,6 +56,16 @@ size = 0.25
 cols = 4
 rows = 2
 
+df.loc[df['xMAX[4]'] > np.pi, ['xMAX[4]']] = np.pi
+df.loc[df['xMAX[4]'] < -np.pi, ['xMAX[4]']] = np.pi
+
+df.loc[df['xMIN[4]'] > np.pi, ['xMIN[4]']] = -np.pi
+df.loc[df['xMIN[4]'] < -np.pi, ['xMIN[4]']] = -np.pi
+
+dfpoinc['x[4]'] = remainder_dataframe(dfpoinc['x[4]'], 2*np.pi)
+df['xRMS[4]'] = remainder_dataframe(df['xRMS[4]'], 2*np.pi)
+
+
 fig, axs = plt.subplots(rows+1, cols, figsize = (x_inches2,y_inches2), dpi = dpi, constrained_layout = True)
 fig.set_constrained_layout_pads(hspace=0, wspace=0.1)
 
@@ -60,7 +80,8 @@ for col in range(cols):
         ax.scatter(dfpoinc['Cpar'], dfpoinc[f'x[{n[i]}]'], rasterized = True, color = "black", s = size, linewidths = 0, marker = '.', zorder = 2)
         ax.plot(df['Cpar'], df[f'xMAX[{n[i]}]'], rasterized = True, color = mycolors[i], lw = 0.5, zorder = 1)
         ax.plot(df['Cpar'], df[f'xMIN[{n[i]}]'], rasterized = True, color = mycolors[i], lw = 0.5, zorder = 1)
-        ax.plot(df['Cpar'], df[f'xRMS[{n[i]}]'], rasterized = True, color = rmscolors[i], lw = 0.5, zorder = 3)
+        if (i != 4):
+            ax.plot(df['Cpar'], df[f'xRMS[{n[i]}]'], rasterized = True, color = rmscolors[i], lw = 0.5, zorder = 3)
         ax.fill_between(df['Cpar'], df[f'xMAX[{n[i]}]'], df[f'xMIN[{n[i]}]'], color = mycolors[i], zorder = 0)
         ax.set_ylabel(names[i])
         ax.set_xlabel(r'$\Omega$')
@@ -114,7 +135,7 @@ axs[row4, col4].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
 
 
 fig2, axs2 = plt.subplots(rows+1, cols, figsize = (x_inches2,y_inches2), dpi = dpi, constrained_layout = True)
-fig.set_constrained_layout_pads(hspace=0, wspace=0.1)
+fig2.set_constrained_layout_pads(hspace=0, wspace=0.1)
 
 row = 0; col = 0
 axs2[row, col].plot(df['Cpar'], df[f'Xcm_MIN'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
@@ -263,8 +284,33 @@ axs2[row, col].set_xticks([0.01, 1, 2])
 axs2[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
 
 
+rows = 2; cols = 3
+fig3, axs3 = plt.subplots(rows, cols, figsize = (x_inches2,y_inches2), dpi = dpi, constrained_layout = True)
+fig3.set_constrained_layout_pads(hspace=0, wspace=0.1)
 
+row = 0; col = 0
+axs3[row, col].plot(df['Cpar'], df[f'pos_spin'] , rasterized = True, color = 'darkgreen', lw = 0.5, zorder = 1)
+axs3[row, col].set_ylabel(r'$\mathrm{spin}(+)$')
+axs3[row, col].set_xlabel(r'$\Omega$')
+axs3[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
+axs3[row, col].set_xticks([0.01, 1, 2])
+axs3[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
 
+row = 0; col = 1
+axs3[row, col].plot(df['Cpar'], df[f'neg_spin'] , rasterized = True, color = 'darkred', lw = 0.5, zorder = 1)
+axs3[row, col].set_ylabel(r'$\mathrm{spin}(-)$')
+axs3[row, col].set_xlabel(r'$\Omega$')
+axs3[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
+axs3[row, col].set_xticks([0.01, 1, 2])
+axs3[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
+
+row = 0; col = 2
+axs3[row, col].plot(df['Cpar'], df[f'tflip'] , rasterized = True, color = 'blue', lw = 0.5, zorder = 1)
+axs3[row, col].set_ylabel(r'$t_{\mathrm{flip}}$')
+axs3[row, col].set_xlabel(r'$\Omega$')
+axs3[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
+axs3[row, col].set_xticks([0.01, 1, 2])
+axs3[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
 
 #========================================================================#
 # Show and Save Figure                                                   #
