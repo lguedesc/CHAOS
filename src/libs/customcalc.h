@@ -1,7 +1,7 @@
 // Methods
 static void assign_names(char **strings, const int nvalues, char **names, size_t maxstrlen);
 static void spins(double initial_angle, double *previous_angle, double *current_angle, double angle, double *positive_spin, double *negative_spin, int index);
-static void time_to_flip(double t, double initial_angle, double current_angle, double *tflip, int *mark);
+static void time_to_flip(double t, double initial_angle, double current_angle, double *tflip);
 
 // Methods for pend oscillator
 static double pend_oscillator_XCM(double X, double rho, double l, double Phi);

@@ -135,7 +135,6 @@ def plot_attractor_map(ax, x, y, z, maxper):
     cbar.dividers.set_linewidth(1)
     cbar.ax.yaxis.set_ticks_position('right')
     
-    
 def plot_rainbow_map(ax, x, y, z):
     raster = True
     ax.set_aspect('equal')

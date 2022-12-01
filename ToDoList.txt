@@ -10,6 +10,4 @@
 
 *** KNOWN ISSUES AND POSSIBLE BUGS ***
 1. See if f is really necessary in rk4 arguments.
-
-*** SPECIFIC FROM CUSTOMCALC ***
-Check why time to flip is not working
+2. Bug in progress bar in dyndiag (showing two %%) and bifurcation (when starting from a advance number, it bugs in 100% always)

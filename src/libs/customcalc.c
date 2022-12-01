@@ -5,6 +5,7 @@
 #include <math.h>
 #include "nlosc.h"
 #include "nldyn.h"
+#include "odesystems.h"
 
 // Methods
 static void assign_names(char **strings, const int nvalues, char **names, size_t maxstrlen) {
@@ -38,20 +39,18 @@ static void spins(double initial_angle, double *previous_angle, double *current_
     }
 }
 
-static void time_to_flip(double t, double initial_angle, double current_angle, double *tflip, int *mark) {
-    if (mark == 0) {
+static void time_to_flip(double t, double initial_angle, double current_angle, double *tflip) {
+    if ((*tflip) == 0.0) {
         const double pi = 4 * atan(1);  // Pi number definition
         // If flipping happens, store the time and mark as done
         if ((current_angle >= initial_angle + 2*pi) || (current_angle <= initial_angle - 2*pi)) {
             (*tflip) = t;
-            (*mark) = 1;
         }
     }
     else {
         return;
     }
 }
-
 
 // Methods for pend_oscillator_EH
 static double pend_oscillator_XCM(double X, double rho, double l, double Phi) {
@@ -177,6 +176,9 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
     double rb = par[1]*sin(par[0]*t);
     double drb = par[1]*par[0]*cos(par[0]*t);
     double ddrb = -par[1]*par[0]*par[0]*sin(par[0]*t);
+
+    double f[8];
+    pend_oscillator_EH(8, x, t, par, f);
     // Mode to define names to be printed in the output file
     if (mode == 0) {    
         char *names[] = {   "ddX", "ddZ", "ddPhi", "Xcm", "Zcm", "dXcm", "dZcm", "ddXcm", "ddZcm",
@@ -202,7 +204,7 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
                             "PoutPZ_Avg", "PoutEM_Avg",
                             "prev_ang", "curnt_ang", "pos_spin", "neg_spin",
                             "OVRLL_prev_ang", "OVRLL_curnt_ang", "OVRLL_pos_spin", "OVRLL_neg_spin",
-                            "tflip", "mark_if_flips"
+                            "tflip"
                             };
         // Assign names to custom values
         assign_names(names, ncustomvalues, customnames, maxstrlen);
@@ -210,13 +212,11 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
     // Mode to perform calculations in steady state regime of the time series
     else if (mode == 1) { 
         // X Acceleration of the system in steady state regime ("ddX")
-        customvalue[0] = (1/(1 + par[3]))*(-(1 + par[3]*cos(x[4])*cos(x[4]))*(2*par[4]*x[1] + par[7]*par[7]*x[0]) + (par[3]/2)*(2*par[5]*x[3] + x[2] - par[15]*x[6])*sin(2*x[4]) + par[3]*par[10]*x[5]*x[5]*sin(x[4]))
-                          + (2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7])*par[3]*par[10]*cos(x[4]) -ddrb*sin((pi/180)*par[2]);
+        customvalue[0] = f[1];
         // Z Acceleration of the system in steady state regime ("ddZ")
-        customvalue[1] = (1/(1 + par[3]))*(-(1 + par[3]*sin(x[4])*sin(x[4]))*(2*par[5]*x[3] + x[2] - par[15]*x[6]) + (par[3]/2)*(2*par[4]*x[1] + par[7]*par[7]*x[0])*sin(2*x[4]) + par[3]*par[10]*x[5]*x[5]*cos(x[4]))
-                          - (2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7])*par[3]*par[10]*sin(x[4]) -ddrb*cos((pi/180)*par[2]);
+        customvalue[1] = f[3];
         // Phi Acceleration of the system in steady state regime ("ddPhi")
-        customvalue[2] = -(1 + par[3])*(2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7]) + (1/par[10])*((2*par[4]*x[1] + par[7]*par[7]*x[0])*cos(x[4]) - (2*par[5]*x[3] + x[2] - par[15]*x[6])*sin(x[4]));
+        customvalue[2] = f[5];
         // Displacement of the center of mass in X direction ("Xcm")
         customvalue[3] = pend_oscillator_XCM(x[0], par[3], par[10], x[4]);          // (x[0] + par[3]*par[10]*sin(x[4]))/(1 + par[3]);
         // Displacement of the center of mass in Z direction ("Zcm")
@@ -281,13 +281,11 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
     // Mode to perform calculations over the entire time series (transient + steady state)
     else if (mode == 2) {
         // Overall X Acceleration of the system ("OVRLL_ddX")
-        customvalue[36] = (1/(1 + par[3]))*(-(1 + par[3]*cos(x[4])*cos(x[4]))*(2*par[4]*x[1] + par[7]*par[7]*x[0]) + (par[3]/2)*(2*par[5]*x[3] + x[2] - par[15]*x[6])*sin(2*x[4]) + par[3]*par[10]*x[5]*x[5]*sin(x[4]))
-                           + (2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7])*par[3]*par[10]*cos(x[4]) -ddrb*sin((pi/180)*par[2]);
+        customvalue[36] = f[1];
         // Overall Z Acceleration of the system ("OVRLL_ddZ")
-        customvalue[37] = (1/(1 + par[3]))*(-(1 + par[3]*sin(x[4])*sin(x[4]))*(2*par[5]*x[3] + x[2] - par[15]*x[6]) + (par[3]/2)*(2*par[4]*x[1] + par[7]*par[7]*x[0])*sin(2*x[4]) + par[3]*par[10]*x[5]*x[5]*cos(x[4]))
-                          - (2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7])*par[3]*par[10]*sin(x[4]) -ddrb*cos((pi/180)*par[2]);
+        customvalue[37] = f[3];
         // Overall Phi Acceleration of the system ("OVRLL_ddPhi")
-        customvalue[38] = -(1 + par[3])*(2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7]) + (1/par[10])*((2*par[4]*x[1] + par[7]*par[7]*x[0])*cos(x[4]) - (2*par[5]*x[3] + x[2] - par[15]*x[6])*sin(x[4]));
+        customvalue[38] = f[5];
         // Overall displacement of the center of mass in X direction ("OVRLL_Xcm")
         customvalue[39] = pend_oscillator_XCM(x[0], par[3], par[10], x[4]);            //(x[0] + par[3]*par[10]*sin(x[4]))/(1 + par[3]); 
         // Overall displacement of the center of mass in Z direction ("OVRLL_Zcm")
@@ -361,9 +359,8 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
         spins(IC[4], &customvalue[114], &customvalue[115], x[4], &customvalue[116], &customvalue[117], currenttimestep);
 
         /* Time To Flip Calculations */ 
-        // "tflip", "mark_if_flips"
-        time_to_flip(t, IC[4], x[4], &customvalue[118], (int *)&customvalue[119]);
-    
+        // "tflip"
+        time_to_flip(t, IC[4], x[4], &customvalue[118]);    
     } 
     // Mode to perform calculations at the end of the time series    
     else if (mode == 3) {
