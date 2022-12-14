@@ -12,9 +12,13 @@ void invalid_option(unsigned int option, char* category, size_t maxlength);
 void end_of_execution(size_t maxlength);
 void identify_simulation(unsigned int toolbox, unsigned int *system, unsigned int *module, char **toolboxesNames, char **systemNames, char** moduleNames, size_t numofsystems, size_t maxlength, size_t numofmodules);
 int int_length(int value);
+
 // Simulation Prints
 void fpartition(FILE *output_file, int mode, size_t maxlength);
 void fwrite_module_and_system(FILE *output_file, char *funcname, char *modulename, size_t maxlength);
+
+void print_list_of_indexes(int n, int *indexes, int spcvalue, int spcname, char* name);
+void fprint_list_of_indexes(FILE *output_file, int n, int *indexes, int spcvalue, int spcname, char* name);
 
 void write_initial_conditions(int dim, double *x, double t, size_t maxlength, double percname);
 void fwrite_initial_conditions(FILE *output_file, int dim, double *x, double t, size_t maxlength, double percname);

@@ -130,7 +130,12 @@ void identify_simulation(unsigned int toolbox, unsigned int *system, unsigned in
 }
 
 int int_length(int value) {
-    return floor(log10(abs(value)));
+    if (value == 0) {
+        return 1;
+    } 
+    else {
+        return (floor(log10(abs(value))) + 1);
+    }
 }
 
 // Simulation Prints
@@ -157,6 +162,142 @@ void fpartition(FILE *output_file, int mode, size_t maxlength) {
     fprintf(output_file, "\n");
 }
 
+void print_list_of_indexes(int n, int *indexes, int spcvalue, int spcname, char* name) {
+    // Allocate memory to handle operations
+    char *buffer = malloc((spcvalue + 1) * sizeof(char));  // Buffer to store each index at a time
+    char *newrow = malloc((spcvalue + 1) * sizeof(char)); // String to store each row
+    char *formatedrow = malloc((spcvalue + spcname + 2) * sizeof(char)); // String to store each formatted row
+    // Declare counter for number of rows found
+    int rows = 0; 
+    // Sweep across all indexes
+    for (int i = 0; i < n; i++) {
+        // Check if is the last index
+        if (i == n - 1) {
+            // Put the final index into the buffer
+            sprintf(buffer, "%d", indexes[i]);
+            // Check if the length of buffer and newrow together are bigger than the maximum space for values
+            if (strlen(newrow) + strlen(buffer) > spcvalue) {
+                // Format the row with names
+                if (rows == 0) {
+                    sprintf(formatedrow, "%-*s %-*s", spcname, name, spcvalue, newrow);
+                }
+                else {
+                    sprintf(formatedrow, "%-*s %-*s", spcname, "", spcvalue, newrow);
+                }
+                printf("\n%s", formatedrow);
+                // Empty the row string
+                strcpy(newrow, "");
+                strcpy(formatedrow, "");
+            }
+            // Update newrow with the new value
+            strcat(newrow, buffer);
+            // Format the row with names
+            if (rows == 0) {
+                sprintf(formatedrow, "%-*s %-*s", spcname, name, spcvalue, newrow);
+                printf("%s", formatedrow);    
+            }
+            else {
+                sprintf(formatedrow, "%-*s %-*s", spcname, "", spcvalue, newrow);
+                printf("\n%s", formatedrow);
+            }
+        }
+        else {
+            // Put the next index into the buffer
+            sprintf(buffer, "%d, ", indexes[i]);
+            // Check if the length of buffer and newrow together are bigger than the maximum space for values
+            if (strlen(newrow) + strlen(buffer) > spcvalue) {
+                rows = rows + 1;
+                // Format the row with names
+                if (rows == 1) {
+                    sprintf(formatedrow, "%-*s %-*s", spcname, name, spcvalue, newrow);
+                    // Print formatted row
+                    printf("%s", formatedrow);
+                }
+                else {
+                    sprintf(formatedrow, "%-*s %-*s", spcname, "", spcvalue, newrow);
+                    // Print formatted row
+                    printf("\n%s", formatedrow);
+                }
+                // Empty the row string
+                strcpy(newrow, "");
+                strcpy(formatedrow, "");
+            }
+            // Update newrow with the new value
+            strcat(newrow, buffer);
+        }
+    }
+    // Free Memory
+    free(newrow); free(buffer); free(formatedrow);
+}
+
+void fprint_list_of_indexes(FILE *output_file, int n, int *indexes, int spcvalue, int spcname, char* name) {
+        // Allocate memory to handle operations
+    char *buffer = malloc((spcvalue + 1) * sizeof(char));  // Buffer to store each index at a time
+    char *newrow = malloc((spcvalue + 1) * sizeof(char)); // String to store each row
+    char *formatedrow = malloc((spcvalue + spcname + 2) * sizeof(char)); // String to store each formatted row
+    // Declare counter for number of rows found
+    int rows = 0; 
+    // Sweep across all indexes
+    for (int i = 0; i < n; i++) {
+        // Check if is the last index
+        if (i == n - 1) {
+            // Put the final index into the buffer
+            sprintf(buffer, "%d", indexes[i]);
+            // Check if the length of buffer and newrow together are bigger than the maximum space for values
+            if (strlen(newrow) + strlen(buffer) > spcvalue) {
+                // Format the row with names
+                if (rows == 0) {
+                    sprintf(formatedrow, "%-*s %-*s", spcname, name, spcvalue, newrow);
+                }
+                else {
+                    sprintf(formatedrow, "%-*s %-*s", spcname, "", spcvalue, newrow);
+                }
+                fprintf(output_file, "\n%s", formatedrow);
+                // Empty the row string
+                strcpy(newrow, "");
+                strcpy(formatedrow, "");
+            }
+            // Update newrow with the new value
+            strcat(newrow, buffer);
+            // Format the row with names
+            if (rows == 0) {
+                sprintf(formatedrow, "%-*s %-*s", spcname, name, spcvalue, newrow);
+                fprintf(output_file, "%s", formatedrow);    
+            }
+            else {
+                sprintf(formatedrow, "%-*s %-*s", spcname, "", spcvalue, newrow);
+                fprintf(output_file, "\n%s", formatedrow);
+            }
+        }
+        else {
+            // Put the next index into the buffer
+            sprintf(buffer, "%d, ", indexes[i]);
+            // Check if the length of buffer and newrow together are bigger than the maximum space for values
+            if (strlen(newrow) + strlen(buffer) > spcvalue) {
+                rows = rows + 1;
+                // Format the row with names
+                if (rows == 1) {
+                    sprintf(formatedrow, "%-*s %-*s", spcname, name, spcvalue, newrow);
+                    // Print formatted row
+                    fprintf(output_file, "%s", formatedrow);
+                }
+                else {
+                    sprintf(formatedrow, "%-*s %-*s", spcname, "", spcvalue, newrow);
+                    // Print formatted row
+                    fprintf(output_file, "\n%s", formatedrow);
+                }
+                // Empty the row string
+                strcpy(newrow, "");
+                strcpy(formatedrow, "");
+            }
+            // Update newrow with the new value
+            strcat(newrow, buffer);
+        }
+    }
+    // Free Memory
+    free(newrow); free(buffer); free(formatedrow);
+}
+
 void write_initial_conditions(int dim, double *x, double t, size_t maxlength, double percname) {
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
@@ -165,7 +306,7 @@ void write_initial_conditions(int dim, double *x, double t, size_t maxlength, do
     partition(2, maxlength);
     printf("%-*s %-*g\n", spcname, "  Initial Time (t):", spcvalue, t);
     for (int i = 0; i < dim; i++) {
-        printf("%s%d%-*s %-*g\n", "  x[", i, spcname - 5,"]:", spcvalue, x[i]);
+        printf("%s%d%-*s %-*g\n", "  x[", i, spcname - 4 - int_length(i),"]:", spcvalue, x[i]);
     }
 }
 
@@ -177,7 +318,7 @@ void fwrite_initial_conditions(FILE *output_file, int dim, double *x, double t, 
     fpartition(output_file, 2, maxlength);
     fprintf(output_file, "%-*s %-*g\n", spcname, "  Initial Time (t):", spcvalue, t);
     for (int i = 0; i < dim; i++) {
-        fprintf(output_file, "%s%d%-*s %-*g\n", "  x[", i, spcname - 5,"]:", spcvalue, x[i]);
+        fprintf(output_file, "%s%d%-*s %-*g\n", "  x[", i, spcname - 4 - int_length(i),"]:", spcvalue, x[i]);
     }
 }
 
@@ -188,7 +329,7 @@ void write_sys_parameters(int npar, double *par, size_t maxlength, double percna
     printf("  System Parameters\n");
     partition(2, maxlength);
     for (int i = 0; i < npar; i++) {
-        printf("%s%d%-*s %-*g\n", "  par[", i, spcname - 7, "]:", spcvalue, par[i]);
+        printf("%s%d%-*s %-*g\n", "  par[", i, spcname - 6 - int_length(i), "]:", spcvalue, par[i]);
     }
 }
 
@@ -199,7 +340,7 @@ void fwrite_sys_parameters(FILE *output_file, int npar, double *par, size_t maxl
     fprintf(output_file, "  System Parameters\n");
     fpartition(output_file, 2, maxlength);
     for (int i = 0; i < npar; i++) {
-        fprintf(output_file, "%s%d%-*s %-*g\n", "  par[", i, spcname - 7, "]:", spcvalue, par[i]);
+        fprintf(output_file, "%s%d%-*s %-*g\n", "  par[", i, spcname - 6 - int_length(i), "]:", spcvalue, par[i]);
     }
 }
 
@@ -210,10 +351,7 @@ void write_RMS_calculations_info(int n, int *index, size_t maxlength, double per
     printf("  RMS Calculation Parameters\n");
     partition(2, maxlength);
     printf("%-*s %-*d\n", spcname, "  Number of RMS Calculations:", spcvalue, n);
-    printf("%-*s %d", spcname, "  State Variables Indexes:", index[0]);
-    for (int i = 1; i < n; i++) {
-        printf(", %d", index[i]);
-    }
+    print_list_of_indexes(n, index, spcvalue, spcname, "  State Variables Indexes:");
     printf("\n");
 }
 
@@ -224,10 +362,7 @@ void fwrite_RMS_calculations_info(FILE *output_file, int n, int *index, size_t m
     fprintf(output_file, "  RMS Calculation Parameters\n");
     fpartition(output_file, 2, maxlength);
     fprintf(output_file, "%-*s %-*d\n", spcname, "  Number of RMS Calculations:", spcvalue, n);
-    fprintf(output_file, "%-*s %d", spcname, "  State Variables Indexes:", index[0]);
-    for (int i = 1; i < n; i++) {
-        fprintf(output_file, ", %d", index[i]);
-    }
+    fprint_list_of_indexes(output_file, n, index, spcvalue, spcname, "  State Variables Indexes:");
     fprintf(output_file, "\n");
 }
 
@@ -241,18 +376,13 @@ void write_custom_info_calculations(int n, int nf, int *findex, int nscr, int *s
         printf("%-*s %-*d\n", spcname, "  Number of Custom Calculations:", spcvalue, n);
         if (nf > 0) {
             printf("%-*s %-*d\n", spcname, "  Custom Values Printed on File:", spcvalue, nf);
-            printf("%-*s %d", spcname, "  Printed on File Indexes:", findex[0]);
-            for (int i = 1; i < nf; i++) {
-                printf(", %d", findex[i]);
-            }
+            
+            print_list_of_indexes(nf, findex, spcvalue, spcname, "  Printed on File Indexes:");
         }
         if (nscr > 0) {
             printf("\n");
             printf("%-*s %-*d\n", spcname, "  Custom Values Printed on Screen:", spcvalue, nscr);
-            printf("%-*s %d", spcname, "  Printed on Screen Indexes:", scrindex[0]);
-            for (int i = 1; i < nscr; i++) {
-                printf(", %d", scrindex[i]);
-            }
+            print_list_of_indexes(nscr, scrindex, spcvalue, spcname, "  Printed on Screen Indexes:");
         }
         printf("\n");
     }
@@ -268,18 +398,12 @@ void fwrite_custom_info_calculations(FILE* output_file, int n, int nf, int *find
         fprintf(output_file, "%-*s %-*d\n", spcname, "  Number of Custom Calculations:", spcvalue, n);
         if (nf > 0) {
             fprintf(output_file, "%-*s %-*d\n", spcname, "  Custom Values Printed on File:", spcvalue, nf);
-            fprintf(output_file, "%-*s %d", spcname, "  Printed on File Indexes:", findex[0]);
-            for (int i = 1; i < nf; i++) {
-                fprintf(output_file, ", %d", findex[i]);
-            }
+            fprint_list_of_indexes(output_file, nf, findex, spcvalue, spcname, "  Printed on File Indexes:");
         }
         if (nscr > 0) {
             fprintf(output_file, "\n");
             fprintf(output_file, "%-*s %-*d\n", spcname, "  Custom Values Printed on Screen:", spcvalue, nscr);
-            fprintf(output_file, "%-*s %d", spcname, "  Printed on Screen Indexes:", scrindex[0]);
-            for (int i = 1; i < nscr; i++) {
-                fprintf(output_file, ", %d", scrindex[i]);
-            }
+            fprint_list_of_indexes(output_file, nscr, scrindex, spcvalue, spcname, "  Printed on Screen Indexes:");
         }
         fprintf(output_file, "\n");
     }
@@ -412,8 +536,6 @@ void fwrite_prog_parameters_lyapunov(FILE *output_file, char *funcname, int dim,
     fprintf(output_file, "%-*s %-*d\n", spcname, "  Transient Considered:", spcvalue, trans);
     fprintf(output_file, "%-*s %-*g\n", spcname, "  Timestep Value:", spcvalue, h);
 }
-
-
 
 void write_prog_parameters_bifurcation(int dim, int npar, int np, int ndiv, int trans, size_t maxlength, double percname) {
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
@@ -812,10 +934,10 @@ void print_RMS(int nRMS, int *rmsindex, double *xRMS, double *overallxRMS, size_
     partition(2, maxlength);
     // Print RMS calculations on screen
     for (int q = 0; q < nRMS; q++) {
-        printf("%s%d%-*s %-*g\n", "  xRMS[", rmsindex[q], spcname - 8, "]:", spcvalue, xRMS[rmsindex[q]]);
+        printf("%s%d%-*s %-*g\n", "  xRMS[", rmsindex[q], spcname - 7 - int_length(rmsindex[q]), "]:", spcvalue, xRMS[rmsindex[q]]);
     }
     for (int q = 0; q < nRMS; q++) {
-        printf("%s%d%-*s %-*g\n", "  Overall xRMS[", rmsindex[q], spcname - 16, "]:", spcvalue, overallxRMS[rmsindex[q]]);
+        printf("%s%d%-*s %-*g\n", "  Overall xRMS[", rmsindex[q], spcname - 15 - int_length(rmsindex[q]), "]:", spcvalue, overallxRMS[rmsindex[q]]);
     }
 }
 
@@ -827,10 +949,10 @@ void fprint_RMS(FILE *output_file, int nRMS, int *rmsindex, double *xRMS, double
     fpartition(output_file, 2, maxlength);
     // Print RMS calculations on file
     for (int q = 0; q < nRMS; q++) {
-        fprintf(output_file, "%s%d%-*s %-*g\n", "  xRMS[", rmsindex[q], spcname - 8, "]:", spcvalue, xRMS[rmsindex[q]]);
+        fprintf(output_file, "%s%d%-*s %-*g\n", "  xRMS[", rmsindex[q], spcname - 7 - int_length(rmsindex[q]), "]:", spcvalue, xRMS[rmsindex[q]]);
     }
     for (int q = 0; q < nRMS; q++) {
-        fprintf(output_file, "%s%d%-*s %-*g\n", "  Overall xRMS[", rmsindex[q], spcname - 16, "]:", spcvalue, overallxRMS[rmsindex[q]]);
+        fprintf(output_file, "%s%d%-*s %-*g\n", "  Overall xRMS[", rmsindex[q], spcname - 15 - int_length(rmsindex[q]), "]:", spcvalue, overallxRMS[rmsindex[q]]);
     }
 }
 
@@ -866,16 +988,16 @@ void print_minmax(double *xmin, double *xmax, double *overallxmin, double *overa
     partition(2, maxlength);
     // Print min and maximum values
     for (int q = 0; q < dim; q++) {
-        printf("%s%d%-*s %-*g\n", "  xmix[", q, spcname - 8, "]:", spcvalue, xmin[q]);
+        printf("%s%d%-*s %-*g\n", "  xmix[", q, spcname - 7 - int_length(q), "]:", spcvalue, xmin[q]);
     }
     for (int q = 0; q < dim; q++) {
-        printf("%s%d%-*s %-*g\n", "  xmax[", q, spcname - 8, "]:", spcvalue, xmax[q]);
+        printf("%s%d%-*s %-*g\n", "  xmax[", q, spcname - 7 - int_length(q), "]:", spcvalue, xmax[q]);
     }
     for (int q = 0; q < dim; q++) {
-        printf("%s%d%-*s %-*g\n", "  Overall xmin[", q, spcname - 16, "]:", spcvalue, overallxmin[q]);
+        printf("%s%d%-*s %-*g\n", "  Overall xmin[", q, spcname - 15 - int_length(q), "]:", spcvalue, overallxmin[q]);
     }
     for (int q = 0; q < dim; q++) {
-        printf("%s%d%-*s %-*g\n", "  Overall xmax[", q, spcname - 16, "]:", spcvalue, overallxmax[q]);
+        printf("%s%d%-*s %-*g\n", "  Overall xmax[", q, spcname - 15 - int_length(q), "]:", spcvalue, overallxmax[q]);
     }
 }
 
@@ -887,16 +1009,16 @@ void fprint_minmax(FILE *output_file, double *xmin, double *xmax, double *overal
     fpartition(output_file, 2, maxlength);
     // Print min and maximum values
     for (int q = 0; q < dim; q++) {
-        fprintf(output_file, "%s%d%-*s %-*g\n", "  xMIN[", q, spcname - 8, "]:", spcvalue, xmin[q]);
+        fprintf(output_file, "%s%d%-*s %-*g\n", "  xMIN[", q, spcname - 7 - int_length(q), "]:", spcvalue, xmin[q]);
     }
     for (int q = 0; q < dim; q++) {
-        fprintf(output_file, "%s%d%-*s %-*g\n", "  xMAX[", q, spcname - 8, "]:", spcvalue, xmax[q]);
+        fprintf(output_file, "%s%d%-*s %-*g\n", "  xMAX[", q, spcname - 7 - int_length(q), "]:", spcvalue, xmax[q]);
     }
     for (int q = 0; q < dim; q++) {
-        fprintf(output_file, "%s%d%-*s %-*g\n", "  Overall xMIN[", q, spcname - 16, "]:", spcvalue, overallxmin[q]);
+        fprintf(output_file, "%s%d%-*s %-*g\n", "  Overall xMIN[", q, spcname - 15 - int_length(q), "]:", spcvalue, overallxmin[q]);
     }
     for (int q = 0; q < dim; q++) {
-        fprintf(output_file, "%s%d%-*s %-*g\n", "  Overall xMAX[", q, spcname - 16, "]:", spcvalue, overallxmax[q]);
+        fprintf(output_file, "%s%d%-*s %-*g\n", "  Overall xMAX[", q, spcname - 15 - int_length(q), "]:", spcvalue, overallxmax[q]);
     }
 }
 
