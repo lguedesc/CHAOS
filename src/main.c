@@ -80,9 +80,14 @@ void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, doub
 #define OS_CUSTOM_11 customcalc                 
 #define OS_OUTPUTNAME_11 "pend_oscillator_EH(without_pend)"
 
+#define OS_FUNC_12 duffing_2DoF_EH
+#define OS_CUSTOM_12 customcalc                 
+#define OS_OUTPUTNAME_12 "duffing_2DoF_EH"
+
+
 #define MAX_NAMELENGTH 120
 #define NUM_OF_GNL_SYSTEMS 3
-#define NUM_OF_OS_SYSTEMS 11
+#define NUM_OF_OS_SYSTEMS 12
 #define NUM_OF_TOOLBOXES 2
 #define NUM_OF_OS_MODULES 11
 #define NUM_OF_GNL_MODULES 3 
@@ -97,7 +102,8 @@ char *OSsystemNames[NUM_OF_OS_SYSTEMS] = {  "Duffing Oscillator",
                                             "Polynomial Bistable Energy Harvester",
                                             "Polynomial Tristable Energy Harvester",
                                             "Pendulum-Oscillator Energy Harvester",
-                                            "Pendulum-Oscillator Energy Harvester (Without Pendulum)" };
+                                            "Pendulum-Oscillator Energy Harvester (Without Pendulum)",
+                                            "2 DoF Duffing-Type Energy Harvester" };
  
 char *GNLsystemNames[NUM_OF_GNL_SYSTEMS] = {"Lorenz System",
                                             "Lotka-Volterra Predator-Prey Model",
@@ -173,6 +179,9 @@ void call_OS_system(unsigned int system, unsigned int module) {
             break;
         case 11:
             execute_OS_modules(module, OS_FUNC_11, OS_CUSTOM_11, OS_OUTPUTNAME_11, OSsystemNames[10]);
+            break;
+        case 12:
+            execute_OS_modules(module, OS_FUNC_12, OS_CUSTOM_12, OS_OUTPUTNAME_12, OSsystemNames[11]);
             break;
         default:
             printf("Invalid...\n");

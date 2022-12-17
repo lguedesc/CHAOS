@@ -36,6 +36,7 @@ then
     echo "8 - Full Dynamical Diagram"
     echo "9 - Basin of Attraction (Equilibrium Point)"
     echo "10 - Basin of Attraction (Forced)"
+    echo "11 - Stability Analysis"
     echo "0 - EXIT"
     echo "====================================================================="
     printf "Plot Module: "
@@ -71,6 +72,9 @@ then
     elif [ $plt -eq 10 ]
     then
         python -B -m FForcBasin.out.plot_forcedbasin
+    elif [ $plt -eq 11 ]
+    then
+        python -B -m StabilityAnalysis.Potential_and_EP-only_mechanical.py
     elif [ $plt -eq 0 ]
     then
         exit 0
