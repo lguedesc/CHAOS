@@ -81,7 +81,7 @@ void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, doub
 #define OS_OUTPUTNAME_11 "pend_oscillator_EH(without_pend)"
 
 #define OS_FUNC_12 duffing_2DoF_EH
-#define OS_CUSTOM_12 customcalc                 
+#define OS_CUSTOM_12 customcalc_duffing_2DoF_EH                 
 #define OS_OUTPUTNAME_12 "duffing_2DoF_EH"
 
 #define OS_FUNC_13 linear_oscillator_2DoF

@@ -26,7 +26,7 @@ system = "duffing_2DoF_EH"
 #system = "bistable_EH"
 ext = ".pdf"
 
-num = 14
+num = 23
 dim = 6
 
 if num > 0:
@@ -52,8 +52,7 @@ if save == True:
 else:
     dpi = 200
 
-gama = 0.2
-mu = 45
+gama = 0.1
 size = 0.25
 
 cols = 3
@@ -77,63 +76,53 @@ for col in range(cols):
             ax.scatter(dfpoinc['Cpar'], dfpoinc[f'x[{n[i]}]'], rasterized = True, color = "black", s = size, linewidths = 0, marker = '.', zorder = 2)
             ax.plot(df['Cpar'], df[f'xMAX[{n[i]}]'], rasterized = True, color = mycolors[i], lw = 0.5, zorder = 1)
             ax.plot(df['Cpar'], df[f'xMIN[{n[i]}]'], rasterized = True, color = mycolors[i], lw = 0.5, zorder = 1)
-            if (i != 4):
-                ax.plot(df['Cpar'], df[f'xRMS[{n[i]}]'], rasterized = True, color = rmscolors[i], lw = 0.5, zorder = 3)
+            ax.plot(df['Cpar'], df[f'xRMS[{n[i]}]'], rasterized = True, color = rmscolors[i], lw = 0.5, zorder = 3)
             ax.fill_between(df['Cpar'], df[f'xMAX[{n[i]}]'], df[f'xMIN[{n[i]}]'], color = mycolors[i], zorder = 0)
             ax.set_ylabel(names[i])
             ax.set_xlabel(r'$\Omega$')
             ax.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
-            ax.set_xticks([0.01, 1, 2])
+            ax.set_xticks([0.01, 1, 2, 3, 4, 5])
             ax.xaxis.set_major_formatter(FormatStrFormatter('%.g'))
             i = i + 1
         else:
             pass
         
-        
-
-'''
-row1 = 2; col1 = 0
-axs[row1, col1].plot(df['Cpar'], df[f'ddX_MIN'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
-axs[row1, col1].plot(df['Cpar'], df[f'ddX_MAX'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
-axs[row1, col1].plot(df['Cpar'], df[f'ddX_RMS'], rasterized = True, color = 'blue', lw = 0.5, zorder = 1)
-axs[row1, col1].fill_between(df['Cpar'], df[f'ddX_MAX'], df[f'ddX_MIN'], color = 'lightblue', zorder = 0)
-axs[row1, col1].set_ylabel(r'$\ddot{x}$')
+row1 = 2; col1 = 2
+#axs[row1, col1].plot(df['Cpar'], df[f'xMIN[4]'] + df[f'xMIN[5]'], rasterized = True, color = 'lightsalmon', lw = 0.5, zorder = 1)
+#xs[row1, col1].plot(df['Cpar'], df[f'xMAX[4]'] + df[f'xMAX[5]'], rasterized = True, color = 'lightsalmon', lw = 0.5, zorder = 1)
+#axs[row1, col1].plot(df['Cpar'], df[f'xRMS[4]'] + df[f'xRMS[5]'], rasterized = True, color = 'red', lw = 0.5, zorder = 3)
+#axs[row1, col1].fill_between(df['Cpar'], df[f'xMIN[4]'] + df[f'xMIN[5]'], df[f'xMAX[4]'] + df[f'xMAX[5]'], color = 'lightsalmon', zorder = 0)
+axs[row1, col1].plot(df['Cpar'], df[f'TotalPout'], rasterized = True, color = 'lightsalmon', lw = 0.5, zorder = 1)
+axs[row1, col1].plot(df['Cpar'], df[f'Pout1'], rasterized = True, color = 'red', lw = 0.5, zorder = 2)
+axs[row1, col1].plot(df['Cpar'], df[f'Pout2'], rasterized = True, color = 'blue', lw = 0.5, zorder = 2)
+axs[row1, col1].fill_between(df['Cpar'], 0, df[f'TotalPout'], color = 'lightsalmon', zorder = 0)
+axs[row1, col1].set_ylabel(r'$v$')
 axs[row1, col1].set_xlabel(r'$\Omega$')
 axs[row1, col1].set_xlim(df['Cpar'].min(), df['Cpar'].max())
-axs[row1, col1].set_xticks([0.01, 1, 2])
+axs[row1, col1].set_xticks([0.01, 1, 2, 3, 4, 5])
+axs[row1, col1].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
+
+row1 = 2; col1 = 0
+axs[row1, col1].plot(df['Cpar'], df[f'ddX1_MIN'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
+axs[row1, col1].plot(df['Cpar'], df[f'ddX1_MAX'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
+axs[row1, col1].plot(df['Cpar'], df[f'ddX1_RMS'], rasterized = True, color = 'blue', lw = 0.5, zorder = 1)
+axs[row1, col1].fill_between(df['Cpar'], df[f'ddX1_MAX'], df[f'ddX1_MIN'], color = 'lightblue', zorder = 0)
+axs[row1, col1].set_ylabel(r'$\ddot{x}_1$')
+axs[row1, col1].set_xlabel(r'$\Omega$')
+axs[row1, col1].set_xlim(df['Cpar'].min(), df['Cpar'].max())
+axs[row1, col1].set_xticks([0.01, 1, 2, 3, 4, 5])
 axs[row1, col1].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
 
 row2 = 2; col2 = 1
-axs[row2, col2].plot(df['Cpar'], df[f'ddZ_MIN'], rasterized = True, color = 'lightgreen', lw = 0.5, zorder = 1)
-axs[row2, col2].plot(df['Cpar'], df[f'ddZ_MAX'], rasterized = True, color = 'lightgreen', lw = 0.5, zorder = 1)
-axs[row2, col2].plot(df['Cpar'], df[f'ddZ_RMS'], rasterized = True, color = 'green', lw = 0.5, zorder = 1)
-axs[row2, col2].fill_between(df['Cpar'], df[f'ddZ_MAX'], df[f'ddZ_MIN'], color = 'lightgreen', zorder = 0)
-axs[row2, col2].set_ylabel(r'$\ddot{z}$')
+axs[row2, col2].plot(df['Cpar'], df[f'ddX2_MIN'], rasterized = True, color = 'lightgreen', lw = 0.5, zorder = 1)
+axs[row2, col2].plot(df['Cpar'], df[f'ddX2_MAX'], rasterized = True, color = 'lightgreen', lw = 0.5, zorder = 1)
+axs[row2, col2].plot(df['Cpar'], df[f'ddX2_RMS'], rasterized = True, color = 'green', lw = 0.5, zorder = 1)
+axs[row2, col2].fill_between(df['Cpar'], df[f'ddX2_MAX'], df[f'ddX2_MIN'], color = 'lightgreen', zorder = 0)
+axs[row2, col2].set_ylabel(r'$\ddot{x}_2$')
 axs[row2, col2].set_xlabel(r'$\Omega$')
 axs[row2, col2].set_xlim(df['Cpar'].min(), df['Cpar'].max())
-axs[row2, col2].set_xticks([0.01, 1, 2])
+axs[row2, col2].set_xticks([0.01, 1, 2, 3, 4, 5])
 axs[row2, col2].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
-
-row3 = 2; col3 = 2
-axs[row3, col3].plot(df['Cpar'], df[f'ddPhi_MIN'], rasterized = True, color = 'lightsalmon', lw = 0.5, zorder = 1)
-axs[row3, col3].plot(df['Cpar'], df[f'ddPhi_MAX'], rasterized = True, color = 'lightsalmon', lw = 0.5, zorder = 1)
-axs[row3, col3].plot(df['Cpar'], df[f'ddPhi_RMS'], rasterized = True, color = 'red', lw = 0.5, zorder = 1)
-axs[row3, col3].fill_between(df['Cpar'], df[f'ddPhi_MAX'], df[f'ddPhi_MIN'], color = 'lightsalmon', zorder = 0)
-axs[row3, col3].set_ylabel(r'$\ddot{\phi}$')
-axs[row3, col3].set_xlabel(r'$\Omega$')
-axs[row3, col3].set_xlim(df['Cpar'].min(), df['Cpar'].max())
-axs[row3, col3].set_xticks([0.01, 1, 2])
-axs[row3, col3].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
-
-row4 = 2; col4 = 3
-axs[row4, col4].plot(df['Cpar'], df[f'PoutPZ_Avg'], rasterized = True, color = 'red', lw = 0.5, zorder = 1, label='PZ')
-axs[row4, col4].plot(df['Cpar'], df[f'PoutEM_Avg'], rasterized = True, color = 'brown', lw = 0.5, zorder = 1, label='EM')
-axs[row4, col4].fill_between(df['Cpar'], df[f'PoutPZ_Avg'] + df[f'PoutEM_Avg'], 0, color = 'pink', zorder = 0)
-axs[row4, col4].set_ylabel(r'$P_{\mathrm{avg}}$')
-axs[row4, col4].set_xlabel(r'$\Omega$')
-axs[row4, col4].set_xlim(df['Cpar'].min(), df['Cpar'].max())
-axs[row4, col4].set_xticks([0.01, 1, 2])
-axs[row4, col4].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
 
 
 fig2, axs2 = plt.subplots(rows+1, cols, figsize = (x_inches2,y_inches2), dpi = dpi, constrained_layout = True)
@@ -150,34 +139,12 @@ axs2[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
 axs2[row, col].set_xticks([0.01, 1, 2])
 axs2[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
 
-row = 0; col = 1
-axs2[row, col].plot(df['Cpar'], df[f'Zcm_MIN'], rasterized = True, color = 'lightgreen', lw = 0.5, zorder = 1)
-axs2[row, col].plot(df['Cpar'], df[f'Zcm_MAX'], rasterized = True, color = 'lightgreen', lw = 0.5, zorder = 1)
-axs2[row, col].plot(df['Cpar'], df[f'Zcm_RMS'], rasterized = True, color = 'darkgreen', lw = 0.5, zorder = 1)
-axs2[row, col].fill_between(df['Cpar'], df[f'Zcm_MAX'], df[f'Zcm_MIN'], color = 'lightgreen', zorder = 0)
-axs2[row, col].set_ylabel(r'$z_{\mathrm{cm}}$')
-axs2[row, col].set_xlabel(r'$\Omega$')
-axs2[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
-axs2[row, col].set_xticks([0.01, 1, 2])
-axs2[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
-
 row = 1; col = 0
 axs2[row, col].plot(df['Cpar'], df[f'dXcm_MIN'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
 axs2[row, col].plot(df['Cpar'], df[f'dXcm_MAX'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
 axs2[row, col].plot(df['Cpar'], df[f'dXcm_RMS'], rasterized = True, color = 'blue', lw = 0.5, zorder = 1)
 axs2[row, col].fill_between(df['Cpar'], df[f'dXcm_MAX'], df[f'dXcm_MIN'], color = 'lightblue', zorder = 0)
-axs2[row, col].set_ylabel(r'$x_{\mathrm{cm}}$')
-axs2[row, col].set_xlabel(r'$\Omega$')
-axs2[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
-axs2[row, col].set_xticks([0.01, 1, 2])
-axs2[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
-
-row = 1; col = 1
-axs2[row, col].plot(df['Cpar'], df[f'dZcm_MIN'], rasterized = True, color = 'lightgreen', lw = 0.5, zorder = 1)
-axs2[row, col].plot(df['Cpar'], df[f'dZcm_MAX'], rasterized = True, color = 'lightgreen', lw = 0.5, zorder = 1)
-axs2[row, col].plot(df['Cpar'], df[f'dZcm_RMS'], rasterized = True, color = 'darkgreen', lw = 0.5, zorder = 1)
-axs2[row, col].fill_between(df['Cpar'], df[f'dZcm_MAX'], df[f'dZcm_MIN'], color = 'lightgreen', zorder = 0)
-axs2[row, col].set_ylabel(r'$z_{\mathrm{cm}}$')
+axs2[row, col].set_ylabel(r'$\dot{x}_{\mathrm{cm}}$')
 axs2[row, col].set_xlabel(r'$\Omega$')
 axs2[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
 axs2[row, col].set_xticks([0.01, 1, 2])
@@ -188,56 +155,78 @@ axs2[row, col].plot(df['Cpar'], df[f'ddXcm_MIN'], rasterized = True, color = 'li
 axs2[row, col].plot(df['Cpar'], df[f'ddXcm_MAX'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
 axs2[row, col].plot(df['Cpar'], df[f'ddXcm_RMS'], rasterized = True, color = 'blue', lw = 0.5, zorder = 1)
 axs2[row, col].fill_between(df['Cpar'], df[f'ddXcm_MAX'], df[f'ddXcm_MIN'], color = 'lightblue', zorder = 0)
-axs2[row, col].set_ylabel(r'$x_{\mathrm{cm}}$')
+axs2[row, col].set_ylabel(r'$\ddot{x}_{\mathrm{cm}}$')
 axs2[row, col].set_xlabel(r'$\Omega$')
 axs2[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
 axs2[row, col].set_xticks([0.01, 1, 2])
+axs2[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
+
+df['Xb_MAX'] = gama
+df['Xb_MIN'] = -gama
+df['dXb_MAX'] = gama*df['Cpar']
+df['dXb_MIN'] = -gama*df['Cpar']
+df['ddXb_MAX'] = gama*df['Cpar']*df['Cpar']
+df['ddXb_MIN'] = -gama*df['Cpar']*df['Cpar']
+
+row = 0; col = 1
+axs2[row, col].plot(df['Cpar'], df[f'Xrel_MIN'] , rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
+axs2[row, col].plot(df['Cpar'], df[f'Xrel_MAX'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
+axs2[row, col].plot(df['Cpar'], df[f'Xrel_RMS'], rasterized = True, color = 'blue', lw = 0.5, zorder = 1)
+axs2[row, col].fill_between(df['Cpar'], df[f'Xrel_MAX'], df[f'Xrel_MIN'], color = 'lightblue', zorder = 0)
+axs2[row, col].set_ylabel(r'$x_{rel}$')
+axs2[row, col].set_xlabel(r'$\Omega$')
+axs2[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
+axs2[row, col].set_xticks([0.01, 1, 2, 3, 4, 5])
+axs2[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
+
+row = 1; col = 1
+axs2[row, col].plot(df['Cpar'], df[f'dXrel_MIN'] , rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
+axs2[row, col].plot(df['Cpar'], df[f'dXrel_MAX'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
+axs2[row, col].plot(df['Cpar'], df[f'dXrel_RMS'], rasterized = True, color = 'blue', lw = 0.5, zorder = 1)
+axs2[row, col].fill_between(df['Cpar'], df[f'dXrel_MAX'], df[f'dXrel_MIN'], color = 'lightblue', zorder = 0)
+axs2[row, col].set_ylabel(r'$x_{rel}$')
+axs2[row, col].set_xlabel(r'$\Omega$')
+axs2[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
+axs2[row, col].set_xticks([0.01, 1, 2, 3, 4, 5])
 axs2[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
 
 row = 2; col = 1
-axs2[row, col].plot(df['Cpar'], df[f'ddZcm_MIN'], rasterized = True, color = 'lightgreen', lw = 0.5, zorder = 1)
-axs2[row, col].plot(df['Cpar'], df[f'ddZcm_MAX'], rasterized = True, color = 'lightgreen', lw = 0.5, zorder = 1)
-axs2[row, col].plot(df['Cpar'], df[f'ddZcm_RMS'], rasterized = True, color = 'darkgreen', lw = 0.5, zorder = 1)
-axs2[row, col].fill_between(df['Cpar'], df[f'ddZcm_MAX'], df[f'ddZcm_MIN'], color = 'lightgreen', zorder = 0)
-axs2[row, col].set_ylabel(r'$z_{\mathrm{cm}}$')
+axs2[row, col].plot(df['Cpar'], df[f'ddXrel_MIN'] , rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
+axs2[row, col].plot(df['Cpar'], df[f'ddXrel_MAX'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
+axs2[row, col].plot(df['Cpar'], df[f'ddXrel_RMS'], rasterized = True, color = 'blue', lw = 0.5, zorder = 1)
+axs2[row, col].fill_between(df['Cpar'], df[f'ddXrel_MAX'], df[f'ddXrel_MIN'], color = 'lightblue', zorder = 0)
+axs2[row, col].set_ylabel(r'$x_{rel}$')
 axs2[row, col].set_xlabel(r'$\Omega$')
 axs2[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
-axs2[row, col].set_xticks([0.01, 1, 2])
+axs2[row, col].set_xticks([0.01, 1, 2, 3, 4, 5])
 axs2[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
-
-df['Xb_MAX'] = gama*np.sin((np.pi/180)*mu)
-df['Xb_MIN'] = -gama*np.sin((np.pi/180)*mu)
-df['dXb_MAX'] = gama*df['Cpar']*np.sin((np.pi/180)*mu)
-df['dXb_MIN'] = -gama*df['Cpar']*np.sin((np.pi/180)*mu)
-df['ddXb_MAX'] = gama*df['Cpar']*df['Cpar']*np.sin((np.pi/180)*mu)
-df['ddXb_MIN'] = -gama*df['Cpar']*df['Cpar']*np.sin((np.pi/180)*mu)
 
 row = 0; col = 2
 axs2[row, col].plot(df['Cpar'], df[f'Xb_MIN'] , rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
 axs2[row, col].plot(df['Cpar'], df[f'Xb_MAX'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
-axs2[row, col].plot(df['Cpar'], df[f'OVRLL_Xb_RMS'], rasterized = True, color = 'blue', lw = 0.5, zorder = 1)
+axs2[row, col].plot(df['Cpar'], df[f'OVRL_Xb_RMS'], rasterized = True, color = 'blue', lw = 0.5, zorder = 1)
 axs2[row, col].fill_between(df['Cpar'], df[f'Xb_MAX'], df[f'Xb_MIN'], color = 'lightblue', zorder = 0)
 axs2[row, col].set_ylabel(r'$x_b$')
 axs2[row, col].set_xlabel(r'$\Omega$')
 axs2[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
-axs2[row, col].set_xticks([0.01, 1, 2])
+axs2[row, col].set_xticks([0.01, 1, 2, 3, 4, 5])
 axs2[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
 
 row = 1; col = 2
 axs2[row, col].plot(df['Cpar'], df[f'dXb_MIN'] , rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
 axs2[row, col].plot(df['Cpar'], df[f'dXb_MAX'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
-axs2[row, col].plot(df['Cpar'], df[f'OVRLL_dXb_RMS'], rasterized = True, color = 'blue', lw = 0.5, zorder = 1)
+axs2[row, col].plot(df['Cpar'], df[f'OVRL_dXb_RMS'], rasterized = True, color = 'blue', lw = 0.5, zorder = 1)
 axs2[row, col].fill_between(df['Cpar'], df[f'dXb_MAX'], df[f'dXb_MIN'], color = 'lightblue', zorder = 0)
 axs2[row, col].set_ylabel(r'$\dot{x}_b$')
 axs2[row, col].set_xlabel(r'$\Omega$')
 axs2[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
-axs2[row, col].set_xticks([0.01, 1, 2])
+axs2[row, col].set_xticks([0.01, 1, 2, 3, 4, 5])
 axs2[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
 
 row = 2; col = 2
 axs2[row, col].plot(df['Cpar'], df[f'ddXb_MIN'] , rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
 axs2[row, col].plot(df['Cpar'], df[f'ddXb_MAX'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
-axs2[row, col].plot(df['Cpar'], df[f'OVRLL_ddXb_RMS'], rasterized = True, color = 'blue', lw = 0.5, zorder = 1)
+axs2[row, col].plot(df['Cpar'], df[f'OVRL_ddXb_RMS'], rasterized = True, color = 'blue', lw = 0.5, zorder = 1)
 axs2[row, col].fill_between(df['Cpar'], df[f'ddXb_MAX'], df[f'ddXb_MIN'], color = 'lightblue', zorder = 0)
 axs2[row, col].set_ylabel(r'$\ddot{x}_b$')
 axs2[row, col].set_xlabel(r'$\Omega$')
@@ -245,75 +234,6 @@ axs2[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
 axs2[row, col].set_xticks([0.01, 1, 2])
 axs2[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
 
-df['Zb_MAX'] = gama*np.cos((np.pi/180)*mu)
-df['Zb_MIN'] = -gama*np.cos((np.pi/180)*mu)
-df['dZb_MAX'] = gama*df['Cpar']*np.cos((np.pi/180)*mu)
-df['dZb_MIN'] = -gama*df['Cpar']*np.cos((np.pi/180)*mu)
-df['ddZb_MAX'] = gama*df['Cpar']*df['Cpar']*np.cos((np.pi/180)*mu)
-df['ddZb_MIN'] = -gama*df['Cpar']*df['Cpar']*np.cos((np.pi/180)*mu)
-
-row = 0; col = 3
-axs2[row, col].plot(df['Cpar'], df[f'Zb_MIN'] , rasterized = True, color = 'lightgreen', lw = 0.5, zorder = 1)
-axs2[row, col].plot(df['Cpar'], df[f'Zb_MAX'], rasterized = True, color = 'lightgreen', lw = 0.5, zorder = 1)
-axs2[row, col].plot(df['Cpar'], df[f'OVRLL_Zb_RMS'], rasterized = True, color = 'darkgreen', lw = 0.5, zorder = 1)
-axs2[row, col].fill_between(df['Cpar'], df[f'Zb_MAX'], df[f'Zb_MIN'], color = 'lightgreen', zorder = 0)
-axs2[row, col].set_ylabel(r'$z_b$')
-axs2[row, col].set_xlabel(r'$\Omega$')
-axs2[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
-axs2[row, col].set_xticks([0.01, 1, 2])
-axs2[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
-
-row = 1; col = 3
-axs2[row, col].plot(df['Cpar'], df[f'dZb_MIN'] , rasterized = True, color = 'lightgreen', lw = 0.5, zorder = 1)
-axs2[row, col].plot(df['Cpar'], df[f'dZb_MAX'], rasterized = True, color = 'lightgreen', lw = 0.5, zorder = 1)
-axs2[row, col].plot(df['Cpar'], df[f'OVRLL_dZb_RMS'], rasterized = True, color = 'darkgreen', lw = 0.5, zorder = 1)
-axs2[row, col].fill_between(df['Cpar'], df[f'dZb_MAX'], df[f'dZb_MIN'], color = 'lightgreen', zorder = 0)
-axs2[row, col].set_ylabel(r'$\dot{z}_b$')
-axs2[row, col].set_xlabel(r'$\Omega$')
-axs2[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
-axs2[row, col].set_xticks([0.01, 1, 2])
-axs2[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
-
-row = 2; col = 3
-axs2[row, col].plot(df['Cpar'], df[f'ddZb_MIN'] , rasterized = True, color = 'lightgreen', lw = 0.5, zorder = 1)
-axs2[row, col].plot(df['Cpar'], df[f'ddZb_MAX'], rasterized = True, color = 'lightgreen', lw = 0.5, zorder = 1)
-axs2[row, col].plot(df['Cpar'], df[f'OVRLL_ddZb_RMS'], rasterized = True, color = 'darkgreen', lw = 0.5, zorder = 1)
-axs2[row, col].fill_between(df['Cpar'], df[f'ddZb_MAX'], df[f'ddZb_MIN'], color = 'lightgreen', zorder = 0)
-axs2[row, col].set_ylabel(r'$\ddot{x}_b$')
-axs2[row, col].set_xlabel(r'$\Omega$')
-axs2[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
-axs2[row, col].set_xticks([0.01, 1, 2])
-axs2[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
-
-
-rows = 2; cols = 3
-fig3, axs3 = plt.subplots(rows, cols, figsize = (x_inches2,y_inches2), dpi = dpi, constrained_layout = True)
-fig3.set_constrained_layout_pads(hspace=0, wspace=0.1)
-
-row = 0; col = 0
-axs3[row, col].plot(df['Cpar'], df[f'pos_spin'] , rasterized = True, color = 'darkgreen', lw = 0.5, zorder = 1)
-axs3[row, col].set_ylabel(r'$\mathrm{spin}(+)$')
-axs3[row, col].set_xlabel(r'$\Omega$')
-axs3[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
-axs3[row, col].set_xticks([0.01, 1, 2])
-axs3[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
-
-row = 0; col = 1
-axs3[row, col].plot(df['Cpar'], df[f'neg_spin'] , rasterized = True, color = 'darkred', lw = 0.5, zorder = 1)
-axs3[row, col].set_ylabel(r'$\mathrm{spin}(-)$')
-axs3[row, col].set_xlabel(r'$\Omega$')
-axs3[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
-axs3[row, col].set_xticks([0.01, 1, 2])
-axs3[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
-
-row = 0; col = 2
-axs3[row, col].plot(df['Cpar'], df[f'tflip'] , rasterized = True, color = 'blue', lw = 0.5, zorder = 1)
-axs3[row, col].set_ylabel(r'$t_{\mathrm{flip}}$')
-axs3[row, col].set_xlabel(r'$\Omega$')
-axs3[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
-axs3[row, col].set_xticks([0.01, 1, 2])
-axs3[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
-'''
 #========================================================================#
 # Show and Save Figure                                                   #
 #========================================================================#

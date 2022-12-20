@@ -20,6 +20,13 @@ static void assign_names(char **strings, const int nvalues, char **names, size_t
     }
 }
 
+static void error(int mode) {
+    printf("DEBUG ERROR: Custom Function using mode = %d, please use 0, 1, 2 or 3", mode);
+    printf("Check Implementation: Custom Function using mode = %d, please use 0, 1, 2 or 3", mode);
+    printf("Exiting Program...\n");
+    exit(1);
+}
+
 static void spins(double initial_angle, double *previous_angle, double *current_angle, double angle, double *positive_spin, double *negative_spin, int index) {
     // Store previous and current angle
     if (index == 0) {
@@ -75,6 +82,20 @@ static double pend_oscillator_ddXCM(double ddX, double rho, double l, double Phi
 
 static double pend_oscillator_ddZCM(double ddZ, double rho, double l, double Phi, double dPhi, double ddPhi) {
     return ((ddZ - rho*l*(ddPhi*sin(Phi) + dPhi*dPhi*cos(Phi)))/(1 + rho));
+}
+
+
+// Methods for duffing_2DoF_EH
+static double duffing_2DoF_EH_XCM(double X1, double X2, double rho) {
+    return ((X1 + rho*X2)/(1 + rho));
+}
+
+static double duffing_2DoF_EH_dXCM(double dX1, double dX2, double rho) {
+    return ((dX1 + rho*dX2)/(1 + rho));
+}
+
+static double duffing_2DoF_EH_ddXCM(double ddX1, double ddX2, double rho) {
+    return ((ddX1 + rho*ddX2)/(1 + rho));
 }
 
 
@@ -161,7 +182,7 @@ void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, doub
         customvalue[19] = (par[5]*par[6]/par[7])*xrms[2];
     }
     else {
-        printf("DEBUG WARNING: Custom Function using mode = %d, please use 0, 1, 2 or 3", mode);
+        error(mode);
     }
 }
 
@@ -368,7 +389,7 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
         for (int i = 0; i < 3; i++) { // From customvalue[84] to customvalue[86]
             customvalue[84+i] = RMS(&customvalue[27+i], customvalue[i], (int)(N*steadystateperc), 1);
         }
-        //RMS of the center of mass in steady state regime ("Xcm_RMS", "Zcm_RMS", "dXcm_RMS", "dZcm_RMS", "ddXcm_RMS", "ddZcm_RMS")
+        // RMS of the center of mass in steady state regime ("Xcm_RMS", "Zcm_RMS", "dXcm_RMS", "dZcm_RMS", "ddXcm_RMS", "ddZcm_RMS")
         for (int i = 0; i < 6; i++) { // From customvalue[87] to customvalue[92]
             customvalue[87+i] = RMS(&customvalue[30+i], customvalue[3+i], (int)(N*steadystateperc), 1);
         }     
@@ -390,347 +411,230 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
         customvalue[109] = (par[16]*par[13]/par[14])*xrms[7];
     }
     else {
-        printf("DEBUG WARNING: Custom Function using mode = %d, please use 0, 1, 2 or 3", mode);
+        error(mode);
     }
 }
 
-
-
-void customcalc_pend_oscillator_EH_old(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
-    /* OMEGA   = par[0]   |   zeta_z    = par[5]   |   l         = par[10]   |   chi_PZ = par[15]       |   x[0] = x       |   x[5] = dphi/dt
-       gamma   = par[1]   |   zeta_t    = par[6]   |   varphi_PZ = par[11]   |   chi_EM = par[16]       |   x[1] = dx/dt   |   x[6] = v
-       mu      = par[2]   |   OMEGA_s   = par[7]   |   kappa_PZ  = par[12]   |                          |   x[2] = z       |   x[7] = i
-       rho     = par[3]   |   OMEGA_phi = par[8]   |   varphi_EM = par[13]   |                          |   x[3] = dz/dt   |
-       zeta_x  = par[4]   |   OMEGA_t   = par[9]   |   kappa_EM  = par[14]   |                          |   x[4] = phi     |                   */
+void customcalc_duffing_2DoF_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+    /* OMEGA   = par[0]   |   alpha_1 = par[5]   |   chi_1    = par[10]   |   kappa_2 = par[15]   |   x1  = x[0] | v2 = x[5]
+       gamma   = par[1]   |   alpha_2 = par[6]   |   chi_2    = par[11]   |                       |   dx1 = x[1] |    
+       rho     = par[2]   |   beta_1  = par[7]   |   varphi_1 = par[12]   |                       |   x2  = x[2] |
+       zeta_1  = par[3]   |   beta_2  = par[8]   |   varphi_2 = par[13]   |                       |   dx2 = x[3] |
+       zeta_2  = par[4]   |   OMEGA_s = par[9]   |   kappa_1  = par[14]   |                       |   v1  = x[4] |           */
     
-    const double pi = 4 * atan(1);
-    double rb = par[1]*sin(par[0]*t);
-    double drb = par[1]*par[0]*cos(par[0]*t);
-    double ddrb = -par[1]*par[0]*par[0]*sin(par[0]*t);
+    double f[6];
+    duffing_2DoF_EH(6, x, t, par, f);
+    
     // Mode to define names to be printed in the output file
     if (mode == 0) {    
-        char *names[] = {   "ddX", "ddZ", "ddPhi", 
-                            "Xcm", "Zcm", 
-                            "dXcm", "dZcm",
-                            "ddXcm", "ddZcm",
-                            "ddX_MIN", "ddX_MAX",
-                            "ddZ_MIN", "ddZ_MAX",
-                            "ddPhi_MIN", "ddPhi_MAX",
-                            "Sum(ddX^2)", "Sum(ddZ^2)", "Sum(ddPhi^2)",
-                            "Sum(Xcm^2)", "Sum(Zcm^2)",
-                            "Sum(dXcm^2)","Sum(dZcm^2)",
-                            "Sum(ddXcm^2)","Sum(ddZcm^2)",
-                            "OVRLL_ddX", "OVRLL_ddZ", "OVRLL_ddPhi",
-                            "OVRLL_Xcm", "OVRLL_Zcm",
-                            "OVRLL_dXcm", "OVRLL_dZcm",
-                            "OVRLL_ddXcm", "OVRLL_ddZcm",
-                            "OVRLL_xb", "OVRLL_zb",
-                            "OVRLL_dxb", "OVRLL_dzb",
-                            "OVRLL_ddxb", "OVRLL_ddzb",    
+        char *names[] = {   "ddX1", "ddX2", "Xcm", "dXcm", "ddXcm", 
+                            "ddX1_MIN", "ddX2_MIN",
+                            "ddX1_MAX", "ddX2_MAX",
+                            "Xcm_MIN", "dXcm_MIN", "ddXcm_MIN",
+                            "Xcm_MAX", "dXcm_MAX", "ddXcm_MAX",
+                            "Sum(ddX1^2)", "Sum(ddX2^2)", 
+                            "Sum(Xcm^2)", "Sum(dXcm^2)", "Sum(ddXcm^2)",    
+                            "OVRL_ddX1", "OVRL_ddX2", "OVRL_Xcm", "OVRL_dXcm", "OVRL_ddXcm", "OVRL_Xb", "OVRL_dXb", "OVRL_ddXb",
+                            "OVRL_ddX1_MIN", "OVRL_ddX2_MIN", 
+                            "OVRL_ddX1_MAX", "OVRL_ddX2_MAX",
+                            "OVRL_Xcm_MIN", "OVRL_dXcm_MIN", "OVRL_ddXcm_MIN",
+                            "OVRL_Xcm_MAX", "OVRL_dXcm_MAX", "OVRL_ddXcm_MAX",
+                            "Sum(OVRL_ddX1^2)", "Sum(OVRL_ddX2^2)", 
+                            "Sum(OVRL_Xcm^2)", "Sum(OVRL_dXcm^2)", "Sum(OVRL_ddXcm^2)",
+                            "Sum(OVRL_Xb)", "Sum(OVRL_dXb)", "Sum(OVRL_ddXb)",
+                            "ddX1_RMS", "ddX2_RMS",
+                            "Xcm_RMS", "dXcm_RMS", "ddXcm_RMS",
+                            "OVRL_ddX1_RMS", "OVRL_ddX2_RMS",
+                            "OVRL_Xcm_RMS", "OVRL_dXcm_RMS", "OVRL_ddXcm_RMS",
+                            "OVRL_Xb_RMS", "OVRL_dXb_RMS", "OVRL_ddXb_RMS",
+                            "Pout1", "Pout2", "TotalPout", "PoutDens",
+                            "Xrel", "dXrel", "ddXrel", 
+                            "Xrel_MIN", "dXrel_MIN", "ddXrel_MIN",
+                            "Xrel_MAX", "dXrel_MAX", "ddXrel_MAX",
+                            "Sum(Xrel^2)", "Sum(dXrel^2)", "Sum(ddXrel^2)",
+                            "OVRL_Xrel", "OVRL_dXrel", "OVRL_ddXrel", 
+                            "OVRL_Xrel_MIN", "OVRL_dXrel_MIN", "OVRL_ddXrel_MIN",
+                            "OVRL_Xrel_MAX", "OVRL_dXrel_MAX", "OVRL_ddXrel_MAX",
+                            "Sum(OVRL_Xrel^2)", "Sum(OVRL_dXrel^2)", "Sum(OVRL_ddXrel^2)",
+                            "Xrel_RMS", "dXrel_RMS", "ddXrel_RMS",
+                            "OVRL_Xrel_RMS", "OVRL_dXrel_RMS", "OVRL_ddXrel_RMS", 
                         };
+        
+        
         // Assign names to custom values
         assign_names(names, ncustomvalues, customnames, maxstrlen);
-    }
-    // Mode to perform calculations in steady state regime of the time series
-    else if (mode == 1) { 
-        // X Acceleration of the system in steady state regime
-        customvalue[0] = (1/(1 + par[3]))*(-(1 + par[3]*cos(x[4])*cos(x[4]))*(2*par[4]*x[1] + par[7]*par[7]*x[0]) + (par[3]/2)*(2*par[5]*x[3] + x[2] - par[15]*x[6])*sin(2*x[4]) + par[3]*par[10]*x[5]*x[5]*sin(x[4]))
-                          + (2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7])*par[3]*par[10]*cos(x[4]) -ddrb*sin((pi/180)*par[2]);
-        // Z Acceleration of the system in steady state regime
-        customvalue[1] = (1/(1 + par[3]))*(-(1 + par[3]*sin(x[4])*sin(x[4]))*(2*par[5]*x[3] + x[2] - par[15]*x[6]) + (par[3]/2)*(2*par[4]*x[1] + par[7]*par[7]*x[0])*sin(2*x[4]) + par[3]*par[10]*x[5]*x[5]*cos(x[4]))
-                          - (2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7])*par[3]*par[10]*sin(x[4]) -ddrb*cos((pi/180)*par[2]);
-        // Phi Acceleration of the system in steady state regime
-        customvalue[2] = -(1 + par[3])*(2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7]) + (1/par[10])*((2*par[4]*x[1] + par[7]*par[7]*x[0])*cos(x[4]) - (2*par[5]*x[3] + x[2] - par[15]*x[6])*sin(x[4]));
-        // Displacement of the center of mass in X direction
-        customvalue[3] = (x[0] + par[3]*par[10]*sin(x[4]))/(1 + par[3]);
-        // Displacement of the center of mass in Z direction
-        customvalue[4] = (x[2] + par[3]*par[10]*cos(x[4]))/(1 + par[3]);
-        // Velocity of the center of mass in X direction
-        customvalue[5] = (x[1] + par[3]*par[10]*x[5]*cos(x[4]))/(1 + par[3]);
-        // Velocity of the center of mass in Z direction
-        customvalue[6] = (x[3] - par[3]*par[10]*x[5]*sin(x[4]))/(1 + par[3]);
-        // Acceleration of the center of mass in X direction
-        customvalue[7] = (customvalue[0] + par[3]*par[10]* (customvalue[2]*cos(x[4]) - x[5]*x[5]*sin(x[4])))/(1 + par[3]);
-        // Acceleration of the center of mass in Z direction
-        customvalue[8] = (customvalue[1] - par[3]*par[10]* (customvalue[2]*sin(x[4]) + x[5]*x[5]*cos(x[4])))/(1 + par[3]);
-        // Minimum value of the X acceleration in steady state regime
-        min_value(customvalue[0], &customvalue[9]);
-        // Maximum Value of the X acceleration in steady state regime
-        max_value(customvalue[0], &customvalue[10]);
-        // Minimum value of the Z acceleration in steady state regime
-        min_value(customvalue[1], &customvalue[11]);
-        // Maximum value of the Z acceleration in steady state regime
-        max_value(customvalue[1], &customvalue[12]);
-        // Minimum value of the Phi acceleration in steady state regime
-        min_value(customvalue[2], &customvalue[13]);
-        // Maximum value of the Phi acceleration in steady state regime
-        max_value(customvalue[2], &customvalue[14]);
-        // Minimum value of the displacement of the center of mass in X direction in steady state regime
-        // Maximum value of the displacement of the center of mass in Z direction in steady state regime
-        // Minimum value of the velocity of the center of mass in X direction in steady state regime
-        // Maximum value of the velocity of the center of mass in Z direction in steady state regime
-        // Minimum value of the acceleration of the center of mass in X direction in steady state regime
-        // Maximum value of the acceleration of the center of mass in Z direction in steady state regime
-        // Accumulate the value of the square of the X Acceleration of the system in steady state regime
-        customvalue[15] = RMS(&customvalue[15], customvalue[0], (int)(N*steadystateperc), 0);
-        // Accumulate the value of the square of the Z Acceleration of the system in steady state regime
-        customvalue[16] = RMS(&customvalue[16], customvalue[1], (int)(N*steadystateperc), 0);
-        // Accumulate the value of the square of the Phi Acceleration of the system in steady state regime
-        customvalue[17] = RMS(&customvalue[17], customvalue[2], (int)(N*steadystateperc), 0);
-        // Accumulate the value of the square of the displacement of the center of mass in X direction in steady state regime
-        customvalue[18] = RMS(&customvalue[18], customvalue[3], (int)(N*steadystateperc), 0);
-        // Accumulate the value of the square of the displacement of the center of mass in Z direction in steady state regime
-        customvalue[19] = RMS(&customvalue[19], customvalue[4], (int)(N*steadystateperc), 0);    
-        // Accumulate the value of the square of the velocity of the center of mass in X direction in steady state regime            
-        customvalue[20] = RMS(&customvalue[20], customvalue[5], (int)(N*steadystateperc), 0);
-        // Accumulate the value of the square of the velocity of the center of mass in Z direction in steady state regime
-        customvalue[21] = RMS(&customvalue[21], customvalue[6], (int)(N*steadystateperc), 0);
-        // Accumulate the value of the square of the acceleration of the center of mass in X direction in steady state regime
-        customvalue[22] = RMS(&customvalue[22], customvalue[7], (int)(N*steadystateperc), 0);
-        // Accumulate the value of the square of the acceleration of the center of mass in Z direction in steady state regime
-        customvalue[23] = RMS(&customvalue[23], customvalue[8], (int)(N*steadystateperc), 0);
-    }
-    // Mode to perform calculations over the entire time series (transient + steady state)
-    else if (mode == 2) {
-        // Overall X Acceleration of the system 
-        customvalue[24] = (1/(1 + par[3]))*(-(1 + par[3]*cos(x[4])*cos(x[4]))*(2*par[4]*x[1] + par[7]*par[7]*x[0]) + (par[3]/2)*(2*par[5]*x[3] + x[2] - par[15]*x[6])*sin(2*x[4]) + par[3]*par[10]*x[5]*x[5]*sin(x[4]))
-                           + (2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7])*par[3]*par[10]*cos(x[4]) -ddrb*sin((pi/180)*par[2]);
-        // Overall Z Acceleration of the system
-        customvalue[25] = (1/(1 + par[3]))*(-(1 + par[3]*sin(x[4])*sin(x[4]))*(2*par[5]*x[3] + x[2] - par[15]*x[6]) + (par[3]/2)*(2*par[4]*x[1] + par[7]*par[7]*x[0])*sin(2*x[4]) + par[3]*par[10]*x[5]*x[5]*cos(x[4]))
-                          - (2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7])*par[3]*par[10]*sin(x[4]) -ddrb*cos((pi/180)*par[2]);
-        // Overall Phi Acceleration of the system
-        customvalue[26] = -(1 + par[3])*(2*par[6]*x[5] + par[9]*par[9]*x[4] + par[8]*par[8]*sin(x[4]) - par[16]*x[7]) + (1/par[10])*((2*par[4]*x[1] + par[7]*par[7]*x[0])*cos(x[4]) - (2*par[5]*x[3] + x[2] - par[15]*x[6])*sin(x[4]));
-        // Overall displacement of the center of mass in X direction
-        customvalue[27] = (x[0] + par[3]*par[10]*sin(x[4]))/(1 + par[3]);
-        // Overall displacement of the center of mass in Z direction
-        customvalue[28] = (x[2] + par[3]*par[10]*cos(x[4]))/(1 + par[3]);
-        // Overall velocity of the center of mass in X direction
-        customvalue[29] = (x[1] + par[3]*par[10]*x[5]*cos(x[4]))/(1 + par[3]);
-        // Overall velocity of the center of mass in Z direction
-        customvalue[30] = (x[3] - par[3]*par[10]*x[5]*sin(x[4]))/(1 + par[3]);
-        // Overall Acceleration of the center of mass in X direction
-        customvalue[31] = (customvalue[24] + par[3]*par[10]*(customvalue[26]*cos(x[4]) - x[5]*x[5]*sin(x[4])))/(1 + par[3]);
-        // Overall Acceleration of the center of mass in Z direction
-        customvalue[32] = (customvalue[25] - par[3]*par[10]*(customvalue[26]*sin(x[4]) + x[5]*x[5]*cos(x[4])))/(1 + par[3]);
-        // Overall Input Base Excitation Displacement in X direction
-        customvalue[33] = rb*sin((pi/180)*par[2]);
-        // Overall Input Base Excitation Displacement in Z direction
-        customvalue[34] = rb*cos((pi/180)*par[2]);
-        // Overall Input Base Excitation Velocity in X direction
-        customvalue[35] = drb*sin((pi/180)*par[2]);
-        // Overall Input Base Excitation Velocity in Z direction
-        customvalue[36] = drb*cos((pi/180)*par[2]);
-        // Overall Input Base Excitation Acceleration in X direction
-        customvalue[37] = ddrb*sin((pi/180)*par[2]);
-        // Overall Input Base Excitation Acceleration in Z direction
-        customvalue[38] = ddrb*cos((pi/180)*par[2]);
-        // Overall minimum value of the X acceleration of the system
-        min_value(customvalue[24], &customvalue[39]);
-        // Overall maximum value of the X acceleration of the system
-        max_value(customvalue[24], &customvalue[40]);
-        // Overall minimum value of the Z acceleration of the system
-        min_value(customvalue[25], &customvalue[41]);
-        // Overall maximum value of the Z acceleration of the system
-        max_value(customvalue[25], &customvalue[42]);
-        // Overall minimum value of the Phi acceleration of the system
-        min_value(customvalue[26], &customvalue[43]);
-        // Overall maximum value of the Phi acceleration of the system
-        min_value(customvalue[26], &customvalue[44]);
-        // Overall minimum value of the displacement of the center of mass in X direction
-        // Overall maximum value of the displacement of the center of mass in Z direction
-        // Overall minimum value of the velocity of the center of mass in X direction
-        // Overall minimum value of the velocity of the center of mass in Z direction
-        // Overall minimum value of the acceleration of the center of mass in X direction
-        // Overall minimum value of the acceleration of the center of mass in Z direction
-        // Accumulate the value of the square of the overall X acceleration of the system
-        customvalue[45] = RMS(&customvalue[45], customvalue[24], N, 0);
-        // Accumulate the valur of the square of the overall Z acceleration of the system
-        customvalue[46] = RMS(&customvalue[46], customvalue[25], N, 0);
-        // Accumulate the value of the square of the overall Phi acceleration of the system
-        customvalue[47] = RMS(&customvalue[47], customvalue[26], N, 0);
-        // Accumulate the value of the square of the Overall displacement of the center of mass in X direction
-        customvalue[48] = RMS(&customvalue[48], customvalue[27], N, 0);
-        // Accumulate the value of the square of the Overall displacement of the center of mass in Z direction
-        customvalue[49] = RMS(&customvalue[49], customvalue[28], N, 0);
-        // Accumulate the value of the square of the Overall velocity of the center of mass in X direction
-        customvalue[50] = RMS(&customvalue[50], customvalue[29], N, 0);
-        // Accumulate the value of the square of the Overall velocity of the center of mass in Z direction
-        customvalue[51] = RMS(&customvalue[51], customvalue[30], N, 0);
-        // Accumulate the value of the square of the Overall acceleration of the center of mass in X direction
-        customvalue[52] = RMS(&customvalue[52], customvalue[31], N, 0);
-        // Accumulate the value of the square of the Overall acceleration of the center of mass in Z direction
-        customvalue[53] = RMS(&customvalue[53], customvalue[32], N, 0);
-        // Accumulate the value of the square of the overall input base excitation displacement in X direction
-        customvalue[54] = RMS(&customvalue[54], customvalue[33], N, 0);
-        // Accumulate the value of the square of the overall input base excitation displacement in Z direction
-        customvalue[55] = RMS(&customvalue[55], customvalue[34], N, 0);
-        // Accumulate the value of the square of the overall input base excitation velocity in X direction
-        customvalue[56] = RMS(&customvalue[56], customvalue[35], N, 0);
-        // Accumulate the value of the square of the overall input base excitation velocity in Z direction
-        customvalue[57] = RMS(&customvalue[57], customvalue[36], N, 0);
-        // Accumulate the value of the square of the overall input base excitation acceleration in X direction
-        customvalue[58] = RMS(&customvalue[58], customvalue[37], N, 0);
-        // Accumulate the value of the square of the overall input base excitation acceleration in Z direction
-        customvalue[59] = RMS(&customvalue[59], customvalue[38], N, 0);
     } 
-    // Mode to perform calculations at the end of the time series
-    else if (mode == 3) {
-        // RMS X acceleration of the system in the steady state regime
-        customvalue[47] = RMS(&customvalue[14], customvalue[0], (int)(N*steadystateperc), 1);
-        // RMS Z acceleration of the system in the steady state regime
-        customvalue[48] = RMS(&customvalue[15], customvalue[1], (int)(N*steadystateperc), 1);
-        // RMS Phi acceleration of the system in the steady state regime
-        customvalue[49] = RMS(&customvalue[16], customvalue[2], (int)(N*steadystateperc), 1);
-        // Overall RMS X acceleration of the system
-        customvalue[50] = RMS(&customvalue[38], customvalue[17], N, 1);
-        // Overall RMS Z acceleration of the system
-        customvalue[51] = RMS(&customvalue[39], customvalue[18], N, 1);
-        // Overall RMS Phi acceleration of the system
-        customvalue[52] = RMS(&customvalue[40], customvalue[19], N, 1);
-        // Overall RMS of the input base excitation displacement in X direction
-        customvalue[53] = RMS(&customvalue[41], customvalue[26], N, 1);
-        // Overall RMS of the input base excitation displacement in Z direction
-        customvalue[54] = RMS(&customvalue[42], customvalue[27], N, 1);
-        // Overall RMS of the input base excitation velocity in X direction
-        customvalue[55] = RMS(&customvalue[43], customvalue[28], N, 1);
-        // Overall RMS of the input base excitation velocity in Z direction
-        customvalue[56] = RMS(&customvalue[44], customvalue[29], N, 1);
-        // Overall RMS of the input base excitation acceleration in X direction
-        customvalue[57] = RMS(&customvalue[45], customvalue[30], N, 1);
-        // Overall RMS of the input base excitation acceleration in Z direction
-        customvalue[58] = RMS(&customvalue[46], customvalue[31], N, 1);
-        // Peak to Peak Average Electrical Output Power of the Piezoelectric Element
-        customvalue[59] = (par[15]*par[11]/par[12])*xrms[6];
-        // Peak to Peak Average Electrical Output Power of the Electromagnetic Converter
-        customvalue[60] = (par[16]*par[13]/par[14])*xrms[7];
-    }
-    else {
-        printf("DEBUG WARNING: Custom Function using mode = %d, please use 0, 1, 2 or 3", mode);
-    }
-}
-
-void customcalc_bistable_EH_old2(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
-    // Check if mode is equal to "table"
-    if (mode == 0) {    // Mode to define names to be printed in the output file
-        char *names[] = {   "ddx[0]",
-                            "xb",
-                            "dxb",
-                            "ddxb",
-                            "PinInst",
-                            "PinInst(Sum)",
-                            "PoutAvg",
-                            "PinAvg",
-                            "EffAvg",
-                        };
-        // Assign names to custom values
-        assign_names(names, ncustomvalues, customnames, maxstrlen);
-    }
     // Mode to perform calculations in steady state regime of the time series
-    else if (mode == 1) { 
-        // Acceleration of the system
-        customvalue[0] = par[1]*par[0]*par[0]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] + par[5]*x[2];
-        // Input Base Excitation Displacement
-        customvalue[1] = par[1]*sin(par[0]*t);
-        // Input Base Excitation Velocity
-        customvalue[2] = par[1]*par[0]*cos(par[0]*t);
-        // Input Base Excitation Acceleration
-        customvalue[3] = -par[1]*par[0]*par[0]*sin(par[0]*t);
-        // Instantaneous Input Power
-        customvalue[4] = (customvalue[0] + customvalue[3])*customvalue[2];
-        // Cumulative sum of Instantaneous Input Power
-        customvalue[5] = customvalue[5] + customvalue[4];
-    }
-    // Mode to perform calculations over the entire time series (transient + steady state)
-    else if (mode == 2) {
-        // Acceleration of the system over the entire time series
-        customvalue[0] = par[1]*par[0]*par[0]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] + par[5]*x[2];
-        // Input Base Excitation Displacement over the entire time series
-        customvalue[1] = par[1]*sin(par[0]*t);
-        // Input Base Excitation Velocity over the entire time series
-        customvalue[2] = par[1]*par[0]*cos(par[0]*t); 
-        // Input Base Excitation Acceleration over the entire time series
-        customvalue[3] = -par[1]*par[0]*par[0]*sin(par[0]*t);
-        // Instantaneous Input Power over the entire time series
-        customvalue[4] = (customvalue[0] + customvalue[3])*customvalue[2];
-        // Cumulative sum of Instantaneous Input Power over the entire time series
-        customvalue[5] = customvalue[5] + customvalue[4];
-    } 
-    // Mode to perform calculations at the end of the time series
-    else if (mode == 3) {
-        // Peak to Peak Average Electrical Output Power
-        customvalue[6] = (par[5]*par[6]/par[7])*xrms[2];
-        // Peak to Peak Average Mechanical Input Power of the relative motion with respect to the base
-        customvalue[7] = customvalue[5]/N;
-        // Efficiency of Conversion n = pe/pm
-        customvalue[8] = customvalue[6]/customvalue[7];
-    }
-    else {
-        printf("DEBUG WARNING: Custom Function using mode = %d, please use 0, 1 or 2", mode);
-    }
-}
-
-void customcalc_bistable_EH_old(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
-    // Check if mode is equal to "table"
-    if (mode == 0) {
-        // Names to be printed in the output file
-        char *names[] = {   "xb",
-                            "dxb",
-                            "ddxb",
-                            "Sum(xb^2)",
-                            "Sum(dxb^2)",
-                            "Sum(ddxb^2)",
-                            "xbRMS",
-                            "dxbRMS",
-                            "ddxbRMS",
-                            "PoutAvg",
-                            "PinAvg",
-                            "EffAvg",
-                            "TRdispl(withRMS)",
-                            "TRvel(withRMS)",
-                            "TRdispl(PtoP)",
-                            "TRvel(PtoP)",
-                        };
-        // Assign names to custom values
-        assign_names(names, ncustomvalues, customnames, maxstrlen);
-    }
     else if (mode == 1) {
-        // Input Base Excitation Displacement
-        customvalue[0] = (par[1]/par[0]*par[0])*sin(par[0]*t);
-        // Input Base Excitation Velocity
-        customvalue[1] = (par[1]/par[0])*cos(par[0]*t);
-        // Input Base Excitation Acceleration
-        customvalue[2] = -par[1]*sin(par[0]*t);
-        // Accumulate the value of the square of the Input Base Excitation Displacement
-        customvalue[3] = RMS(&customvalue[3], customvalue[0], N, 0);
-        // Accumulate the value of the square of the Input Base Excitation Velocity
-        customvalue[4] = RMS(&customvalue[4], customvalue[1], N, 0);
-        // Accumulate the value of the square of the Input Base Excitation Acceleration
-        customvalue[5] = RMS(&customvalue[5], customvalue[2], N, 0);
-    }
-    // Check if mode is equal to "end"
+        // X1 Acceleration of the system in steady state regime ("ddX1")
+        customvalue[0] = f[1];
+        // X2 Acceleration of the system in steady state regime ("ddX2")
+        customvalue[1] = f[3];
+        // Displacement of the center of mass ("Xcm")
+        customvalue[2] = duffing_2DoF_EH_XCM(x[0], x[2], par[2]);
+        // Velocity of the center of mass ("dXcm")
+        customvalue[3] = duffing_2DoF_EH_dXCM(x[1], x[3], par[2]);
+        // Acceleration of the center of mass ("ddXcm")
+        customvalue[4] = duffing_2DoF_EH_ddXCM(f[1], f[3], par[2]);
+        
+        // X2 - X1 Displacement of the system in steady state regime ("Xrel")
+        customvalue[63] = x[2] - x[0];
+        // dX2 - dX1 Velocity of the system in steady state regime ("dXrel")
+        customvalue[64] = x[3] - x[1];
+        // ddX2 - ddX1 Acceleration of the system in steady state regime ("ddXrel")
+        customvalue[65] = f[3] - f[1];
+
+        for (int i = 0; i < 2; i++) { 
+            // Minimum and Maximum values of the accelerations in steady state regime ("ddX1_MIN", "ddX2_MIN", "ddX1_MAX", "ddX2_MAX")
+            if (currenttimestep == N*steadystateperc) {
+                customvalue[5+i] = customvalue[i]; // From customvalue[5] to customvalue[6]    
+                customvalue[7+i] = customvalue[i]; // From customvalue[7] to customvalue[8]
+            }
+            else {
+                min_value(customvalue[i], &customvalue[5+i]); // "ddX1_MIN", "ddX2_MIN"
+                max_value(customvalue[i], &customvalue[7+i]); // "ddX1_MAX", "ddX2_MAX"
+            }
+            // Accumulate the value of the square of accelerations of the system in steady state regime ("Sum(ddX1^2)", "Sum(ddX2^2)")
+            customvalue[15+i] = RMS(&customvalue[15+i], customvalue[i], (int)(N*steadystateperc), 0);  // From customvalue[15] to customvalue[16] 
+        }
+           
+        for (int i = 0; i < 3; i++) {   
+            // Minimum and Maximum values of the values in steady state regime  
+            if (currenttimestep == N*steadystateperc) {
+                customvalue[9+i] = customvalue[2+i];   // From customvalue[9] to customvalue[11] 
+                customvalue[12+i] = customvalue[2+i];  // From customvalue[12] to customvalue[14] 
+                customvalue[66+i] = customvalue[63+i]; // From customvalue[66] to customvalue[68] 
+                customvalue[69+i] = customvalue[63+i]; // From customvalue[69] to customvalue[71] 
+            }
+            else {
+                min_value(customvalue[2+i], &customvalue[9+i]);  // "Xcm_MIN", "dXcm_MIN", "ddXcm_MIN"
+                max_value(customvalue[2+i], &customvalue[12+i]); // "Xcm_MAX", "dXcm_MAX", "ddXcm_MAX"
+                min_value(customvalue[63+i], &customvalue[66+i]); // "Xrel_MIN", "dXrel_MIN", "ddXrel_MIN"
+                max_value(customvalue[63+i], &customvalue[69+i]); // "Xrel_MAX", "dXrel_MAX", "ddXrel_MAX"
+            }               
+            // Accumulate the value of the square of values of the center of mass in steady state regime ("Sum(Xcm^2)", "Sum(dXcm^2)", "Sum(ddXcm^2)")
+            customvalue[17+i] = RMS(&customvalue[17+i], customvalue[2+i], (int)(N*steadystateperc), 0); // From customvalue[17] to customvalue[19] 
+            // Accumulate the value of the square of values of the relative motion X2-X1 and its derivatives in steady state regime ("Sum(Xrel^2)", "Sum(dXrel^2)", "Sum(ddXrel^2)")
+            customvalue[72+i] = RMS(&customvalue[72+i], customvalue[63+i], (int)(N*steadystateperc), 0); // From customvalue[72] to customvalue[74]    
+        }
+    } 
+    // Mode to perform calculations over the entire time series (transient + steady state)
     else if (mode == 2) {
-        // RMS of the Input Base Excitation Displacement
-        customvalue[6] = RMS(&customvalue[3], customvalue[0], N, 1);
-        // RMS of the Input Base Excitation Velocity
-        customvalue[7] = RMS(&customvalue[4], customvalue[1], N, 1);
-        // RMS of the Input Base Excitation Acceleration
-        customvalue[8] = RMS(&customvalue[5], customvalue[2], N, 1);
-        // Peak to Peak Average Electrical Output Power
-        customvalue[9] = (par[5]*par[6]/par[7])*xrms[2];
-        // Peak to Peak Average Mechanical Input Power of the relative motion with respect to the base
-        customvalue[10] = customvalue[8]*xrms[1];
-        // Efficiency of Conversion n = pe/pm
-        customvalue[11] = customvalue[9]/customvalue[10];
-        // Avg Transmissibility of displacement (with RMS)
-        customvalue[12] = xrms[0]/customvalue[6];
-        // Avg Transmissibility of velocity (with RMS)
-        customvalue[13] = xrms[1]/customvalue[7];
-        // Avg Transmissibility of displacement (Peak to Peak)
-        customvalue[14] = (xmax[0] - xmin[0])/(par[1] - (-par[1]));
-        // Avg Transmissibility of velocity (Peak to Peak)
-        customvalue[15] = (xmax[1] - xmin[1])/(par[0]*(par[1] - (-par[1])));
+        // Overall X Acceleration of the system ("OVRLL_ddX1")
+        customvalue[20] = f[1];
+        // Overall Z Acceleration of the system ("OVRLL_ddX2")
+        customvalue[21] = f[3];
+        // Overall Displacement of the center of mass ("OVRLL_Xcm")
+        customvalue[22] = duffing_2DoF_EH_XCM(x[0], x[2], par[2]);
+        // Overall Velocity of the center of mass ("OVRLL_dXcm")
+        customvalue[23] = duffing_2DoF_EH_dXCM(x[1], x[3], par[2]);
+        // Overall Acceleration of the center of mass ("OVRLL_ddXcm")
+        customvalue[24] = duffing_2DoF_EH_ddXCM(f[1], f[3], par[2]);
+        // Overall Input Base Excitation Displacement ("OVRLL_Xb")    
+        customvalue[25] = par[1]*sin(par[0]*t);
+        // Overall Input Base Excitation Velocity ("OVRLL_dXb")
+        customvalue[26] = par[1]*par[0]*cos(par[0]*t);
+        // Overall Input Base Excitation Acceleration ("OVRLL_ddXb")
+        customvalue[27] = -par[1]*par[0]*par[0]*sin(par[0]*t);
+        
+        // Overall X2 - X1 Displacement of the system in steady state regime ("OVRL_Xrel")
+        customvalue[75] = x[2] - x[0];
+        // Overall dX2 - dX1 Velocity of the system in steady state regime ("OVRL_dXrel")
+        customvalue[76] = x[3] - x[1];
+        // Overall ddX2 - ddX1 Acceleration of the system in steady state regime ("OVRL_ddXrel")
+        customvalue[77] = f[3] - f[1];
+
+        for (int i = 0; i < 2; i++) { 
+            // Overall Minimum and Maximum values of the accelerations ("OVRL_ddX1_MIN", "OVRL_ddX2_MIN", "OVRL_ddX1_MAX", "OVRL_ddX2_MAX")
+            min_value(customvalue[20+i], &customvalue[28+i]);   // From customvalue[28] to customvalue[29]
+            max_value(customvalue[20+i], &customvalue[30+i]);   // From customvalue[30] to customvalue[31]
+            // Accumulate the overall value of the square of accelerations of the system ("OVRL_Sum(ddX1^2)", "OVRL_Sum(ddX2^2)")
+            customvalue[38+i] = RMS(&customvalue[38+i], customvalue[20+i], N, 0); // From customvalue[38] to customvalue[39]
+        }
+
+        for (int i = 0; i < 3; i++) {
+            // Overall Minimum and Maximum values 
+            min_value(customvalue[22+i], &customvalue[32+i]);   // From customvalue[32] to customvalue[34] ("OVRL_Xcm_MIN", "OVRL_dXcm_MIN", "OVRL_ddXcm_MIN")
+            max_value(customvalue[22+i], &customvalue[35+i]);   // From customvalue[35] to customvalue[37] ("OVRL_Xcm_MAX", "OVRL_dXcm_MAX", "OVRL_ddXcm_MAX")
+            min_value(customvalue[75+i], &customvalue[78+i]);   // From customvalue[78] to customvalue[80] ("OVRL_Xrel_MIN", "OVRL_dXrel_MIN", "OVRL_ddXrel_MIN")
+            max_value(customvalue[75+i], &customvalue[81+i]);   // From customvalue[81] to customvalue[83] ("OVRL_Xrel_MAX", "OVRL_dXrel_MAX", "OVRL_ddXrel_MAX")
+            // Accumulate the overall value of the square of values of the center of mass ("OVRL_Sum(Xcm^2)", "OVRL_Sum(dXcm^2)", "OVRL_Sum(ddXcm^2)")
+            customvalue[40+i] = RMS(&customvalue[40+i], customvalue[22+i], N, 0); // From customvalue[40] to customvalue[42]
+            // Accumulate the value of the square of the overall input base excitation values ("OVRL_Sum(Xb^2)", "OVRL_Sum(dXb^2)", "OVRL_Sum(ddXb^2)")
+            customvalue[43+i] = RMS(&customvalue[43+i], customvalue[25+i], N, 0); // From customvalue[43] to customvalue[45]
+            // Accumulate the value of the square of the overall Xrel=X2-X1 values and its derivatives ("OVRL_Sum(Xrel^2)", "OVRL_Sum(dXrel^2)", "OVRL_Sum(ddXrel^2)")
+            customvalue[84+i] = RMS(&customvalue[84+i], customvalue[75+i], N, 0); // From customvalue[84] to customvalue[86]
+        }
+    }
+    // Mode to perform calculations at the end of the time series    
+    else if (mode == 3) {
+
+        for (int i = 0; i < 2; i++) { 
+            // RMS acceleration of the system in steady state regime ("ddX1_RMS", "ddX2_RMS")
+            customvalue[46+i] = RMS(&customvalue[15+i], customvalue[i], (int)(N*steadystateperc), 1); // From customvalue[46] to customvalue[47]
+            // Overall RMS acceleration of the system in steady state regime ("OVRLL_ddX1_RMS", "OVRLL_ddX2_RMS")
+            customvalue[51+i] = RMS(&customvalue[38+i], customvalue[20+i], N, 1); // From customvalue[51] to customvalue[52]
+        }
+        
+        for (int i = 0; i < 3; i ++) {
+            // RMS of the center of mass in steady state regime ("Xcm_RMS", "dXcm_RMS", "ddXcm_RMS")
+            customvalue[48+i] = RMS(&customvalue[17+i], customvalue[2+i], (int)(N*steadystateperc), 1); // From customvalue[48] to customvalue[50]
+            // Overall RMS of the center of mass in steady state regime ("OVRLL_Xcm_RMS", "OVRLL_dXcm_RMS", "OVRLL_ddXcm_RMS")
+            customvalue[53+i] = RMS(&customvalue[40+i], customvalue[22+i], N, 1); // From customvalue[53] to customvalue[55]
+            // Overal RMS of the input base excitation values ("OVRLL_Xb_RMS", "OVRLL_dXb_RMS", "OVRLL_ddXb_RMS",)
+            customvalue[56+i] = RMS(&customvalue[43+i], customvalue[25+i], N, 1); // From customvalue[56] to customvalue[58]
+            // RMS of the motion of Xrel=X2-X1 and its derivatives ("Xrel_RMS", "dXrel_RMS", "ddXrel_RMS")
+            customvalue[87+i] = RMS(&customvalue[72+i], customvalue[63+i], (int)(N*steadystateperc), 1); // From customvalue[87] to customvalue[89]
+            // RMS of the motion of Xrel=X2-X1 and its derivatives ("OVRL_Xrel_RMS", "OVRL_dXrel_RMS", "OVRL_ddXrel_RMS")
+            customvalue[90+i] = RMS(&customvalue[84+i], customvalue[75+i], N, 1); // From customvalue[90] to customvalue[92]
+        }
+
+        // Peak to Peak Average Electrical Output Power of the Piezoelectric Element 1
+        customvalue[59] = ((par[10]*par[12])/par[14])*xrms[4];
+        // Peak to Peak Average Electrical Output Power of the Piezoelectric Element 2
+        customvalue[60] = ((par[11]*par[13])/par[15])*xrms[5];
+        // Sum of Peak to Peak Average Electrical Output Power of the Piezoelectric Elements
+        customvalue[61] = customvalue[59] + customvalue[60];
+        // Output Power Density of the system
+        customvalue[62] = customvalue[61]/2;
+
     }
     else {
-        printf("DEBUG WARNING: Custom Function using mode = %d, please use 0, 1 or 2", mode);
+        error(mode);
     }
+
+
+
 }
+
+/* Model for customcalc functions: 
+
+void customcalc_name(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode)
+    // Mode to define names to be printed in the output file
+    if (mode == 0) {    
+        char *names[] = {   "list", "of", "names"   };
+        // Assign names to custom values
+        assign_names(names, ncustomvalues, customnames, maxstrlen);
+    } 
+    // Mode to perform calculations in steady state regime of the time series
+    else if (mode == 1) {
+        // Add calculations as
+        customvalue[0] = operations;
+        customvalue[1] = operations1;
+    } 
+    // Mode to perform calculations over the entire time series (transient + steady state)
+    else if (mode == 2) {
+        // Add calculations as
+        customvalue[2] = operations2;
+        customvalue[3] = operations3;
+    }
+    // Mode to perform calculations at the end of the time series    
+    else if (mode == 3) {
+        // Add calculations as
+        customvalue[4] = operations4;
+        customvalue[5] = operations5;
+    }
+    else {
+        error(mode);
+    }
+*/

@@ -1,6 +1,3 @@
-// Methods
-static void error(void);
-
 // General Nonlinear Systems
 void lorenz(int dim, double *x, double t, double *par, double *f);
 void lotka_volterra_predator_prey(int dim, double *x, double t, double *par, double *f);

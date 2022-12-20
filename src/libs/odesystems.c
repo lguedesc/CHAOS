@@ -450,7 +450,7 @@ void duffing_2DoF_EH(int dim, double *x, double t, double *par, double *f) {
         f[3] = par[1]*par[0]*par[0]*sin(par[0] * t) - (1/par[2])*(2*par[4]*(x[3] - x[1]) + par[6]*x[2] + par[8]*x[2]*x[2]*x[2] - par[11]*x[5])
                - par[9]*par[9]*(x[2] - x[0]);
         f[4] = -par[12]*x[4] - par[14]*x[1];
-        f[5] = -par[13]*x[5] - par[15]*x[3]; 
+        f[5] = -par[13]*x[5] - par[15]*(x[3] - x[1]); 
     }
     else if (dim == 42) {
         f[0] = x[1];
@@ -469,8 +469,8 @@ void duffing_2DoF_EH(int dim, double *x, double t, double *par, double *f) {
             f[24 + i] = (par[9]*par[9]*par[2]*x[6 + i] + 2*par[4]*x[12 + i] - 
                         (par[6] + par[9]*par[9]*par[2] + 3*par[8]*x[2]*x[2])*x[18 + i] - 2*par[4]*x[24 + i] + par[11]*x[36 + i]
                         )/par[2];
-            f[30 + i] = -(par[14]*x[12 + i]) - par[12]*x[30 + i];
-            f[36 + i] = -(par[15]*x[24 + i]) - par[13]*x[36 + i];
+            f[30 + i] = -par[14]*x[12 + i] - par[12]*x[30 + i];
+            f[36 + i] = -par[15]*(x[24 + i] - x[12 + i]) - par[13]*x[36 + i];
         }
     }
     else {
