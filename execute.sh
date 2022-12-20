@@ -74,7 +74,7 @@ then
         python -B -m FForcBasin.out.plot_forcedbasin
     elif [ $plt -eq 11 ]
     then
-        python -B -m StabilityAnalysis.Potential_and_EP-only_mechanical.py
+        python -B -m StabilityAnalysis.Potential_and_EP-only_mechanical
     elif [ $plt -eq 0 ]
     then
         exit 0

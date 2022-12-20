@@ -12,6 +12,14 @@
 /* To be added EH */
 // Nonsmooth EH
 
+static void error(void) {
+    printf("  ERROR:\n");
+    printf("  Wrong dimension allocated for the system of equations.\n");
+    printf("  Please check the input file.\n");
+    printf("  Exiting Program...\n");
+    exit(1);
+}
+
 // General Nonlinear Systems
 void halvorsen(int dim, double *x, double t, double *par, double *f) {
     // OMEGA = par[0]
@@ -33,8 +41,7 @@ void halvorsen(int dim, double *x, double t, double *par, double *f) {
         }
     }
     else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
+        error();
     }    
 }
 
@@ -59,8 +66,7 @@ void lorenz(int dim, double *x, double t, double *par, double *f) {
         }
     }
     else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
+        error();
     }    
 }
 
@@ -85,8 +91,7 @@ void lotka_volterra_predator_prey(int dim, double *x, double t, double *par, dou
         }
     }
     else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
+        error();
     }
 }
 
@@ -111,8 +116,7 @@ void falksma(int dim, double *x, double t, double *par, double *f) {
         }
     }
     else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
+        error();
     }
 }
 
@@ -133,8 +137,7 @@ void vanderpol(int dim, double *x, double t, double *par, double *f) {
         }
     }
     else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
+        error();
     }
 }
 
@@ -157,8 +160,7 @@ void pendulum(int dim, double *x, double t, double *par, double *f) {
         } 
     }
     else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
+        error();
     }
 }
 
@@ -182,8 +184,7 @@ void duffing(int dim, double *x, double t, double *par, double *f) {
         }
     }
     else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
+        error();
     }    
 }
 
@@ -205,8 +206,7 @@ void linear_oscillator(int dim, double *x, double t, double *par, double *f) {
         }
     }
     else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
+        error();
     }
 }
 
@@ -237,8 +237,7 @@ void duffing_2DoF(int dim, double *x, double t, double *par, double *f) {
         }
     }
     else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
+        error();
     }
 }
 
@@ -263,8 +262,36 @@ void duffing_vanderpol(int dim, double *x, double t, double *par, double *f) {
         }
     }
     else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
+        error();
+    }
+}
+
+void linear_oscillator_2DoF(int dim, double *x, double t, double *par, double *f) {
+    /* OMEGA   = par[0]   |   OMEGA_s = par[5]   |   x1  = x[0] | 
+       gamma   = par[1]   |                      |   dx1 = x[1] |    
+       rho     = par[2]   |                      |   x2  = x[2] |
+       zeta_1  = par[3]   |                      |   dx2 = x[3] |
+       zeta_2  = par[4]   |                      |              |      */
+    if (dim == 4) { 
+        f[0] = x[1];
+        f[1] = par[1]*par[0]*par[0]*sin(par[0]*t) - 2*par[3]*x[1] + 2*par[4]*(x[3] - x[1]) - x[0] + par[2]*par[5]*par[5]*(x[2] - x[0]);
+        f[2] = x[3];
+        f[3] = par[1]*par[0]*par[0]*sin(par[0]*t) - (2/par[2])*par[4]*(x[3] - x[1]) - par[5]*par[5]*(x[2] - x[0]);
+    }
+    else if (dim == 42) {
+        f[0] = x[1];
+        f[1] = par[1]*par[0]*par[0]*sin(par[0]*t) - 2*par[3]*x[1] + 2*par[4]*(x[3] - x[1]) - x[0] + par[2]*par[5]*par[5]*(x[2] - x[0]);
+        f[2] = x[3];
+        f[3] = par[1]*par[0]*par[0]*sin(par[0]*t) - (2/par[2])*par[4]*(x[3] - x[1]) - par[5]*par[5]*(x[2] - x[0]);
+        for (int i = 0; i < 4; i ++) {
+            f[4 + i] = 0;
+            f[8 + i] = 0;
+            f[12 + i] = 0;
+            f[16 + i] = 0;
+        }
+    }
+    else {
+        error();
     }
 }
 
@@ -291,8 +318,7 @@ void bistable_EH(int dim, double *x, double t, double *par, double *f) {
         }
     }
     else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
+        error();
     }
 }
 
@@ -318,8 +344,7 @@ void tristable_EH(int dim, double *x, double t, double *par, double *f) {
         }
     }
     else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
+        error();
     }
 }
 
@@ -373,8 +398,7 @@ void pend_oscillator_EH(int dim, double *x, double t, double *par, double *f) {
         }
     }
     else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
+        error();
     }
 }
 
@@ -408,8 +432,7 @@ void pend_oscillator_wout_pend_EH(int dim, double *x, double t, double *par, dou
         }
     }
     else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
+        error();
     }
 }
 
@@ -422,7 +445,7 @@ void duffing_2DoF_EH(int dim, double *x, double t, double *par, double *f) {
     if (dim == 6) { 
         f[0] = x[1];
         f[1] = par[1]*par[0]*par[0]*sin(par[0] * t) - 2*par[3]*x[1] + 2*par[4]*(x[3] - x[1]) - (1 + par[5])*x[0] - par[7]*x[0]*x[0]*x[0]
-               + par[9]*par[9]*par[2]*(x[2] - x[0])*(x[2] - x[0])*(x[2] - x[0]) + par[10]*x[4];
+               + par[9]*par[9]*par[2]*(x[2] - x[0]) + par[10]*x[4];
         f[2] = x[3];
         f[3] = par[1]*par[0]*par[0]*sin(par[0] * t) - (1/par[2])*(2*par[4]*(x[3] - x[1]) + par[6]*x[2] + par[8]*x[2]*x[2]*x[2] - par[11]*x[5])
                - par[9]*par[9]*(x[2] - x[0]);
@@ -438,7 +461,7 @@ void duffing_2DoF_EH(int dim, double *x, double t, double *par, double *f) {
                - par[9]*par[9]*(x[2] - x[0]);
         f[4] = -par[12]*x[4] - par[14]*x[1];
         f[5] = -par[13]*x[5] - par[15]*x[3];
-        for (int i = 0; i < 3; i ++) {
+        for (int i = 0; i < 6; i ++) {
             f[6 + i] = x[12 + i];
             f[12 + i] = -((1 + par[5] + par[9]*par[9]*par[2] + 3*par[7]*x[0]*x[0])*x[6 + i]) - 2*(par[3] + par[4])*x[12 + i] + 
                         par[9]*par[9]*par[2]*x[18 + i] + 2*par[4]*x[24 + i] + par[10]*x[30 + i];
@@ -451,11 +474,9 @@ void duffing_2DoF_EH(int dim, double *x, double t, double *par, double *f) {
         }
     }
     else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
+        error();
     }
 }
-
 
 // Not Implemented
 void duffing_cldyn(int dim, double *x, double t, double *par, double *f) {
@@ -478,7 +499,6 @@ void duffing_cldyn(int dim, double *x, double t, double *par, double *f) {
         }
     }
     else {
-        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
-        exit(1);
+        error();
     }    
 }

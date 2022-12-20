@@ -9,9 +9,11 @@
 !input_EH.txt
 !po_in.txt
 !OPEH_in.txt
+!2dof_in.txt
 !duffing_in.txt
 !duffing_2DoF_epbasin.csv
 !duffing_2DoF_info.txt
+!2dof_EH_in.txt
 !ToDoList.txt
 CHAOS
 StabilityAnalysis/*

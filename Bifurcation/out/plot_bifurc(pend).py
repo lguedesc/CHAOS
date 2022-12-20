@@ -21,13 +21,10 @@ def remainder_dataframe(dataframe, divisor):
 
 save = False
 
-#system = "lin_oscillator_2DoF"
-system = "duffing_2DoF_EH"
-#system = "bistable_EH"
+system = "pend_oscillator_EH"
 ext = ".pdf"
 
-num = 14
-dim = 6
+num = 1
 
 if num > 0:
     readpath = "Bifurcation/out/" + system + f"_bifurc({num}).csv"; readpath = pltconf.convert_dir(readpath)
@@ -56,42 +53,43 @@ gama = 0.2
 mu = 45
 size = 0.25
 
-cols = 3
+cols = 4
 rows = 2
+
+df.loc[df['xMAX[4]'] > np.pi, ['xMAX[4]']] = np.pi
+df.loc[df['xMAX[4]'] < -np.pi, ['xMAX[4]']] = np.pi
+
+df.loc[df['xMIN[4]'] > np.pi, ['xMIN[4]']] = -np.pi
+df.loc[df['xMIN[4]'] < -np.pi, ['xMIN[4]']] = -np.pi
+
+dfpoinc['x[4]'] = remainder_dataframe(dfpoinc['x[4]'], 2*np.pi)
+df['xRMS[4]'] = remainder_dataframe(df['xRMS[4]'], 2*np.pi)
+
 
 fig, axs = plt.subplots(rows+1, cols, figsize = (x_inches2,y_inches2), dpi = dpi, constrained_layout = True)
 fig.set_constrained_layout_pads(hspace=0, wspace=0.1)
 
-n = [0, 1, 2, 3, 4, 5]
+n = [0, 1, 2, 3, 4, 5, 6, 7]
 i = 0
 mycolors = ['lightblue', 'lightblue', 'lightgreen', 'lightgreen', 'lightsalmon', 'lightsalmon', 'orange', 'gold']
 rmscolors = ['blue', 'blue', 'darkgreen', 'darkgreen', 'red', 'red', 'orangered', 'orange']
-names = [r'$x_1$', r'$\dot{x}_1$', r'$x_2$', r'$\dot{x}_2$', r'$v_1$', r'$v_2$']
-#names = [r'$x_1$', r'$\dot{x}_1$', r'$x_2$', r'$\dot{x}_2$']
-#names = [r'$x_1$', r'$\dot{x}_1$', r'$v_1$']
+names = [r'$x$', r'$\dot{x}$',r'$z$', r'$\dot{z}$', r'$\phi$', r'$\dot{\phi}$', r'$v$', r'$I$']
 for col in range(cols):
     for row in range(rows):
-        if i < dim:
-            ax = axs[row, col]
-            print(i)
-            ax.scatter(dfpoinc['Cpar'], dfpoinc[f'x[{n[i]}]'], rasterized = True, color = "black", s = size, linewidths = 0, marker = '.', zorder = 2)
-            ax.plot(df['Cpar'], df[f'xMAX[{n[i]}]'], rasterized = True, color = mycolors[i], lw = 0.5, zorder = 1)
-            ax.plot(df['Cpar'], df[f'xMIN[{n[i]}]'], rasterized = True, color = mycolors[i], lw = 0.5, zorder = 1)
-            if (i != 4):
-                ax.plot(df['Cpar'], df[f'xRMS[{n[i]}]'], rasterized = True, color = rmscolors[i], lw = 0.5, zorder = 3)
-            ax.fill_between(df['Cpar'], df[f'xMAX[{n[i]}]'], df[f'xMIN[{n[i]}]'], color = mycolors[i], zorder = 0)
-            ax.set_ylabel(names[i])
-            ax.set_xlabel(r'$\Omega$')
-            ax.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
-            ax.set_xticks([0.01, 1, 2])
-            ax.xaxis.set_major_formatter(FormatStrFormatter('%.g'))
-            i = i + 1
-        else:
-            pass
-        
-        
+        ax = axs[row, col]
+        ax.scatter(dfpoinc['Cpar'], dfpoinc[f'x[{n[i]}]'], rasterized = True, color = "black", s = size, linewidths = 0, marker = '.', zorder = 2)
+        ax.plot(df['Cpar'], df[f'xMAX[{n[i]}]'], rasterized = True, color = mycolors[i], lw = 0.5, zorder = 1)
+        ax.plot(df['Cpar'], df[f'xMIN[{n[i]}]'], rasterized = True, color = mycolors[i], lw = 0.5, zorder = 1)
+        if (i != 4):
+            ax.plot(df['Cpar'], df[f'xRMS[{n[i]}]'], rasterized = True, color = rmscolors[i], lw = 0.5, zorder = 3)
+        ax.fill_between(df['Cpar'], df[f'xMAX[{n[i]}]'], df[f'xMIN[{n[i]}]'], color = mycolors[i], zorder = 0)
+        ax.set_ylabel(names[i])
+        ax.set_xlabel(r'$\Omega$')
+        ax.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
+        ax.set_xticks([0.01, 1, 2])
+        ax.xaxis.set_major_formatter(FormatStrFormatter('%.g'))
+        i = i + 1
 
-'''
 row1 = 2; col1 = 0
 axs[row1, col1].plot(df['Cpar'], df[f'ddX_MIN'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
 axs[row1, col1].plot(df['Cpar'], df[f'ddX_MAX'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
@@ -313,7 +311,7 @@ axs3[row, col].set_xlabel(r'$\Omega$')
 axs3[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
 axs3[row, col].set_xticks([0.01, 1, 2])
 axs3[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
-'''
+
 #========================================================================#
 # Show and Save Figure                                                   #
 #========================================================================#
