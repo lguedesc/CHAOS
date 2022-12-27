@@ -70,10 +70,12 @@ def plot_maps(ax, x, y, z, colormap):
 #                                    Read Data                                #
 # =========================================================================== #
 save = False
-system = "tristable_EH"
+system = "duffing_2DoF"
 ext = ".pdf"
 
-readpath = "EPBasin/out/" + system + "_epbasin(3).csv"; readpath = pltconf.convert_dir(readpath)
+filenum = 4
+
+readpath = "EPBasin/out/" + system + f"_epbasin({filenum}).csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "EPBasin/figs"; savepath = pltconf.convert_dir(savepath)
 
 raw_data = pd.read_csv(readpath, delimiter = " ")

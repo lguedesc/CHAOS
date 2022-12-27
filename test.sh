@@ -1,0 +1,1 @@
+icc -std=c17 -no-multibyte-chars test.c -o test

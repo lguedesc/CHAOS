@@ -13,10 +13,10 @@ read option
 echo "====================================================================="
 if [ $option -eq 1 ];
 then 
-    icc -std=c17 -qopenmp -o CHAOS -O3 src/main.c src/libs/odesystems.c src/libs/interface.c src/libs/iofiles.c src/libs/nldyn.c src/libs/energyharvest.c src/modules/convergence_test.c src/modules/time_series.c src/modules/poinc_map.c src/modules/lyap_exp_wolf.c src/modules/ftime_series.c src/modules/bifurcation.c src/modules/fbifurcation.c src/modules/dyndiag.c src/modules/fdyndiag.c src/modules/epbasin.c src/modules/forcedbasin.c src/modules/EH_time_series.c src/modules/EH_ftime_series.c src/modules/EH_bifurcation.c src/modules/EH_fbifurcation.c src/modules/EH_dyndiag.c src/modules/EH_fdyndiag.c src/modules/EH_forcedbasin.c
+    icc -std=c17 -no-multibyte-chars -qopenmp -o CHAOS -O3 src/main.c src/libs/odesystems.c src/libs/interface.c src/libs/iofiles.c src/libs/nldyn.c src/libs/nlosc.c src/libs/customcalc.c src/modules/convergence_test.c src/modules/time_series.c src/modules/poinc_map.c src/modules/lyap_exp_wolf.c src/modules/ftime_series.c src/modules/bifurcation.c src/modules/fbifurcation.c src/modules/dyndiag.c src/modules/fdyndiag.c src/modules/epbasin.c src/modules/forcedbasin.c src/modules/OS_time_series.c src/modules/OS_ftime_series.c src/modules/OS_bifurcation.c src/modules/OS_fbifurcation.c src/modules/OS_dyndiag.c src/modules/OS_fdyndiag.c src/modules/OS_fforcedbasin.c
 elif [ $option -eq 2 ]
 then 
-    icc -std=c17 -qopenmp -o CHAOS -O3 src/main.c src/libs/odesystems.c src/libs/interface.c src/libs/iofiles.c src/libs/nldyn.c src/libs/energyharvest.c src/modules/convergence_test.c src/modules/time_series.c src/modules/poinc_map.c src/modules/lyap_exp_wolf.c src/modules/ftime_series.c src/modules/bifurcation.c src/modules/fbifurcation.c src/modules/dyndiag.c src/modules/fdyndiag.c src/modules/epbasin.c src/modules/forcedbasin.c src/modules/EH_time_series.c src/modules/EH_ftime_series.c src/modules/EH_bifurcation.c src/modules/EH_fbifurcation.c src/modules/EH_dyndiag.c src/modules/EH_fdyndiag.c src/modules/EH_forcedbasin.c
+    icc -std=c17 -no-multibyte-chars -qopenmp -o CHAOS -O3 src/main.c src/libs/odesystems.c src/libs/interface.c src/libs/iofiles.c src/libs/nldyn.c src/libs/nlosc.c src/libs/customcalc.c src/modules/convergence_test.c src/modules/time_series.c src/modules/poinc_map.c src/modules/lyap_exp_wolf.c src/modules/ftime_series.c src/modules/bifurcation.c src/modules/fbifurcation.c src/modules/dyndiag.c src/modules/fdyndiag.c src/modules/epbasin.c src/modules/forcedbasin.c src/modules/OS_time_series.c src/modules/OS_ftime_series.c src/modules/OS_bifurcation.c src/modules/OS_fbifurcation.c src/modules/OS_dyndiag.c src/modules/OS_fdyndiag.c src/modules/OS_fforcedbasin.c
     ./CHAOS
 elif [ $option -eq 3 ]
 then 
@@ -33,8 +33,10 @@ then
     echo "5 - Bifurcation Diagram"
     echo "6 - Full Bifurcation Diagram"
     echo "7 - Dynamical Diagram"
-    echo "8 - Basin of Attraction (Equilibrium Point)"
-    echo "9 - Basin of Attraction (Forced)"
+    echo "8 - Full Dynamical Diagram"
+    echo "9 - Basin of Attraction (Equilibrium Point)"
+    echo "10 - Basin of Attraction (Forced)"
+    echo "11 - Stability Analysis"
     echo "0 - EXIT"
     echo "====================================================================="
     printf "Plot Module: "
@@ -63,10 +65,16 @@ then
         python -B -m DynDiagram.out.plot_dyndiag
     elif [ $plt -eq 8 ]
     then
-        python -B -m EPBasin.out.plot_epbasin
+        python -B -m FDynDiagram.out.plot_fdyndiag
     elif [ $plt -eq 9 ]
     then
-        python -B -m ForcBasin.out.plot_forcedbasin
+        python -B -m EPBasin.out.plot_epbasin
+    elif [ $plt -eq 10 ]
+    then
+        python -B -m FForcBasin.out.plot_forcedbasin
+    elif [ $plt -eq 11 ]
+    then
+        python -B -m StabilityAnalysis.Potential_and_EP-only_mechanical
     elif [ $plt -eq 0 ]
     then
         exit 0

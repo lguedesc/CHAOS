@@ -7,13 +7,17 @@
 #include "../libs/odesystems.h"
 #include "../libs/nldyn.h"
 #include "../libs/iofiles.h"
+#include "../libs/interface.h"
 #include "lyap_exp_wolf.h"
 
 static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, int* trans, double *t, double **par, double **x);
-static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, double h, double t, double *x, double *par, char* funcname, char* mode);
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, double h, double t, double *x, double *par, char* funcname, size_t maxlength, double percname, char* mode);
 
 void lyapunov_exp_wolf(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     
+    // Parameters related to printing information
+    size_t maxLen = 71;             // Max length of the info printed on the screen and on info file
+    double percName = 0.6;          // Percentage of space occuped by the name of the quantity printed
     // Declare Program Parameters
     const double pi = 4 * atan(1);  // Pi number definition
     int DIM;                        // Dimension of the system
@@ -44,8 +48,8 @@ void lyapunov_exp_wolf(char *funcname, char* outputname, void (*edosys)(int, dou
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);                     // Create info output file
     
     // Print information in screen and info output file
-    print_info(output_info, DIM, nPar, nP, nDiv, trans, h, t, x, par, funcname, "screen");
-    print_info(output_info, DIM, nPar, nP, nDiv, trans, h, t, x, par, funcname, "file");
+    print_info(output_info, DIM, nPar, nP, nDiv, trans, h, t, x, par, funcname, maxLen, percName, "screen");
+    print_info(output_info, DIM, nPar, nP, nDiv, trans, h, t, x, par, funcname, maxLen, percName, "file");
     
     // Call solution
     lyap_wolf_solution(output_lyap, DIM, nP, nDiv, trans, t, &x, h, par, edosys, write_results_lyap);
@@ -97,62 +101,22 @@ static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *nd
     /* The user is responsible to free (x) and (par) after the function call */
 }
 
-static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, double h, double t, double *x, double *par, char* funcname, char* mode) {
+static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, double h, double t, double *x, double *par, char* funcname, size_t maxlength, double percname, char* mode) {
     //Get time and date
     time_t tm;
     time(&tm);
 
     if (strcmp(mode, "screen") == 0) {   
-        printf("\n  Program Parameters\n");
-        printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20d\n", "  Dimension:", " ", dim);
-        printf("%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
-        printf("%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
-        printf("%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
-        printf("%-30s%s%-20d\n", "  Transient considered:", " ", trans);
-        printf("%-30s%s%-20g\n", "  Timestep value:", " ", h);
-        printf("  -------------------------------------------------\n");
-        printf("  Initial Conditions\n");
-        printf("  -------------------------------------------------\n");
-        printf("%-30s%s%-20g\n", "  Initial Time (t):", " ",  t);
-        for (int i = 0; i < dim; i++) {
-            printf("%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
-        }
-        printf("  -------------------------------------------------\n");
-        printf("  System Parameters\n");
-        printf("  -------------------------------------------------\n");
-        for (int i = 0; i < npar; i++) {
-            printf("%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
-        }
-        printf("  -------------------------------------------------\n");
+        write_prog_parameters_lyapunov(dim, npar, np, ndiv, trans, h, maxlength, percname);
+        write_initial_conditions(dim, x, t, maxlength, percname);
+        write_sys_parameters(npar, par, maxlength, percname);
+        partition(2, maxlength); 
     } 
     else if (strcmp(mode, "file") == 0) {
-        fprintf(info, "  Date/Time:  %s", ctime(&tm)); 
-        fprintf(info, "\n  =================================================\n");
-        fprintf(info, "  Lyapunov Exponents (Wolf): %s\n", funcname);
-        fprintf(info, "  =================================================\n\n");
-        fprintf(info, "  Program Parameters\n");
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20d\n", "  Dimension:", " ", dim);
-        fprintf(info, "%-30s%s%-20d\n", "  Number of Parameters:", " ", npar);
-        fprintf(info, "%-30s%s%-20d\n", "  Forcing Periods:", " ", np);
-        fprintf(info, "%-30s%s%-20d\n", "  Timesteps per Period:", " ", ndiv);
-        fprintf(info, "%-30s%s%-20d\n", "  Transient considered:", " ", trans);
-        fprintf(info, "%-30s%s%-20g\n", "  Timestep value:", " ", h);
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "  Initial Conditions\n");
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "%-30s%s%-20g\n", "  Initial Time (t):", " ",  t);
-        for (int i = 0; i < dim; i++) {
-            fprintf(info, "%s%d%-25s%s%-20g\n", "  x[", i, "]:", " ", x[i]);
-        }
-        fprintf(info, "  -------------------------------------------------\n");
-        fprintf(info, "  System Parameters\n");
-        fprintf(info, "  -------------------------------------------------\n");
-        for (int i = 0; i < npar; i++) {
-            fprintf(info, "%s%d%-23s%s%-20g\n", "  par[", i, "]:", " ", par[i]);
-        }
-        fprintf(info, "  -------------------------------------------------\n");
+        fwrite_prog_parameters_lyapunov(info, funcname, dim, npar, np, ndiv, trans, h, maxlength, percname);
+        fwrite_initial_conditions(info, dim, x, t, maxlength, percname);
+        fwrite_sys_parameters(info, npar, par, maxlength, percname);
+        fpartition(info, 2, maxlength);
     }
     else {
         printf("Information could not be printed using mode (%s)...\n", mode);
