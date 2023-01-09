@@ -3,12 +3,13 @@
 2. Put a customcalc before integrator to contemplate customvalues initial conditions
 3. Finish the general dynamical systems toolbox (Lorenz, Lotk-Volterra, Halvorsen, Rossler, etc) - Add missing modules and change timestep to be defined by the user, not by number of divisions
 4. Make a Simplified Version of the Forced Basin of Attraction based only on poincare map, without lyapunov.
-5. Implement Runge-Kutta-Fehlberg (RK45) Method and integrate with the existing modules, letting the user decide which integrator he/she wants to use.
+5. Implement different integrators like Runge-Kutta-Fehlberg (RK45) Method for nonsmooth systems, Symplectic integrators for hamiltonian systems, etc.. to be attached with the existing modules, letting the users decide which integrator they want to use.
 6. Implement Lyapunov Exponents Cloned Dynamics method and integrate with the existing modules, letting the user decide which method he/she wants to use.
 7. Implement 0-1 Test for Chaos method and integrate with existing modules, letting the user decide which method he/she wants to use.
 8. Implement Geometric Poincaré Map for systems that don't have harmonic external forcing terms.
 9. Implement Lyapunov Dimension (Kaplan-Yorke Dimension) and Kolmogorov-Sinai Entropy
 10. Implement Harmonic Balance Method to find all solution branches of a parameter domain.
+
 
 *** KNOWN ISSUES AND POSSIBLE BUGS ***
 1. Bug in progress bar in dyndiag (showing two %%) and bifurcation (when starting from a advance number, it bugs in 100% always)
