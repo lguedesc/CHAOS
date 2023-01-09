@@ -163,10 +163,11 @@ void fpartition(FILE *output_file, int mode, size_t maxlength) {
 }
 
 void print_list_of_indexes(int n, int *indexes, int spcvalue, int spcname, char* name) {
-    // Allocate memory to handle operations
-    char *buffer = malloc((spcvalue + 1) * sizeof(char));  // Buffer to store each index at a time
-    char *newrow = malloc((spcvalue + 1) * sizeof(char)); // String to store each row
-    char *formatedrow = malloc((spcvalue + spcname + 2) * sizeof(char)); // String to store each formatted row
+    // Allocate memory to handle operations    
+    char *buffer = calloc((spcvalue + 1), sizeof(char));  // Buffer to store each index at a time
+    char *newrow = calloc((spcvalue + 1), sizeof(char)); // String to store each row
+    char *formatedrow = calloc((spcvalue + spcname + 2), sizeof(char)); // String to store each formatted row
+    
     // Declare counter for number of rows found
     int rows = 0; 
     // Sweep across all indexes
@@ -186,8 +187,8 @@ void print_list_of_indexes(int n, int *indexes, int spcvalue, int spcname, char*
                 }
                 printf("\n%s", formatedrow);
                 // Empty the row string
-                strcpy(newrow, "");
-                strcpy(formatedrow, "");
+                strcpy(newrow, "\0");
+                strcpy(formatedrow, "\0");
             }
             // Update newrow with the new value
             strcat(newrow, buffer);
@@ -219,8 +220,8 @@ void print_list_of_indexes(int n, int *indexes, int spcvalue, int spcname, char*
                     printf("\n%s", formatedrow);
                 }
                 // Empty the row string
-                strcpy(newrow, "");
-                strcpy(formatedrow, "");
+                strcpy(newrow, "\0");
+                strcpy(formatedrow, "\0");
             }
             // Update newrow with the new value
             strcat(newrow, buffer);
@@ -231,10 +232,10 @@ void print_list_of_indexes(int n, int *indexes, int spcvalue, int spcname, char*
 }
 
 void fprint_list_of_indexes(FILE *output_file, int n, int *indexes, int spcvalue, int spcname, char* name) {
-        // Allocate memory to handle operations
-    char *buffer = malloc((spcvalue + 1) * sizeof(char));  // Buffer to store each index at a time
-    char *newrow = malloc((spcvalue + 1) * sizeof(char)); // String to store each row
-    char *formatedrow = malloc((spcvalue + spcname + 2) * sizeof(char)); // String to store each formatted row
+    // Allocate memory to handle operations
+    char *buffer = calloc((spcvalue + 1), sizeof(char));  // Buffer to store each index at a time
+    char *newrow = calloc((spcvalue + 1), sizeof(char)); // String to store each row
+    char *formatedrow = calloc((spcvalue + spcname + 2), sizeof(char)); // String to store each formatted row
     // Declare counter for number of rows found
     int rows = 0; 
     // Sweep across all indexes
