@@ -602,10 +602,203 @@ void customcalc_duffing_2DoF_EH(double *x, double *par, double t, double *xrms, 
     else {
         error(mode);
     }
+}
+
+void customcalc_linear_2DoF_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+    /* OMEGA   = par[0]   |   OMEGA_s  = par[5]   |   kappa_1 = par[10]   |   x1  = x[0] |  v2 = x[5]
+       gamma   = par[1]   |   chi_1    = par[6]   |   kappa_2 = par[11]   |   dx1 = x[1] |    
+       rho     = par[2]   |   chi_2    = par[7]   |                       |   x2  = x[2] |
+       zeta_1  = par[3]   |   varphi_1 = par[8]   |                       |   dx2 = x[3] |
+       zeta_2  = par[4]   |   varphi_2 = par[9]   |                       |   v1  = x[4] |         */
+    
+    double f[6];
+    linear_2DoF_EH(6, x, t, par, f);
+    
+    // Mode to define names to be printed in the output file
+    if (mode == 0) {    
+        char *names[] = {   "ddX1", "ddX2", "Xcm", "dXcm", "ddXcm", 
+                            "ddX1_MIN", "ddX2_MIN",
+                            "ddX1_MAX", "ddX2_MAX",
+                            "Xcm_MIN", "dXcm_MIN", "ddXcm_MIN",
+                            "Xcm_MAX", "dXcm_MAX", "ddXcm_MAX",
+                            "Sum(ddX1^2)", "Sum(ddX2^2)", 
+                            "Sum(Xcm^2)", "Sum(dXcm^2)", "Sum(ddXcm^2)",    
+                            "OVRL_ddX1", "OVRL_ddX2", "OVRL_Xcm", "OVRL_dXcm", "OVRL_ddXcm", "OVRL_Xb", "OVRL_dXb", "OVRL_ddXb",
+                            "OVRL_ddX1_MIN", "OVRL_ddX2_MIN", 
+                            "OVRL_ddX1_MAX", "OVRL_ddX2_MAX",
+                            "OVRL_Xcm_MIN", "OVRL_dXcm_MIN", "OVRL_ddXcm_MIN",
+                            "OVRL_Xcm_MAX", "OVRL_dXcm_MAX", "OVRL_ddXcm_MAX",
+                            "Sum(OVRL_ddX1^2)", "Sum(OVRL_ddX2^2)", 
+                            "Sum(OVRL_Xcm^2)", "Sum(OVRL_dXcm^2)", "Sum(OVRL_ddXcm^2)",
+                            "Sum(OVRL_Xb)", "Sum(OVRL_dXb)", "Sum(OVRL_ddXb)",
+                            "ddX1_RMS", "ddX2_RMS",
+                            "Xcm_RMS", "dXcm_RMS", "ddXcm_RMS",
+                            "OVRL_ddX1_RMS", "OVRL_ddX2_RMS",
+                            "OVRL_Xcm_RMS", "OVRL_dXcm_RMS", "OVRL_ddXcm_RMS",
+                            "OVRL_Xb_RMS", "OVRL_dXb_RMS", "OVRL_ddXb_RMS",
+                            "Pout1", "Pout2", "TotalPout", "PoutDens",
+                            "Xrel", "dXrel", "ddXrel", 
+                            "Xrel_MIN", "dXrel_MIN", "ddXrel_MIN",
+                            "Xrel_MAX", "dXrel_MAX", "ddXrel_MAX",
+                            "Sum(Xrel^2)", "Sum(dXrel^2)", "Sum(ddXrel^2)",
+                            "OVRL_Xrel", "OVRL_dXrel", "OVRL_ddXrel", 
+                            "OVRL_Xrel_MIN", "OVRL_dXrel_MIN", "OVRL_ddXrel_MIN",
+                            "OVRL_Xrel_MAX", "OVRL_dXrel_MAX", "OVRL_ddXrel_MAX",
+                            "Sum(OVRL_Xrel^2)", "Sum(OVRL_dXrel^2)", "Sum(OVRL_ddXrel^2)",
+                            "Xrel_RMS", "dXrel_RMS", "ddXrel_RMS",
+                            "OVRL_Xrel_RMS", "OVRL_dXrel_RMS", "OVRL_ddXrel_RMS", 
+                        };
+        
+        
+        // Assign names to custom values
+        assign_names(names, ncustomvalues, customnames, maxstrlen);
+    } 
+    // Mode to perform calculations in steady state regime of the time series
+    else if (mode == 1) {
+        // X1 Acceleration of the system in steady state regime ("ddX1")
+        customvalue[0] = f[1];
+        // X2 Acceleration of the system in steady state regime ("ddX2")
+        customvalue[1] = f[3];
+        // Displacement of the center of mass ("Xcm")
+        customvalue[2] = duffing_2DoF_EH_XCM(x[0], x[2], par[2]);
+        // Velocity of the center of mass ("dXcm")
+        customvalue[3] = duffing_2DoF_EH_dXCM(x[1], x[3], par[2]);
+        // Acceleration of the center of mass ("ddXcm")
+        customvalue[4] = duffing_2DoF_EH_ddXCM(f[1], f[3], par[2]);
+        
+        // X2 - X1 Displacement of the system in steady state regime ("Xrel")
+        customvalue[63] = x[2] - x[0];
+        // dX2 - dX1 Velocity of the system in steady state regime ("dXrel")
+        customvalue[64] = x[3] - x[1];
+        // ddX2 - ddX1 Acceleration of the system in steady state regime ("ddXrel")
+        customvalue[65] = f[3] - f[1];
+
+        for (int i = 0; i < 2; i++) { 
+            // Minimum and Maximum values of the accelerations in steady state regime ("ddX1_MIN", "ddX2_MIN", "ddX1_MAX", "ddX2_MAX")
+            if (currenttimestep == N*steadystateperc) {
+                customvalue[5+i] = customvalue[i]; // From customvalue[5] to customvalue[6]    
+                customvalue[7+i] = customvalue[i]; // From customvalue[7] to customvalue[8]
+            }
+            else {
+                min_value(customvalue[i], &customvalue[5+i]); // "ddX1_MIN", "ddX2_MIN"
+                max_value(customvalue[i], &customvalue[7+i]); // "ddX1_MAX", "ddX2_MAX"
+            }
+            // Accumulate the value of the square of accelerations of the system in steady state regime ("Sum(ddX1^2)", "Sum(ddX2^2)")
+            customvalue[15+i] = RMS(&customvalue[15+i], customvalue[i], (int)(N*steadystateperc), 0);  // From customvalue[15] to customvalue[16] 
+        }
+           
+        for (int i = 0; i < 3; i++) {   
+            // Minimum and Maximum values of the values in steady state regime  
+            if (currenttimestep == N*steadystateperc) {
+                customvalue[9+i] = customvalue[2+i];   // From customvalue[9] to customvalue[11] 
+                customvalue[12+i] = customvalue[2+i];  // From customvalue[12] to customvalue[14] 
+                customvalue[66+i] = customvalue[63+i]; // From customvalue[66] to customvalue[68] 
+                customvalue[69+i] = customvalue[63+i]; // From customvalue[69] to customvalue[71] 
+            }
+            else {
+                min_value(customvalue[2+i], &customvalue[9+i]);  // "Xcm_MIN", "dXcm_MIN", "ddXcm_MIN"
+                max_value(customvalue[2+i], &customvalue[12+i]); // "Xcm_MAX", "dXcm_MAX", "ddXcm_MAX"
+                min_value(customvalue[63+i], &customvalue[66+i]); // "Xrel_MIN", "dXrel_MIN", "ddXrel_MIN"
+                max_value(customvalue[63+i], &customvalue[69+i]); // "Xrel_MAX", "dXrel_MAX", "ddXrel_MAX"
+            }               
+            // Accumulate the value of the square of values of the center of mass in steady state regime ("Sum(Xcm^2)", "Sum(dXcm^2)", "Sum(ddXcm^2)")
+            customvalue[17+i] = RMS(&customvalue[17+i], customvalue[2+i], (int)(N*steadystateperc), 0); // From customvalue[17] to customvalue[19] 
+            // Accumulate the value of the square of values of the relative motion X2-X1 and its derivatives in steady state regime ("Sum(Xrel^2)", "Sum(dXrel^2)", "Sum(ddXrel^2)")
+            customvalue[72+i] = RMS(&customvalue[72+i], customvalue[63+i], (int)(N*steadystateperc), 0); // From customvalue[72] to customvalue[74]    
+        }
+    } 
+    // Mode to perform calculations over the entire time series (transient + steady state)
+    else if (mode == 2) {
+        // Overall X Acceleration of the system ("OVRLL_ddX1")
+        customvalue[20] = f[1];
+        // Overall Z Acceleration of the system ("OVRLL_ddX2")
+        customvalue[21] = f[3];
+        // Overall Displacement of the center of mass ("OVRLL_Xcm")
+        customvalue[22] = duffing_2DoF_EH_XCM(x[0], x[2], par[2]);
+        // Overall Velocity of the center of mass ("OVRLL_dXcm")
+        customvalue[23] = duffing_2DoF_EH_dXCM(x[1], x[3], par[2]);
+        // Overall Acceleration of the center of mass ("OVRLL_ddXcm")
+        customvalue[24] = duffing_2DoF_EH_ddXCM(f[1], f[3], par[2]);
+        // Overall Input Base Excitation Displacement ("OVRLL_Xb")    
+        customvalue[25] = par[1]*sin(par[0]*t);
+        // Overall Input Base Excitation Velocity ("OVRLL_dXb")
+        customvalue[26] = par[1]*par[0]*cos(par[0]*t);
+        // Overall Input Base Excitation Acceleration ("OVRLL_ddXb")
+        customvalue[27] = -par[1]*par[0]*par[0]*sin(par[0]*t);
+        
+        // Overall X2 - X1 Displacement of the system in steady state regime ("OVRL_Xrel")
+        customvalue[75] = x[2] - x[0];
+        // Overall dX2 - dX1 Velocity of the system in steady state regime ("OVRL_dXrel")
+        customvalue[76] = x[3] - x[1];
+        // Overall ddX2 - ddX1 Acceleration of the system in steady state regime ("OVRL_ddXrel")
+        customvalue[77] = f[3] - f[1];
+
+        for (int i = 0; i < 2; i++) { 
+            // Overall Minimum and Maximum values of the accelerations ("OVRL_ddX1_MIN", "OVRL_ddX2_MIN", "OVRL_ddX1_MAX", "OVRL_ddX2_MAX")
+            min_value(customvalue[20+i], &customvalue[28+i]);   // From customvalue[28] to customvalue[29]
+            max_value(customvalue[20+i], &customvalue[30+i]);   // From customvalue[30] to customvalue[31]
+            // Accumulate the overall value of the square of accelerations of the system ("OVRL_Sum(ddX1^2)", "OVRL_Sum(ddX2^2)")
+            customvalue[38+i] = RMS(&customvalue[38+i], customvalue[20+i], N, 0); // From customvalue[38] to customvalue[39]
+        }
+
+        for (int i = 0; i < 3; i++) {
+            // Overall Minimum and Maximum values 
+            min_value(customvalue[22+i], &customvalue[32+i]);   // From customvalue[32] to customvalue[34] ("OVRL_Xcm_MIN", "OVRL_dXcm_MIN", "OVRL_ddXcm_MIN")
+            max_value(customvalue[22+i], &customvalue[35+i]);   // From customvalue[35] to customvalue[37] ("OVRL_Xcm_MAX", "OVRL_dXcm_MAX", "OVRL_ddXcm_MAX")
+            min_value(customvalue[75+i], &customvalue[78+i]);   // From customvalue[78] to customvalue[80] ("OVRL_Xrel_MIN", "OVRL_dXrel_MIN", "OVRL_ddXrel_MIN")
+            max_value(customvalue[75+i], &customvalue[81+i]);   // From customvalue[81] to customvalue[83] ("OVRL_Xrel_MAX", "OVRL_dXrel_MAX", "OVRL_ddXrel_MAX")
+            // Accumulate the overall value of the square of values of the center of mass ("OVRL_Sum(Xcm^2)", "OVRL_Sum(dXcm^2)", "OVRL_Sum(ddXcm^2)")
+            customvalue[40+i] = RMS(&customvalue[40+i], customvalue[22+i], N, 0); // From customvalue[40] to customvalue[42]
+            // Accumulate the value of the square of the overall input base excitation values ("OVRL_Sum(Xb^2)", "OVRL_Sum(dXb^2)", "OVRL_Sum(ddXb^2)")
+            customvalue[43+i] = RMS(&customvalue[43+i], customvalue[25+i], N, 0); // From customvalue[43] to customvalue[45]
+            // Accumulate the value of the square of the overall Xrel=X2-X1 values and its derivatives ("OVRL_Sum(Xrel^2)", "OVRL_Sum(dXrel^2)", "OVRL_Sum(ddXrel^2)")
+            customvalue[84+i] = RMS(&customvalue[84+i], customvalue[75+i], N, 0); // From customvalue[84] to customvalue[86]
+        }
+    }
+    // Mode to perform calculations at the end of the time series    
+    else if (mode == 3) {
+
+        for (int i = 0; i < 2; i++) { 
+            // RMS acceleration of the system in steady state regime ("ddX1_RMS", "ddX2_RMS")
+            customvalue[46+i] = RMS(&customvalue[15+i], customvalue[i], (int)(N*steadystateperc), 1); // From customvalue[46] to customvalue[47]
+            // Overall RMS acceleration of the system in steady state regime ("OVRLL_ddX1_RMS", "OVRLL_ddX2_RMS")
+            customvalue[51+i] = RMS(&customvalue[38+i], customvalue[20+i], N, 1); // From customvalue[51] to customvalue[52]
+        }
+        
+        for (int i = 0; i < 3; i ++) {
+            // RMS of the center of mass in steady state regime ("Xcm_RMS", "dXcm_RMS", "ddXcm_RMS")
+            customvalue[48+i] = RMS(&customvalue[17+i], customvalue[2+i], (int)(N*steadystateperc), 1); // From customvalue[48] to customvalue[50]
+            // Overall RMS of the center of mass in steady state regime ("OVRLL_Xcm_RMS", "OVRLL_dXcm_RMS", "OVRLL_ddXcm_RMS")
+            customvalue[53+i] = RMS(&customvalue[40+i], customvalue[22+i], N, 1); // From customvalue[53] to customvalue[55]
+            // Overal RMS of the input base excitation values ("OVRLL_Xb_RMS", "OVRLL_dXb_RMS", "OVRLL_ddXb_RMS",)
+            customvalue[56+i] = RMS(&customvalue[43+i], customvalue[25+i], N, 1); // From customvalue[56] to customvalue[58]
+            // RMS of the motion of Xrel=X2-X1 and its derivatives ("Xrel_RMS", "dXrel_RMS", "ddXrel_RMS")
+            customvalue[87+i] = RMS(&customvalue[72+i], customvalue[63+i], (int)(N*steadystateperc), 1); // From customvalue[87] to customvalue[89]
+            // RMS of the motion of Xrel=X2-X1 and its derivatives ("OVRL_Xrel_RMS", "OVRL_dXrel_RMS", "OVRL_ddXrel_RMS")
+            customvalue[90+i] = RMS(&customvalue[84+i], customvalue[75+i], N, 1); // From customvalue[90] to customvalue[92]
+        }
+
+        // Peak to Peak Average Electrical Output Power of the Piezoelectric Element 1
+        customvalue[59] = ((par[6]*par[8])/par[10])*xrms[4];
+        // Peak to Peak Average Electrical Output Power of the Piezoelectric Element 2
+        customvalue[60] = ((par[7]*par[9])/par[11])*xrms[5];
+        // Sum of Peak to Peak Average Electrical Output Power of the Piezoelectric Elements
+        customvalue[61] = customvalue[59] + customvalue[60];
+        // Output Power Density of the system
+        customvalue[62] = customvalue[61]/2;
+
+    }
+    else {
+        error(mode);
+    }
 
 
 
 }
+
+
+
+
 
 /* Model for customcalc functions: 
 

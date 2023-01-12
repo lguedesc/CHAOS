@@ -7,7 +7,7 @@ import os
 from matplotlib.ticker import FormatStrFormatter
 from src.libs import plotconfig as pltconf
 
-pltconf.plot_params(True, 10, 0.5)
+pltconf.plot_params(False, 10, 0.5)
 
 def remainder_dataframe(dataframe, divisor):
     # Find the exact values
@@ -22,11 +22,11 @@ def remainder_dataframe(dataframe, divisor):
 save = False
 
 #system = "lin_oscillator_2DoF"
-system = "duffing_2DoF_EH"
+system = "lin_2DoF_EH"
 #system = "bistable_EH"
 ext = ".pdf"
 
-num = 23
+num = 0
 dim = 6
 
 if num > 0:
@@ -86,7 +86,7 @@ for col in range(cols):
             i = i + 1
         else:
             pass
-        
+
 row1 = 2; col1 = 2
 #axs[row1, col1].plot(df['Cpar'], df[f'xMIN[4]'] + df[f'xMIN[5]'], rasterized = True, color = 'lightsalmon', lw = 0.5, zorder = 1)
 #xs[row1, col1].plot(df['Cpar'], df[f'xMAX[4]'] + df[f'xMAX[5]'], rasterized = True, color = 'lightsalmon', lw = 0.5, zorder = 1)
@@ -101,7 +101,7 @@ axs[row1, col1].set_xlabel(r'$\Omega$')
 axs[row1, col1].set_xlim(df['Cpar'].min(), df['Cpar'].max())
 axs[row1, col1].set_xticks([0.01, 1, 2, 3, 4, 5])
 axs[row1, col1].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
-
+'''
 row1 = 2; col1 = 0
 axs[row1, col1].plot(df['Cpar'], df[f'ddX1_MIN'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
 axs[row1, col1].plot(df['Cpar'], df[f'ddX1_MAX'], rasterized = True, color = 'lightblue', lw = 0.5, zorder = 1)
@@ -233,7 +233,7 @@ axs2[row, col].set_xlabel(r'$\Omega$')
 axs2[row, col].set_xlim(df['Cpar'].min(), df['Cpar'].max())
 axs2[row, col].set_xticks([0.01, 1, 2])
 axs2[row, col].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
-
+'''
 #========================================================================#
 # Show and Save Figure                                                   #
 #========================================================================#
