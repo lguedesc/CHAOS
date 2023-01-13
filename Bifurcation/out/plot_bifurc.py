@@ -22,11 +22,12 @@ def remainder_dataframe(dataframe, divisor):
 save = False
 
 #system = "lin_oscillator_2DoF"
-system = "lin_2DoF_EH"
+#system = "lin_2DoF_EH"
+system = "duffing_2DoF_EH"
 #system = "bistable_EH"
 ext = ".pdf"
 
-num = 0
+num = 3
 dim = 6
 
 if num > 0:
@@ -68,6 +69,8 @@ rmscolors = ['blue', 'blue', 'darkgreen', 'darkgreen', 'red', 'red', 'orangered'
 names = [r'$x_1$', r'$\dot{x}_1$', r'$x_2$', r'$\dot{x}_2$', r'$v_1$', r'$v_2$']
 #names = [r'$x_1$', r'$\dot{x}_1$', r'$x_2$', r'$\dot{x}_2$']
 #names = [r'$x_1$', r'$\dot{x}_1$', r'$v_1$']
+xticks = [0.01, 1, 2, 3, 4, 5]
+
 for col in range(cols):
     for row in range(rows):
         if i < dim:
@@ -81,25 +84,26 @@ for col in range(cols):
             ax.set_ylabel(names[i])
             ax.set_xlabel(r'$\Omega$')
             ax.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
-            ax.set_xticks([0.01, 1, 2, 3, 4, 5])
+            ax.set_xticks(xticks)
             ax.xaxis.set_major_formatter(FormatStrFormatter('%.g'))
             i = i + 1
         else:
             pass
 
+Poutname = 'TotalPout'
 row1 = 2; col1 = 2
 #axs[row1, col1].plot(df['Cpar'], df[f'xMIN[4]'] + df[f'xMIN[5]'], rasterized = True, color = 'lightsalmon', lw = 0.5, zorder = 1)
 #xs[row1, col1].plot(df['Cpar'], df[f'xMAX[4]'] + df[f'xMAX[5]'], rasterized = True, color = 'lightsalmon', lw = 0.5, zorder = 1)
 #axs[row1, col1].plot(df['Cpar'], df[f'xRMS[4]'] + df[f'xRMS[5]'], rasterized = True, color = 'red', lw = 0.5, zorder = 3)
 #axs[row1, col1].fill_between(df['Cpar'], df[f'xMIN[4]'] + df[f'xMIN[5]'], df[f'xMAX[4]'] + df[f'xMAX[5]'], color = 'lightsalmon', zorder = 0)
-axs[row1, col1].plot(df['Cpar'], df[f'TotalPout'], rasterized = True, color = 'lightsalmon', lw = 0.5, zorder = 1)
-axs[row1, col1].plot(df['Cpar'], df[f'Pout1'], rasterized = True, color = 'red', lw = 0.5, zorder = 2)
-axs[row1, col1].plot(df['Cpar'], df[f'Pout2'], rasterized = True, color = 'blue', lw = 0.5, zorder = 2)
-axs[row1, col1].fill_between(df['Cpar'], 0, df[f'TotalPout'], color = 'lightsalmon', zorder = 0)
+axs[row1, col1].plot(df['Cpar'], df[Poutname], rasterized = True, color = 'lightsalmon', lw = 0.5, zorder = 1)
+#axs[row1, col1].plot(df['Cpar'], df[f'Pout1'], rasterized = True, color = 'red', lw = 0.5, zorder = 2)
+#axs[row1, col1].plot(df['Cpar'], df[f'Pout2'], rasterized = True, color = 'blue', lw = 0.5, zorder = 2)
+axs[row1, col1].fill_between(df['Cpar'], 0, df[Poutname], color = 'lightsalmon', zorder = 0)
 axs[row1, col1].set_ylabel(r'$v$')
 axs[row1, col1].set_xlabel(r'$\Omega$')
 axs[row1, col1].set_xlim(df['Cpar'].min(), df['Cpar'].max())
-axs[row1, col1].set_xticks([0.01, 1, 2, 3, 4, 5])
+axs[row1, col1].set_xticks(xticks)
 axs[row1, col1].xaxis.set_major_formatter(FormatStrFormatter('%.g'))
 '''
 row1 = 2; col1 = 0

@@ -304,12 +304,12 @@ void bistable_EH(int dim, double *x, double t, double *par, double *f) {
        beta  = par[4]   |                */
     if (dim == 3) {
         f[0] = x[1];
-        f[1] = par[1]*par[0]*par[0]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] + par[5]*x[2];
+        f[1] = par[1]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] + par[5]*x[2];
         f[2] = -par[6]*x[2] - par[7]*x[1];
     }
     else if (dim == 12) {
         f[0] = x[1];
-        f[1] = par[1]*par[0]*par[0]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] + par[5]*x[2];
+        f[1] = par[1]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] + par[5]*x[2];
         f[2] = -par[6]*x[2] - par[7]*x[1];
         for (int i = 0; i < 3; i ++) {
             f[3 + i] = x[6 + i];
@@ -455,12 +455,12 @@ void duffing_2DoF_EH(int dim, double *x, double t, double *par, double *f) {
     else if (dim == 42) {
         f[0] = x[1];
         f[1] = par[1]*par[0]*par[0]*sin(par[0] * t) - 2*par[3]*x[1] + 2*par[4]*(x[3] - x[1]) - (1 + par[5])*x[0] - par[7]*x[0]*x[0]*x[0]
-               + par[9]*par[9]*par[2]*(x[2] - x[0])*(x[2] - x[0])*(x[2] - x[0]) + par[10]*x[4];
+               + par[9]*par[9]*par[2]*(x[2] - x[0]) + par[10]*x[4];
         f[2] = x[3];
         f[3] = par[1]*par[0]*par[0]*sin(par[0] * t) - (1/par[2])*(2*par[4]*(x[3] - x[1]) + par[6]*x[2] + par[8]*x[2]*x[2]*x[2] - par[11]*x[5])
                - par[9]*par[9]*(x[2] - x[0]);
         f[4] = -par[12]*x[4] - par[14]*x[1];
-        f[5] = -par[13]*x[5] - par[15]*x[3];
+        f[5] = -par[13]*x[5] - par[15]*(x[3] - x[1]); 
         for (int i = 0; i < 6; i ++) {
             f[6 + i] = x[12 + i];
             f[12 + i] = -((1 + par[5] + par[9]*par[9]*par[2] + 3*par[7]*x[0]*x[0])*x[6 + i]) - 2*(par[3] + par[4])*x[12 + i] + 
@@ -500,12 +500,14 @@ void linear_2DoF_EH(int dim, double *x, double t, double *par, double *f) {
         f[4] = -par[8]*x[4] - par[10]*x[1];
         f[5] = -par[9]*x[5] - par[11]*(x[3] - x[1]);
         for (int i = 0; i < 4; i ++) {
-            f[6 + i] = 0;
-            f[12 + i] = 0;
-            f[18 + i] = 0;
-            f[24 + i] = 0;
-            f[30 + i] = 0;
-            f[36 + i] = 0;
+            f[6 + i] = x[12 + i];
+            f[12 + i] = -((1 + par[5]*par[5]*par[2])*x[6 + i]) - 2*(par[3] + par[4])*x[12 + i] + par[5]*par[5]*par[2]*x[18 + i]
+                         + 2*par[4]*x[24 + i] + par[6]*x[30 + i];
+            f[18 + i] = x[24 + i];
+            f[24 + i] = (1/par[2])*(par[5]*par[5]*par[2]*x[6 + i] - 2*par[4]*(x[24 + i] - x[12 + i]) - par[5]*par[5]*par[2]*x[18 + i]
+                                    + par[7]*x[36 + i]);
+            f[30 + i] = -par[10]*x[12 + i] - par[8]*x[30 + i];
+            f[36 + i] = -par[11]*(x[24 + i] - x[12 + i]) - par[9]*x[36+i];
         }
     }
     else {

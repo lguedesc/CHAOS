@@ -779,24 +779,19 @@ void customcalc_linear_2DoF_EH(double *x, double *par, double t, double *xrms, d
         }
 
         // Peak to Peak Average Electrical Output Power of the Piezoelectric Element 1
-        customvalue[59] = ((par[6]*par[8])/par[10])*xrms[4];
+        customvalue[59] = ((par[6]*par[8])/par[10])*xrms[4]; 
         // Peak to Peak Average Electrical Output Power of the Piezoelectric Element 2
         customvalue[60] = ((par[7]*par[9])/par[11])*xrms[5];
         // Sum of Peak to Peak Average Electrical Output Power of the Piezoelectric Elements
         customvalue[61] = customvalue[59] + customvalue[60];
         // Output Power Density of the system
         customvalue[62] = customvalue[61]/2;
-
+        
     }
     else {
         error(mode);
     }
-
-
-
 }
-
-
 
 
 

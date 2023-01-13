@@ -87,7 +87,7 @@ def configure_rainbow_colormap():
 # =========================================================================== #
 def plot_lyap_map(ax, x, y, z):
     raster = True
-    ax.set_aspect('equal')
+    #ax.set_aspect('equal')
     divider = make_axes_locatable(ax)
     cax = divider.append_axes('right', size = '2.5%', pad = 0.05)    
     lsize = 7.5
@@ -108,7 +108,7 @@ def plot_lyap_map(ax, x, y, z):
 
 def plot_attractor_map(ax, x, y, z, maxper):
     colormap, cmapmin, cmapmax = configure_colormap_motion(z)
-    ax.set_aspect('equal')
+    #ax.set_aspect('equal')
     divider = make_axes_locatable(ax)
     cax = divider.append_axes('right', size = '2.5%', pad = 0.05)    
     lsize = 7.5
@@ -137,7 +137,7 @@ def plot_attractor_map(ax, x, y, z, maxper):
     
 def plot_rainbow_map(ax, x, y, z):
     raster = True
-    ax.set_aspect('equal')
+    #ax.set_aspect('equal')
     divider = make_axes_locatable(ax)
     cax = divider.append_axes('right', size = '2.5%', pad = 0.05)    
     lsize = 7.5
@@ -150,7 +150,7 @@ def plot_rainbow_map(ax, x, y, z):
 
 def plot_neg_pos_map(ax, x, y, z):
     raster = True
-    ax.set_aspect('equal')
+    #ax.set_aspect('equal')
     divider = make_axes_locatable(ax)
     cax = divider.append_axes('right', size = '2.5%', pad = 0.05)    
     lsize = 7.5
