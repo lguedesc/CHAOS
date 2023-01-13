@@ -1180,17 +1180,15 @@ void OS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int 
                 for (int r = 4 + (5*dim) + (2*nrms); r < 4 + (5*dim) + (2*nrms) + nprintf; r ++) {
                     results[index][r] = customvalues[printfindex[r - 4 - (5*dim) - (2*nrms)]];
                 }
-            
-                // Progress Monitor
-                if (ID == 0) {
-                    //printf("PAR[%d] = %lf\n", indexX, PAR[indexX]);
-                    //printf("%-5s%-3d%-7s%-3d%-12s%-11lf%-11s%-12lf%-14s%-2d%-15s%-2d%-10s%-11lf%-10s%-11lf\n", "[k = ", k, "] [m = ", m, "]: parY = ", PAR[indexY], ", parX = ", PAR[indexX], ", Attractor = ", attrac, ", diffAttrac = ", diffAttrac, ", LE[0] = ", LE[0], ", LE[1] = ", LE[1]);
-                    progress_bar(0, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
-                    if (k == ((int)parrange[5] - 1)/omp_get_num_threads() ) {
-                        progress_bar(1, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
-                    }
+            }
+            // Progress Monitor
+            if (ID == 0) {
+                //printf("PAR[%d] = %lf\n", indexX, PAR[indexX]);
+                //printf("%-5s%-3d%-7s%-3d%-12s%-11lf%-11s%-12lf%-14s%-2d%-15s%-2d%-10s%-11lf%-10s%-11lf\n", "[k = ", k, "] [m = ", m, "]: parY = ", PAR[indexY], ", parX = ", PAR[indexX], ", Attractor = ", attrac, ", diffAttrac = ", diffAttrac, ", LE[0] = ", LE[0], ", LE[1] = ", LE[1]);
+                progress_bar(0, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
+                if (k == ((int)parrange[5] - 1)/omp_get_num_threads() ) {
+                    progress_bar(1, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
                 }
-            
             }
         }
         // Free memory    
