@@ -27,7 +27,7 @@ system = "duffing_2DoF_EH"
 #system = "bistable_EH"
 ext = ".pdf"
 
-num = 3
+num = 4
 dim = 6
 
 if num > 0:
@@ -100,7 +100,7 @@ axs[row1, col1].plot(df['Cpar'], df[Poutname], rasterized = True, color = 'light
 #axs[row1, col1].plot(df['Cpar'], df[f'Pout1'], rasterized = True, color = 'red', lw = 0.5, zorder = 2)
 #axs[row1, col1].plot(df['Cpar'], df[f'Pout2'], rasterized = True, color = 'blue', lw = 0.5, zorder = 2)
 axs[row1, col1].fill_between(df['Cpar'], 0, df[Poutname], color = 'lightsalmon', zorder = 0)
-axs[row1, col1].set_ylabel(r'$v$')
+axs[row1, col1].set_ylabel(r'$P_{avg}$')
 axs[row1, col1].set_xlabel(r'$\Omega$')
 axs[row1, col1].set_xlim(df['Cpar'].min(), df['Cpar'].max())
 axs[row1, col1].set_xticks(xticks)

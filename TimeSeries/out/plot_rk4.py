@@ -7,17 +7,17 @@ from src.libs import plotconfig as pltconf
 
 pltconf.plot_params(True, 10, 0.5)
 
-nP = 500
-nDiv = 6000
-trans = 400
+nP = 5000
+nDiv = 1000
+trans = 3750
 plot_i = nDiv*trans
 
 save = False
 
-system = "pend_oscillator_EH"
+system = "duffing_2DoF_EH"
 ext = ".pdf"
 
-readpath = "TimeSeries/out/" + system + "_rk4(1).csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "TimeSeries/out/" + system + "_rk4(4).csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "TimeSeries/figs"; savepath = pltconf.convert_dir(savepath)
         
 df = pd.read_csv(readpath, delimiter = " ")
@@ -46,7 +46,7 @@ ax1.set_ylabel(r'$x$')
 ax1.set_xlabel(r'$\tau$')
 ax1.set_xlim(df['Time'].min(), df['Time'].max())
 
-ax2.plot(df['Time'], df['x[2]'], rasterized = True, color = "blue", linewidth = 0.5, zorder = 1)
+ax2.plot(df['Time'], df['x[1]'], rasterized = True, color = "blue", linewidth = 0.5, zorder = 1)
 ax2.set_ylabel(r'$\dot{x}$')
 ax2.set_xlabel(r'$\tau$')
 ax2.set_xlim(df['Time'].min(), df['Time'].max())
@@ -54,7 +54,7 @@ ax2.set_xlim(df['Time'].min(), df['Time'].max())
 ax3.plot(df['x[0]'].iloc[plot_i:-1], df['x[1]'].iloc[plot_i:-1], rasterized = True, color = "black", linewidth = 0.5, zorder = 1)
 ax3.set_ylabel(r'$\dot{x}$')
 ax3.set_xlabel(r'$x$')
-ax3.set_aspect('equal')
+#ax3.set_aspect('equal')
 
 
 #========================================================================#

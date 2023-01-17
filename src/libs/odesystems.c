@@ -436,7 +436,7 @@ void pend_oscillator_wout_pend_EH(int dim, double *x, double t, double *par, dou
     }
 }
 
-void duffing_2DoF_EH(int dim, double *x, double t, double *par, double *f) {
+void duffing_2DoF_EH_old(int dim, double *x, double t, double *par, double *f) {
     /* OMEGA   = par[0]   |   alpha_1 = par[5]   |   chi_1    = par[10]   |   kappa_2 = par[15]   |   x1  = x[0] | v2 = x[5]
        gamma   = par[1]   |   alpha_2 = par[6]   |   chi_2    = par[11]   |                       |   dx1 = x[1] |    
        rho     = par[2]   |   beta_1  = par[7]   |   varphi_1 = par[12]   |                       |   x2  = x[2] |
@@ -478,36 +478,79 @@ void duffing_2DoF_EH(int dim, double *x, double t, double *par, double *f) {
     }
 }
 
+void duffing_2DoF_EH(int dim, double *x, double t, double *par, double *f) {
+    /* OMEGA   = par[0]   |   alpha_1 = par[5]   |   chi_1    = par[10]   |   kappa_2 = par[15]   |   x1  = x[0] | v2 = x[5]
+       gamma   = par[1]   |   alpha_2 = par[6]   |   chi_2    = par[11]   |                       |   dx1 = x[1] |    
+       rho     = par[2]   |   beta_1  = par[7]   |   varphi_1 = par[12]   |                       |   x2  = x[2] |
+       zeta_1  = par[3]   |   beta_2  = par[8]   |   varphi_2 = par[13]   |                       |   dx2 = x[3] |
+       zeta_2  = par[4]   |   OMEGA_s = par[9]   |   kappa_1  = par[14]   |                       |   v1  = x[4] |           */
+    double ddxb = par[1]*par[0]*par[0]*sin(par[0] * t);
+    if (dim == 6) { 
+        f[0] = x[1]; 
+        f[1] = ddxb - 2*par[3]*x[1] + 2*par[4]*(x[3] - x[1]) - (1 + par[5])*x[0] - par[7]*x[0]*x[0]*x[0]
+               + par[9]*par[9]*par[2]*(x[2] - x[0]) + par[10]*x[4] - par[11]*x[5];
+        f[2] = x[3];
+        f[3] = ddxb - (1/par[2])*(2*par[4]*(x[3] - x[1]) + par[6]*x[2] + par[8]*x[2]*x[2]*x[2] - par[11]*x[5])
+               - par[9]*par[9]*(x[2] - x[0]);
+        f[4] = -par[12]*x[4] - par[14]*x[1];
+        f[5] = -par[13]*x[5] - par[15]*(x[3] - x[1]); 
+    }
+    else if (dim == 42) {
+        f[0] = x[1]; 
+        f[1] = ddxb - 2*par[3]*x[1] + 2*par[4]*(x[3] - x[1]) - (1 + par[5])*x[0] - par[7]*x[0]*x[0]*x[0]
+               + par[9]*par[9]*par[2]*(x[2] - x[0]) + par[10]*x[4] - par[11]*x[5];
+        f[2] = x[3];
+        f[3] = ddxb - (1/par[2])*(2*par[4]*(x[3] - x[1]) + par[6]*x[2] + par[8]*x[2]*x[2]*x[2] - par[11]*x[5])
+               - par[9]*par[9]*(x[2] - x[0]);
+        f[4] = -par[12]*x[4] - par[14]*x[1];
+        f[5] = -par[13]*x[5] - par[15]*(x[3] - x[1]); 
+        for (int i = 0; i < 6; i ++) {
+            f[6 + i] = x[12 + i];
+            f[12 + i] = -(1 + par[5] + par[9]*par[9]*par[2] + 3*par[7]*x[0]*x[0])*x[6 + i] - 2*(par[3] + par[4])*x[12 + i] + 
+                        par[9]*par[9]*par[2]*x[18 + i] + 2*par[4]*x[24 + i] + par[10]*x[30 + i] - par[11]*x[36 + i];
+            f[18 + i] = x[24 + i];
+            f[24 + i] = (1/par[2])*(par[9]*par[9]*par[2]*x[6 + i] + 2*par[4]*x[12 + i] - (par[6] + par[9]*par[9]*par[2] + 3*par[8]*x[2]*x[2])*x[18 + i] 
+                                    - 2*par[4]*x[24 + i] + par[11]*x[36 + i]);
+            f[30 + i] = -par[14]*x[12 + i] - par[12]*x[30 + i];
+            f[36 + i] = -par[15]*(x[24 + i] - x[12 + i]) - par[13]*x[36 + i];
+        }
+    }
+    else {
+        error();
+    }
+}
+
 void linear_2DoF_EH(int dim, double *x, double t, double *par, double *f) {
     /* OMEGA   = par[0]   |   OMEGA_s  = par[5]   |   kappa_1 = par[10]   |   x1  = x[0] |  v2 = x[5]
        gamma   = par[1]   |   chi_1    = par[6]   |   kappa_2 = par[11]   |   dx1 = x[1] |    
        rho     = par[2]   |   chi_2    = par[7]   |                       |   x2  = x[2] |
        zeta_1  = par[3]   |   varphi_1 = par[8]   |                       |   dx2 = x[3] |
        zeta_2  = par[4]   |   varphi_2 = par[9]   |                       |   v1  = x[4] |         */
+    double ddxb = par[1]*par[0]*par[0]*sin(par[0] * t);
     if (dim == 6) { 
         f[0] = x[1];
-        f[1] = par[1]*par[0]*par[0]*sin(par[0]*t) - 2*par[3]*x[1] + 2*par[4]*(x[3] - x[1]) - x[0] + par[2]*par[5]*par[5]*(x[2] - x[0]) + par[6]*x[4];
+        f[1] = ddxb - 2*par[3]*x[1] + 2*par[4]*(x[3] - x[1]) - x[0] + par[2]*par[5]*par[5]*(x[2] - x[0]) + par[6]*x[4] - par[7]*x[5];
         f[2] = x[3];
-        f[3] = par[1]*par[0]*par[0]*sin(par[0]*t) - (2/par[2])*par[4]*(x[3] - x[1]) - par[5]*par[5]*(x[2] - x[0])+ par[7]*x[5];
+        f[3] = ddxb - (2/par[2])*par[4]*(x[3] - x[1]) - par[5]*par[5]*(x[2] - x[0])+ par[7]*x[5];
         f[4] = -par[8]*x[4] - par[10]*x[1];
         f[5] = -par[9]*x[5] - par[11]*(x[3] - x[1]); 
     }
     else if (dim == 42) {
         f[0] = x[1];
-        f[1] = par[1]*par[0]*par[0]*sin(par[0]*t) - 2*par[3]*x[1] + 2*par[4]*(x[3] - x[1]) - x[0] + par[2]*par[5]*par[5]*(x[2] - x[0]) + par[6]*x[4];
+        f[1] = ddxb - 2*par[3]*x[1] + 2*par[4]*(x[3] - x[1]) - x[0] + par[2]*par[5]*par[5]*(x[2] - x[0]) + par[6]*x[4] - par[7]*x[5];
         f[2] = x[3];
-        f[3] = par[1]*par[0]*par[0]*sin(par[0]*t) - (2/par[2])*par[4]*(x[3] - x[1]) - par[5]*par[5]*(x[2] - x[0])+ par[7]*x[5];
+        f[3] = ddxb - (2/par[2])*par[4]*(x[3] - x[1]) - par[5]*par[5]*(x[2] - x[0])+ par[7]*x[5];
         f[4] = -par[8]*x[4] - par[10]*x[1];
-        f[5] = -par[9]*x[5] - par[11]*(x[3] - x[1]);
-        for (int i = 0; i < 4; i ++) {
+        f[5] = -par[9]*x[5] - par[11]*(x[3] - x[1]); 
+        for (int i = 0; i < 6; i ++) {
             f[6 + i] = x[12 + i];
-            f[12 + i] = -((1 + par[5]*par[5]*par[2])*x[6 + i]) - 2*(par[3] + par[4])*x[12 + i] + par[5]*par[5]*par[2]*x[18 + i]
-                         + 2*par[4]*x[24 + i] + par[6]*x[30 + i];
+            f[12 + i] = -(1 + par[5]*par[5]*par[2])*x[6 + i] - 2*(par[3] + par[4])*x[12 + i] + par[5]*par[5]*par[2]*x[18 + i] 
+                        + 2*par[4]*x[24 + i] + par[6]*x[30 + i] - par[7]*x[36 + i];
             f[18 + i] = x[24 + i];
             f[24 + i] = (1/par[2])*(par[5]*par[5]*par[2]*x[6 + i] - 2*par[4]*(x[24 + i] - x[12 + i]) - par[5]*par[5]*par[2]*x[18 + i]
                                     + par[7]*x[36 + i]);
             f[30 + i] = -par[10]*x[12 + i] - par[8]*x[30 + i];
-            f[36 + i] = -par[11]*(x[24 + i] - x[12 + i]) - par[9]*x[36+i];
+            f[36 + i] = -par[11]*(x[24 + i] - x[12 + i]) - par[9]*x[36 + i];
         }
     }
     else {
