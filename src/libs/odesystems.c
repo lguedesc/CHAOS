@@ -558,6 +558,91 @@ void linear_2DoF_EH(int dim, double *x, double t, double *par, double *f) {
     }
 }
 
+/* Adeodato (2020) SMA Model*/
+
+static double sma_strain(double displ, double t, double t0, double strain_0, double L0) {
+    // If initial time, then get initial condition properties
+    if (t == t0) {
+         return strain_0;
+    } 
+    // Else, update properties based on system behavior
+    else {
+        return (displ/L0);
+    }
+}
+
+static double sma_stress(double t, double t0, double E, double sigma_0, double strain) {
+    // If initial time, then get initial condition properties
+    if (t == t0) {
+         return sigma_0;
+    } 
+    // Else, update properties based on system behavior
+    else {
+        return E*strain;
+    }
+}
+
+static double loop_direction(double t, double t0, double dstrain) {
+    // If initial time, then get initial condition properties
+    if (t == t0) {
+         return 1.0;
+    } 
+    // Else, update properties based on system behavior
+    else {
+        return (dstrain/fabs(dstrain));
+    }
+}
+
+static double load_direction(double t, double t0, double strain) {
+    // If initial time, then get initial condition properties
+    if (t == t0) {
+         return 1.0;
+    } 
+    // Else, update properties based on system behavior
+    else {
+        return (strain/fabs(strain));
+    }
+}
+
+void adeodato_sma_oscillator(int dim, double *x, double t, double *par, double *f) {
+    /* System Parameters  |                                                              Shape Memory Properties                                                       |   
+       -----------------  -   --------------------------------------------------------------------------------------------------------------------------------------   -      
+       OMEGA   = par[0]   |   sigma_0    = par[6]   |   beta_0    = par[12]   |   alpha  = par[18]  |  s_2      = par[24]   |   load_ant = par[30]   |   T = par[36]   |   
+       gamma   = par[1]   |   sigma_ant  = par[7]   |   beta_ant  = par[13]   |   Ms     = par[19]  |  Ca       = par[25]   |   load     = par[31]   |                 |      
+       c       = par[2]   |   sigma      = par[8]   |   beta      = par[14]   |   Mf     = par[20]  |  Cm       = par[26]   |   Area     = par[32]   |                 |           
+       k       = par[3]   |   strain_0   = par[9]   |   E_0       = par[15]   |   As     = par[21]  |  strain_r = par[27]   |   L_0      = par[33]   |                 |
+       m       = par[4]   |   strain_ant = par[10]  |   E         = par[16]   |   Af     = par[22]  |  dir_ant  = par[28]   |   Ea       = par[34]   |                 |
+       t_0     = par[5]   |   strain     = par[11]  |   alpha_0   = par[17]   |   s_1    = par[23]  |  dir      = par[29]   |   Em       = par[35]   |                 |   */
+    
+    // Compute current sma properties
+    par[11] = sma_strain(x[0], t, par[5], par[9], par[33]);    // Strain
+    par[8] = sma_stress(t, par[5], par[16], par[6], par[11]);  // Sigma
+    par[16] = par[15];
+    // Compute strain derivative
+    double dstrain = par[11] - par[10];
+    // Compute directions of steps in the loop and direction of the load
+    par[29] = loop_direction(t, par[5], dstrain);    // dir
+    par[31] = load_direction(t, par[5], par[11]);    // load
+    
+    // System of Equations
+    if (dim == 2) {
+        f[0] = x[1];
+        f[1] = (1/par[4])*(par[1]*sin(par[0] * t) - par[2]*x[1] - par[3]*x[0] - par[8]*par[32]);    
+    } 
+    else if (dim == 4) {
+        f[0] = x[1];
+        f[1] = (1/par[4])*(par[1]*sin(par[0] * t) - par[2]*x[1] - par[3]*x[0] - par[8]*par[32]);
+        for (int i = 0; i < 2; i++) {
+            f[2 + i] = 0;
+            f[4 + i] = 0;
+        }
+    }
+    else {
+        printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
+        exit(1);
+    }    
+}
+
 // Not Implemented
 void duffing_cldyn(int dim, double *x, double t, double *par, double *f) {
     // OMEGA = par[0]
