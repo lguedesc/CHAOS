@@ -117,7 +117,7 @@ char *OSsystemNames[NUM_OF_OS_SYSTEMS] = {  "Duffing Oscillator",
                                             "2 DoF Duffing-Type Energy Harvester",
                                             "2 DoF Linear Oscillator",
                                             "2 DoF Linear Energy Harvester",
-                                            "Adeodato SMA Oscillator" };
+                                            "Adeodato SMA Oscillator (In Development)" };
  
 char *GNLsystemNames[NUM_OF_GNL_SYSTEMS] = {"Lorenz System",
                                             "Lotka-Volterra Predator-Prey Model",
@@ -126,7 +126,7 @@ char *GNLsystemNames[NUM_OF_GNL_SYSTEMS] = {"Lorenz System",
 char *toolboxesNames[NUM_OF_TOOLBOXES] = {  "General Nonlinear Dynamics Toolbox",
                                             "Harmonic Nonlinear Oscillators Toolbox" };
                             
-char *OSmoduleNames[NUM_OF_OS_MODULES] = {  "Convergence Test",
+char *OSmoduleNames[NUM_OF_OS_MODULES] = {  "Convergence Test (In Development)",
                                             "Time Series",
                                             "Poincare Map",
                                             "Lyapunov Exponents (Method from Wolf et al., 1985)", 

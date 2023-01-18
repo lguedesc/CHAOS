@@ -604,26 +604,67 @@ static double load_direction(double t, double t0, double strain) {
     }
 }
 
+static void IC_for_parameters(double *par_0, double *par, double *par_ant) {
+    (*par_ant) = (*par_0);
+    (*par) = (*par_0);
+}
+
+static double update_parameter(double par) {
+    return par;
+}
+
 void adeodato_sma_oscillator(int dim, double *x, double t, double *par, double *f) {
-    /* System Parameters  |                                                              Shape Memory Properties                                                       |   
-       -----------------  -   --------------------------------------------------------------------------------------------------------------------------------------   -      
-       OMEGA   = par[0]   |   sigma_0    = par[6]   |   beta_0    = par[12]   |   alpha  = par[18]  |  s_2      = par[24]   |   load_ant = par[30]   |   T = par[36]   |   
-       gamma   = par[1]   |   sigma_ant  = par[7]   |   beta_ant  = par[13]   |   Ms     = par[19]  |  Ca       = par[25]   |   load     = par[31]   |                 |      
-       c       = par[2]   |   sigma      = par[8]   |   beta      = par[14]   |   Mf     = par[20]  |  Cm       = par[26]   |   Area     = par[32]   |                 |           
-       k       = par[3]   |   strain_0   = par[9]   |   E_0       = par[15]   |   As     = par[21]  |  strain_r = par[27]   |   L_0      = par[33]   |                 |
-       m       = par[4]   |   strain_ant = par[10]  |   E         = par[16]   |   Af     = par[22]  |  dir_ant  = par[28]   |   Ea       = par[34]   |                 |
-       t_0     = par[5]   |   strain     = par[11]  |   alpha_0   = par[17]   |   s_1    = par[23]  |  dir      = par[29]   |   Em       = par[35]   |                 |   */
+    /* System Parameters  |                                                              Shape Memory Properties                                                               |   
+       -----------------  -   ----------------------------------------------------------------------------------------------------------------------------------------------   -      
+       OMEGA   = par[0]   |   sigma_0    = par[6]   |   beta_0    = par[12]   |   alpha  = par[18]  |  s_2      = par[24]   |   load_ant = par[30]   |   T         = par[36]   |   
+       gamma   = par[1]   |   sigma_ant  = par[7]   |   beta_ant  = par[13]   |   Ms     = par[19]  |  Ca       = par[25]   |   load     = par[31]   |   t_ant     = par[37]   |      
+       c       = par[2]   |   sigma      = par[8]   |   beta      = par[14]   |   Mf     = par[20]  |  Cm       = par[26]   |   Area     = par[32]   |   E_ant     = par[38]   |           
+       k       = par[3]   |   strain_0   = par[9]   |   E_0       = par[15]   |   As     = par[21]  |  strain_r = par[27]   |   L_0      = par[33]   |   alpha_ant = par[39]   |
+       m       = par[4]   |   strain_ant = par[10]  |   E         = par[16]   |   Af     = par[22]  |  dir_ant  = par[28]   |   Ea       = par[34]   |                         |
+       t_0     = par[5]   |   strain     = par[11]  |   alpha_0   = par[17]   |   s_1    = par[23]  |  dir      = par[29]   |   Em       = par[35]   |                         |   */
     
-    // Compute current sma properties
-    par[11] = sma_strain(x[0], t, par[5], par[9], par[33]);    // Strain
-    par[8] = sma_stress(t, par[5], par[16], par[6], par[11]);  // Sigma
-    par[16] = par[15];
-    // Compute strain derivative
-    double dstrain = par[11] - par[10];
-    // Compute directions of steps in the loop and direction of the load
-    par[29] = loop_direction(t, par[5], dstrain);    // dir
-    par[31] = load_direction(t, par[5], par[11]);    // load
-    
+    // Make parameter_ant = parameter_0 if t = t_0
+    if (t == par[5]) {
+        par[37] = update_parameter(par[5]);              // t_ant = t_0
+        IC_for_parameters(&par[6], &par[8], &par[7]);    // Initial conditions for sigma
+        IC_for_parameters(&par[9], &par[11], &par[10]);  // Initial conditions for strain
+        IC_for_parameters(&par[12], &par[14], &par[13]); // Initial conditions for beta
+        IC_for_parameters(&par[15], &par[16], &par[38]); // Initial conditions for E
+        IC_for_parameters(&par[17], &par[18], &par[39]); // Initial conditions for alpha
+        par[28] = update_parameter(par[29]);  // dir_ant = dir
+        par[31] = update_parameter(par[30]);  // load_and = load
+    }
+    // if t bigger than t_ant, update properties
+    if (t > par[37]) {
+        // Update ant parameters
+        par[7] = update_parameter(par[8]);    // sigma_ant = sigma
+        par[10] = update_parameter(par[11]);  // strain_ant = strain
+        par[13] = update_parameter(par[14]);  // beta_ant = beta
+        par[38] = update_parameter(par[16]);  // E_ant = E
+        par[39] = update_parameter(par[18]);  // alpha_ant = alpha
+        par[28] = update_parameter(par[29]);  // dir_ant = dir
+        par[30] = update_parameter(par[31]);  // load_ant = load
+        // Compute current sma strain
+        par[11] = sma_strain(x[0], t, par[5], par[9], par[33]);    // Strain
+        // Compute strain derivative
+        double dstrain = par[11] - par[10];
+        // Compute directions of steps in the loop and direction of the load
+        par[29] = loop_direction(t, par[5], dstrain);    // dir
+        par[31] = load_direction(t, par[5], par[11]);    // load
+        // Update parameters if load or dir changes signal
+        if ((par[29] != par[28]) || (par[31] != par[30])) {
+            printf("t = %lf | dir_ant = %lf | dir = %lf\n", t, par[28], par[29]);
+            printf("t = %lf | load_ant = %lf | load = %lf\n", t, par[30], par[31]);
+            par[6] = update_parameter(par[7]);      // sigma_0 = sigma_ant
+            par[9] = update_parameter(par[10]);     // strain_0 = strain_ant
+            par[12] = update_parameter(par[13]);    // beta_0 = beta_ant
+            par[15] = update_parameter(par[38]);    // E_0 = E_ant
+            par[17] = update_parameter(par[39]);    // alpha_0 = alpha_ant
+        }
+        // Compute current sma stress
+        par[8] = sma_stress(t, par[5], par[16], par[6], par[11]);  // Sigma
+        
+    }
     // System of Equations
     if (dim == 2) {
         f[0] = x[1];
@@ -640,7 +681,7 @@ void adeodato_sma_oscillator(int dim, double *x, double t, double *par, double *
     else {
         printf("Wrong dimension (dim) or (ndim) allocated for system of equations\n");
         exit(1);
-    }    
+    }
 }
 
 // Not Implemented

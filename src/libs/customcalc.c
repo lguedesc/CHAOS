@@ -794,29 +794,40 @@ void customcalc_linear_2DoF_EH(double *x, double *par, double t, double *xrms, d
 }
 
 void customcalc_adeodato_sma_oscillator(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
-    /* System Parameters  |                                                              Shape Memory Properties                                                       |   
-       -----------------  -   --------------------------------------------------------------------------------------------------------------------------------------   -      
-       OMEGA   = par[0]   |   sigma_0    = par[6]   |   beta_0    = par[12]   |   alpha  = par[18]  |  s_2      = par[24]   |   load_ant = par[30]   |   T = par[36]   |   
-       gamma   = par[1]   |   sigma_ant  = par[7]   |   beta_ant  = par[13]   |   Ms     = par[19]  |  Ca       = par[25]   |   load     = par[31]   |                 |      
-       c       = par[2]   |   sigma      = par[8]   |   beta      = par[14]   |   Mf     = par[20]  |  Cm       = par[26]   |   Area     = par[32]   |                 |           
-       k       = par[3]   |   strain_0   = par[9]   |   E_0       = par[15]   |   As     = par[21]  |  strain_r = par[27]   |   L_0      = par[33]   |                 |
-       m       = par[4]   |   strain_ant = par[10]  |   E         = par[16]   |   Af     = par[22]  |  dir_ant  = par[28]   |   Ea       = par[34]   |                 |
-       t_0     = par[5]   |   strain     = par[11]  |   alpha_0   = par[17]   |   s_1    = par[23]  |  dir      = par[29]   |   Em       = par[35]   |                 |   */
+    /* System Parameters  |                                                              Shape Memory Properties                                                               |   
+       -----------------  -   ----------------------------------------------------------------------------------------------------------------------------------------------   -      
+       OMEGA   = par[0]   |   sigma_0    = par[6]   |   beta_0    = par[12]   |   alpha  = par[18]  |  s_2      = par[24]   |   load_ant = par[30]   |   T         = par[36]   |   
+       gamma   = par[1]   |   sigma_ant  = par[7]   |   beta_ant  = par[13]   |   Ms     = par[19]  |  Ca       = par[25]   |   load     = par[31]   |   t_ant     = par[37]   |      
+       c       = par[2]   |   sigma      = par[8]   |   beta      = par[14]   |   Mf     = par[20]  |  Cm       = par[26]   |   Area     = par[32]   |   E_ant     = par[38]   |           
+       k       = par[3]   |   strain_0   = par[9]   |   E_0       = par[15]   |   As     = par[21]  |  strain_r = par[27]   |   L_0      = par[33]   |   alpha_ant = par[39]   |
+       m       = par[4]   |   strain_ant = par[10]  |   E         = par[16]   |   Af     = par[22]  |  dir_ant  = par[28]   |   Ea       = par[34]   |                         |
+       t_0     = par[5]   |   strain     = par[11]  |   alpha_0   = par[17]   |   s_1    = par[23]  |  dir      = par[29]   |   Em       = par[35]   |                         |   */
     // Mode to define names to be printed in the output file
     if (mode == 0) {    
-        char *names[] = { "Sigma", "Strain", "E", "dir", "load"};
+        char *names[] = { "Sigma_0", "Sigma_ant", "Sigma", "Strain_0", "Strain_ant", "Strain",
+                          "E_0", "E_ant", "E", "Alpha_0", "Alpha_ant", "Alpha", "Beta_0", "Beta_ant", "Beta", "dir_ant", "dir", "load_ant", "load"};
         // Assign names to custom values
         assign_names(names, ncustomvalues, customnames, maxstrlen);
 
-        // Assign SMA Initial Conditions
+        // Assign SMA Initial Conditions Properties
         if (t == t0) {
-            customvalue[0] = par[8];        
-            customvalue[1] = par[11];
-            customvalue[2] = par[16];
-            customvalue[3] = par[29];
-            customvalue[4] = par[31];
-            for(int i = 0; i < 5; i++) {
-                printf("customvalue[%d] = %lf\n", i, customvalue[i]);
+            // Sigma
+            customvalue[0] = par[6];  customvalue[1] = par[7];   customvalue[2] = par[8];
+            // Strain
+            customvalue[3] = par[9];  customvalue[4] = par[10];  customvalue[5] = par[11];
+            // Beta
+            customvalue[6] = par[12]; customvalue[7] = par[13];  customvalue[8] = par[14];
+            // E
+            customvalue[9] = par[15]; customvalue[10] = par[38];  customvalue[11] = par[16];
+            // Alpha
+            customvalue[12] = par[17]; customvalue[13] = par[39];  customvalue[14] = par[18];
+            // dir
+            customvalue[15] = par[28]; customvalue[16] = par[29];
+            // load
+            customvalue[17] = par[30]; customvalue[18] = par[31];
+
+            for(int i = 0; i < 19; i++) {
+                printf("customvalue[%d] = %s = %lf\n", i, names[i], customvalue[i]);
             }
         }
     }
@@ -826,11 +837,20 @@ void customcalc_adeodato_sma_oscillator(double *x, double *par, double t, double
     }
     // Mode to perform calculations over the entire time series (transient + steady state)
     else if (mode == 2) {
-        customvalue[0] = par[8];        
-        customvalue[1] = par[11];
-        customvalue[2] = par[16];
-        customvalue[3] = par[29];
-        customvalue[4] = par[31];
+        // Sigma
+            customvalue[0] = par[6];  customvalue[1] = par[7];   customvalue[2] = par[8];
+            // Strain
+            customvalue[3] = par[9];  customvalue[4] = par[10];  customvalue[5] = par[11];
+            // Beta
+            customvalue[6] = par[12]; customvalue[7] = par[13];  customvalue[8] = par[14];
+            // E
+            customvalue[9] = par[15]; customvalue[10] = par[38];  customvalue[11] = par[16];
+            // Alpha
+            customvalue[12] = par[17]; customvalue[13] = par[39];  customvalue[14] = par[18];
+            // dir
+            customvalue[15] = par[28]; customvalue[16] = par[29];
+            // load
+            customvalue[17] = par[30]; customvalue[18] = par[31];
     } 
     // Mode to perform calculations at the end of the time series
     else if (mode == 3) {
