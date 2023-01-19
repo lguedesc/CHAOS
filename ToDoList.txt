@@ -1,14 +1,17 @@
 *** FUTURE FEATURES (TO BE IMPLEMENTED) ***
-1. Better input files: The user can put the variables in any order, just by declaring it by name. Example dim=3, nRMS=2
-2. Put a customcalc before integrator to contemplate customvalues initial conditions
+1. Better input files: The user can put the variables in any order, just by declaring it by name. Example dim=3, nRMS=2; Maybe declaring the system in the input file removing the "choose dynamical system" menu
+2. Insert a customcalc before integrator to contemplate customvalues initial conditions
 3. Finish the general dynamical systems toolbox (Lorenz, Lotk-Volterra, Halvorsen, Rossler, etc) - Add missing modules and change timestep to be defined by the user, not by number of divisions
 4. Make a Simplified Version of the Forced Basin of Attraction based only on poincare map, without lyapunov.
-5. Implement different integrators like Runge-Kutta-Fehlberg (RKF45, RKF78 - nearly symplectic) Method for nonsmooth systems, Symplectic integrators for hamiltonian systems, Variational integrators for euler-lagrangian systems, etc.. to be attached with the existing modules, letting the users decide which integrator they want to use.
-6. Implement Lyapunov Exponents Cloned Dynamics method and integrate with the existing modules, letting the user decide which method he/she wants to use.
-7. Implement 0-1 Test for Chaos method and integrate with existing modules, letting the user decide which method he/she wants to use.
+5. Implement different integrators like Runge-Kutta-Fehlberg (RKF45, RKF78 - nearly symplectic) Method for nonsmooth systems, Symplectic integrators for hamiltonian systems, Variational integrators for euler-lagrangian systems, etc.. to be attached with the existing modules, letting the users decide which integrator they want to use in the input file.
+6. Adapt the Stroboscopic Poincaré map already implemented to be compatible with variable step-size of the integrators.
+7. Implement the determination of the periodicity of the system by analysing the local maxima or minima of the system for systems which dont have harmonic external forcing terms.
 8. Implement Geometric Poincaré Map for systems that don't have harmonic external forcing terms.
-9. Implement Lyapunov Dimension (Kaplan-Yorke Dimension) and Kolmogorov-Sinai Entropy
-10. Implement Harmonic Balance Method to find all solution branches of a parameter domain.
+9. Let the user decide in the input file to use stroboscopic poincare or local maxima to determine periodicity in the Harmonically excited systems toolbox; and choose to use geometric poincaré or local maxima to determine the periodicity in the general systems toolbox.
+10. Implement Lyapunov Exponents Cloned Dynamics method and integrate with the existing modules, letting the user decide which method he/she wants to use.
+11. Implement 0-1 Test for Chaos method and integrate with existing modules, letting the user decide which method he/she wants to use.
+12. Implement Lyapunov Dimension (Kaplan-Yorke Dimension) and Kolmogorov-Sinai Entropy
+13. Implement Harmonic Balance Method to find all solution branches of a parameter domain. (See if it is possible)
 
 
 *** KNOWN ISSUES AND POSSIBLE BUGS ***
