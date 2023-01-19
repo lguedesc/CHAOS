@@ -126,7 +126,7 @@ void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, doub
                             "xbRMS",
                             "dxbRMS",
                             "ddxbRMS",
-                            "PoutAvg"
+                            "TotalPout"
                         };
         // Assign names to custom values
         assign_names(names, ncustomvalues, customnames, maxstrlen);
