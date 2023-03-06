@@ -108,7 +108,7 @@ void create_dir(const char *pathname) {
 void directory_exists(const char *pathname) {
     // Check if the directory exists
     if (stat(pathname, &info) != 0) {
-        printf("Cannot find output directory\nCreating output directory...\n");
+        printf("   Cannot find output directory\n   Creating output directory...\n");
         create_dir(pathname);
     } 
 }

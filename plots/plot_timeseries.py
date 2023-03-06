@@ -1,39 +1,30 @@
 #%% -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
-import matplotlib as mpl
-import pandas as pd
-import os
-from src.libs import plotconfig as pltconf
+from libs import plotconfig as pltconf
 
-pltconf.plot_params(True, 10, 0.5)
+pltconf.plot_params(True, 10, 0.2)
 
+only_steady = False
 nP = 5000
 nDiv = 1000
 trans = 3750
-plot_i = nDiv*trans
+plot_i = nP*trans
 
-save = False
+save = True
 
-system = "duffing_2DoF_EH"
+system = "duffing"
+simulation = "timeseries"
 ext = ".pdf"
+filenum = 0
 
-readpath = "TimeSeries/out/" + system + "_rk4(4).csv"; readpath = pltconf.convert_dir(readpath)
-savepath = "TimeSeries/figs"; savepath = pltconf.convert_dir(savepath)
-        
-df = pd.read_csv(readpath, delimiter = " ")
-
+df = pltconf.read_CHAOS_data(system, filenum, simulation)
 #=======================================================================#
 # Figure Parameters                                                     #
 #=======================================================================#
-x_inches2 = 150*(1/25.4)     # [mm]*constant
-y_inches2 = x_inches2*(0.4)
+figsize = pltconf.figsize_in_cm(15, 0.4*15)
+dpi = pltconf.set_fig_quality(save = save, base_dpi = 100)
 
-if save == True:
-    dpi = 300
-else:
-    dpi = 200
-
-fig = plt.figure(1, figsize = (x_inches2,y_inches2), dpi = dpi, constrained_layout = True)
+fig = plt.figure(1, figsize = figsize, dpi = dpi, layout = "constrained")
 fig.set_constrained_layout_pads(hspace=0, wspace=0.1)
 grid = fig.add_gridspec(2, 4)
 
@@ -51,24 +42,19 @@ ax2.set_ylabel(r'$\dot{x}$')
 ax2.set_xlabel(r'$\tau$')
 ax2.set_xlim(df['Time'].min(), df['Time'].max())
 
-ax3.plot(df['x[0]'].iloc[plot_i:-1], df['x[1]'].iloc[plot_i:-1], rasterized = True, color = "black", linewidth = 0.5, zorder = 1)
-ax3.set_ylabel(r'$\dot{x}$')
-ax3.set_xlabel(r'$x$')
-#ax3.set_aspect('equal')
-
-
+if only_steady == True:
+    ax3.plot(df['x[0]'].iloc[plot_i:-1], df['x[1]'].iloc[plot_i:-1], rasterized = True, color = "black", linewidth = 0.5, zorder = 1)
+    ax3.set_ylabel(r'$\dot{x}$')
+    ax3.set_xlabel(r'$x$')
+else:
+    ax3.plot(df['x[0]'], df['x[1]'], rasterized = True, color = "black", linewidth = 0.5, zorder = 1)
+    ax3.set_ylabel(r'$\dot{x}$')
+    ax3.set_xlabel(r'$x$')
 #========================================================================#
 # Show and Save Figure                                                   #
 #========================================================================#
-
 if save == True:
-    isExist = os.path.exists(savepath)
-    if (isExist == False):
-        os.makedirs(savepath)
-    
-    name = "/sample_" + system + ext; name = pltconf.convert_dir(name)
-    fig.savefig(savepath + name)
-    plt.show()
+    pltconf.save_CHAOS_data(fig, system, simulation, ext)
+    #plt.show()
 else:
     plt.show()
-

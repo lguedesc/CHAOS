@@ -3,48 +3,38 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pandas as pd
 import os
-#from sympy import plot_implicit
-from src.libs import plotconfig as pltconf
+from libs import plotconfig as pltconf
 
-pltconf.plot_params(True, 10, 0.5)
+pltconf.plot_params(True, 10, 0.2)
 
-save = False
+save = True
 
-system = "bistable_EH"
+system = "duffing"
 ext = ".pdf"
+filenum = 1
+simulation = "ftimeseries"
 
-readpath = "FTimeSeries/out/" + system + "_ftimeseries(10).csv"; readpath = pltconf.convert_dir(readpath)
-readpath_poinc = "FTimeSeries/out/" + system + "_poinc(10).csv"; readpath_poinc = pltconf.convert_dir(readpath_poinc)
-savepath = "FTimeSeries/figs"; savepath = pltconf.convert_dir(savepath)
+df, df_poinc = pltconf.read_CHAOS_data(system, filenum, simulation)
         
-df = pd.read_csv(readpath, delimiter = " ")
-df_poinc = pd.read_csv(readpath_poinc, delimiter = " ")
-
-dim = 2
 nP = 1000
 nDiv = 1000
 trans = 750
 plot_i = nP*trans
 
-#pltconf.handle_s_lyap(df, trans, 'Time', dim)
 #=======================================================================#
 # Figure Parameters                                                     #
 #=======================================================================#
-x_inches2 = 150*(1/25.4)     # [mm]*constant
-y_inches2 = x_inches2*(0.7)
+figsize = pltconf.figsize_in_cm(15, 0.6*15)
+dpi = pltconf.set_fig_quality(save = save, base_dpi = 100)
 
-if save == True:
-    dpi = 2000
-else:
-    dpi = 200
 
-fig = plt.figure(1, figsize = (x_inches2,y_inches2), dpi = dpi, constrained_layout = True)
+fig = plt.figure(1, figsize = figsize, dpi = dpi, layout = "constrained")
 fig.set_constrained_layout_pads(hspace=0, wspace=0.1)
 grid = fig.add_gridspec(3, 4)
 
 ax1 = fig.add_subplot(grid[0,:-2])
 ax2 = fig.add_subplot(grid[1,:-2])
-ax3 = fig.add_subplot(grid[1:2,2:4])
+ax3 = fig.add_subplot(grid[0:2,2:4])
 ax4 = fig.add_subplot(grid[2,:-2])
 
 size = 1.5
@@ -69,8 +59,6 @@ ax3.set_xlabel(r'$x$')
 
 ax4.plot(df['Time'], df['LE[0]'], rasterized = True, color = "green", linewidth = 1, zorder = 1, label = "$\lambda_1$")
 ax4.plot(df['Time'], df['LE[1]'], rasterized = True, color = "purple", linewidth = 1, zorder = 1, label = "$\lambda_2$")
-ax4.plot(df['Time'], df['sLE[0]'], rasterized = True, color = "deepskyblue", linewidth = 0.5, zorder = 2, label = "$s\lambda_1$")
-ax4.plot(df['Time'], df['sLE[1]'], rasterized = True, color = "orange", linewidth = 0.5, zorder = 2, label = "$s\lambda_2$")
 ax4.hlines(0, df['Time'].min(), df['Time'].max(), color = "black", linewidth = 0.5, zorder = 3)
 ax4.set_ylabel(r'$\lambda$')
 ax4.set_xlabel(r'$\tau$')
@@ -82,12 +70,7 @@ ax4.legend(loc = "best", prop={'size': 6})
 #========================================================================#
 
 if save == True:
-    isExist = os.path.exists(savepath)
-    if (isExist == False):
-        os.makedirs(savepath)
-    
-    name = "/sample_" + system + "_ftimeseries" + ext; name = pltconf.convert_dir(name)
-    fig.savefig(savepath + name)
+    pltconf.save_CHAOS_data(fig, system, simulation, ext)
     plt.show()
 else:
     plt.show()
