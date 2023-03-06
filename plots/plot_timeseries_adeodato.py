@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pandas as pd
 import os
-from src.libs import plotconfig as pltconf
+from libs import plotconfig as pltconf
 
 pltconf.plot_params(True, 10, 0.5)
 

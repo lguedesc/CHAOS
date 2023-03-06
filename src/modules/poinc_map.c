@@ -39,7 +39,7 @@ void poincaremap(char *funcname, char* outputname, void (*edosys)(int, double *,
     // Create output files to store results
     char output_poinc_name[200];
     char output_info_name[200];
-    const char *rawdir = "PoincareMap/out/";                                                              // Directory of output file
+    const char *rawdir = "data/PoincareMap/out/";                                                              // Directory of output file
     char *dir = convert_dir(rawdir);
     const char *ext = ".csv";                                                                           // Extension of output file
     const char *ext_info = ".txt";        

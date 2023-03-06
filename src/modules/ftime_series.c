@@ -36,7 +36,7 @@ void ftime_series(char *funcname, char* outputname, void (*edosys)(int, double *
     char output_ftimeseries_name[200];
     char output_poinc_name[200];
     char output_info_name[200];
-    const char *rawdir = "FTimeSeries/out/";                                                                // Directory of output file
+    const char *rawdir = "data/FTimeSeries/out/";                                                                // Directory of output file
     char *dir = convert_dir(rawdir);
     const char *ext = ".csv";                                                                               // Extension of output file
     const char *ext_info = ".txt";                                                                          // Extension of info file

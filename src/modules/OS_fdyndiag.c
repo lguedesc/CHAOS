@@ -48,7 +48,7 @@ void OS_fdyndiag(char *funcname, char* outputname, void (*edosys)(int, double *,
     // Create output files to store results
     char output_dyndiag_name[200];
     char output_info_name[200];
-    const char *rawdir = "FDynDiagram/out/";                                                            // Directory of output file
+    const char *rawdir = "data/FDynDiagram/out/";                                                            // Directory of output file
     char *dir = convert_dir(rawdir);
     const char *ext = ".csv";                                                                           // Extension of output file
     const char *ext_info = ".txt";                                                                      // Extension of info file
