@@ -22,8 +22,8 @@ Currently, **CHAOS** offers an array of features to be used in pre-programmed dy
 * 1D and 2D Parameter Diagrams
 * Basins of Attraction of Fixed Points
 * Basins of Attraction of Dynamical Responses
-* Maximum, Minimum and Root Mean Square (RMS) values of all state variables
-* Custom Calculations inputed by the user (need programming in the source code)
+* Maximum, Minimum and Root Mean Square (RMS) values of state variables
+* Custom Calculations inserted by the user (need programming in source code)
 
 ## Limitations⚠️
 * Need a input file to enter with the simulation and system parameters
