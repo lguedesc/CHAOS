@@ -47,7 +47,7 @@ void OS_fforcedbasin(char *funcname, char* outputname, void (*edosys)(int, doubl
     // Create output files to store results
     char output_ffbasin_name[200];
     char output_info_name[200];
-    const char *rawdir = "FForcBasin/out/";                                                             // Directory of output file
+    const char *rawdir = "data/FForcBasin/out/";                                                             // Directory of output file
     char *dir = convert_dir(rawdir);
     const char *ext = ".csv";                                                                           // Extension of output file
     const char *ext_info = ".txt";                                                                      // Extension of info file

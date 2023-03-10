@@ -54,11 +54,11 @@ void OS_timeseries(char *funcname, char* outputname, void (*edosys)(int, double 
     // Create output files to store results
     char output_rk4_name[200];
     char output_info_name[200];
-    const char *rawdir = "TimeSeries/out/";                                                              // Directory of output file
+    const char *rawdir = "data/TimeSeries/out/";                                                              // Directory of output file
     char *dir = convert_dir(rawdir);
     const char *ext = ".csv";                                                                           // Extension of output file    
     const char *ext_info = ".txt";                                                                      // Extension of info file
-    snprintf(output_rk4_name, sizeof(output_rk4_name), "%s%s_rk4", dir, outputname);                      // Assign name for output rk4 without extension
+    snprintf(output_rk4_name, sizeof(output_rk4_name), "%s%s_timeseries", dir, outputname);                      // Assign name for output rk4 without extension
     snprintf(output_info_name, sizeof(output_info_name), "%s%s_info", dir, outputname);                   // Assign name for output info without extension
     FILE *output_rk4 = create_output_file(output_rk4_name, ext, dir);    // Create rk4 output file 
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);  // Create info output file

@@ -37,7 +37,7 @@ void epbasin(char *funcname, char* outputname, void (*edosys)(int, double *, dou
     // Create output files to store results
     char output_epbasin_name[200];
     char output_info_name[200];
-    const char *rawdir = "EPBasin/out/";                                                            // Directory of output file
+    const char *rawdir = "data/EPBasin/out/";                                                            // Directory of output file
     char *dir = convert_dir(rawdir);
     const char *ext = ".csv";                                                                           // Extension of output file
     const char *ext_info = ".txt";                                                                      // Extension of info file

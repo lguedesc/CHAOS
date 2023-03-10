@@ -1,0 +1,32 @@
+2
+5
+6
+
+1000 1000 750
+
+0.0
+1.0 0.0
+
+0.5
+0.5
+0.025
+-0.5
+0.5
+
+
+/* Variables */
+DIM
+nPar
+maxPer 
+
+nP nDiv trans
+
+t0
+IC: x[0] x[1] x[2] ...
+
+par[0] = OMEGA
+par[1] = gamma
+par[2] = zeta
+par[3] = alpha
+par[4] = beta
+0.707106781186547
