@@ -9,7 +9,7 @@
 </p> 
 
 ## What is the purpose of CHAOS?
-**CHAOS** is a user-friendly software package designed to facilitate numerical simulations of nonlinear dynamical systems subjected to harmonic forcing. Originally created as a personal productivity tool in my daily life as PhD student, it has since evolved into a collaborative project within our research lab, aimed at standardizing our approach to investigating nonlinear dynamics. Our goal is to provide an open source platform that is accessible and easy to use for anyone interested in exploring the fascinating world of nonlinear dynamics. With **CHAOS**, you can perform advanced simulations and gain valuable insights into complex systems without needing extensive programming expertise.
+**CHAOS** is a user-friendly command line software package designed to facilitate numerical simulations of nonlinear dynamical systems subjected to harmonic forcing. Originally created as a personal productivity tool in my daily life as PhD student, it has since evolved into a collaborative project within our research lab, aimed at standardizing our approach to investigating nonlinear dynamics. Our goal is to provide an open source platform that is accessible and easy to use for anyone interested in exploring the fascinating world of nonlinear dynamics. With **CHAOS**, you can perform advanced simulations and gain valuable insights into complex systems without needing extensive programming expertise.
 </p>
 
 ## Current Capabilities
