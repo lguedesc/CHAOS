@@ -17,7 +17,7 @@ Currently, **CHAOS** offers an array of features to be used in pre-programmed dy
 
 * Numerical Integration of systems of 1st order ordinary differential equations (ODEs)
 * Stroboscopic Poincaré Maps
-* Lyapunov Spectra (Method from Wolf et al. 1985)
+* Lyapunov Spectra (Method from [Wolf et al. 1985](https://doi.org/10.1016/0167-2789(85)90011-9))
 * Bifurcation Diagrams
 * 1D and 2D Parameter Diagrams
 * Basins of Attraction of Fixed Points
