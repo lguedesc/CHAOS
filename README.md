@@ -58,3 +58,7 @@ Bibtex entry:
 
 ## License
 **CHAOS** is released under the GNU General Public License v3.0 (GNU GPL) license. See the LICENSE file for details. All new contributions must be made under the GNU GPL v3.0 license.
+
+## Funding
+- [CNPq - Conselho Nacional de Desenvolvimento Científico e Tecnológico](https://www.gov.br/cnpq/pt-br)
+- [FAPERJ - Fundação Carlos Chagas Filho de Amparo à Pesquisa do Estado do Rio de Janeiro](https://www.faperj.br/)
