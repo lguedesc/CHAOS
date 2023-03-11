@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="256" align="center" src="assets/chaos_logo.png">
+  <img width="256" align="center" src="assets/icons/chaos_logo.png">
 </p>
 <h1 align="center">
   CHAOS
