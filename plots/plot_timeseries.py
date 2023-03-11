@@ -10,7 +10,7 @@ nDiv = 1000
 trans = 3750
 plot_i = nP*trans
 
-save = True
+save = False
 
 system = "duffing"
 simulation = "timeseries"
