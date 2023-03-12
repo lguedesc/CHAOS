@@ -29,9 +29,9 @@ endif
 else ifeq ($(CC),gcc)
 	CFLAGS+=-std=$(CSTD) -fopenmp -O3
 else ifeq ($(CC),clang)
-	CFLAGS+=-std=$(CSTD) -qopenmp -no-multibyte-chars -O3
+	CFLAGS+=-std=$(CSTD) -fopenmp -O3
 else ifeq ($(CC),icc)
-	CFLAGS+=-std=$(CSTD) -qopenmp -no-multibyte-chars -O3 -ipo
+	CFLAGS+=-std=$(CSTD) -qopenmp -no-multibyte-chars -O3 -ipo -diag-disable=10441
 endif
 
 #define .c files to be compiled
