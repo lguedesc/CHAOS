@@ -31,6 +31,8 @@ Currently, **CHAOS** offers an array of features to be used in pre-programmed dy
 * Currently only 4th order Runge-Kutta method is available as a numerical integrator. More will be added in the future.
 
 ## Future Features🎯
+We're excited to share that we have plans to expand *CHAOS* and bring more capabilities to the package. Here are some of the features we're aiming to implement in our next releases. If you're interested in supporting or participating in the project, we welcome your contributions. You can easily get involved by opening a pull request. 😀"
+
 * Addition of more numerical integrators
 * Test 0-1 for chaos ([doi:10.1137/080718851](https://doi.org/10.1137/080718851))
 * Poincaré Map to be compatible with adaptive step-size integrators
@@ -41,7 +43,6 @@ Currently, **CHAOS** offers an array of features to be used in pre-programmed dy
 * Better Menu
 
 ## Citing CHAOS
-
 We kindly ask users to cite the following reference in any publications reporting work done with **CHAOS**:
 
 - *L. G. Costa, CHAOS - A Nonlinear Dynamics Package for Harmonically Forced Oscillators, 2023, https://github.com/lguedesc/CHAOS*
