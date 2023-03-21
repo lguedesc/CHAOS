@@ -138,9 +138,9 @@ char *OSmoduleNames[NUM_OF_OS_MODULES] = {  "Convergence Test (In Development)",
                                             "Basin of Attraction (Fixed Points)",
                                             "Full Basin of Attraction (Forced)" };
 
-char *GNLmoduleNames[NUM_OF_GNL_MODULES] = {"Convergence Test",
-                                            "Time Series",
-                                            "Lyapunov Exponents (Method from Wolf et al., 1985)"};
+char *GNLmoduleNames[NUM_OF_GNL_MODULES] = { "Convergence Test",
+                                             "Time Series",
+                                             "Lyapunov Exponents (Method from Wolf et al., 1985)"};
 
 void call_GNL_system(unsigned int system, unsigned int module) {
         switch(system) {

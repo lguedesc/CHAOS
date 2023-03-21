@@ -179,7 +179,8 @@ void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, doub
         // Overall RMS of the input base excitation acceleration
         customvalue[18] = RMS(&customvalue[13], customvalue[7], N, 1);
         // Peak to Peak Average Electrical Output Power
-        customvalue[19] = (par[5]*par[6]/par[7])*xrms[2];
+        //customvalue[19] = (par[5]*par[6]/par[7])*xrms[2]*xrms[2];
+        customvalue[19] = par[6]*xrms[2]*xrms[2];
     }
     else {
         error(mode);
@@ -406,9 +407,11 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
             customvalue[102+i] = RMS(&customvalue[78+i], customvalue[45+i], N, 1);
         }
         // Peak to Peak Average Electrical Output Power of the Piezoelectric Element
-        customvalue[108] = (par[15]*par[11]/par[12])*xrms[6];
+        //customvalue[108] = (par[15]*par[11]/par[12])*xrms[6]*xrms[6];
+        customvalue[108] = par[11]*xrms[6]*xrms[6];
         // Peak to Peak Average Electrical Output Power of the Electromagnetic Converter
-        customvalue[109] = (par[16]*par[13]/par[14])*xrms[7];
+        //customvalue[109] = (par[16]*par[13]/par[14])*xrms[7]*xrms[7];
+        customvalue[109] = par[13]*xrms[7]*xrms[7];
     }
     else {
         error(mode);
@@ -590,9 +593,11 @@ void customcalc_duffing_2DoF_EH(double *x, double *par, double t, double *xrms, 
         }
 
         // Peak to Peak Average Electrical Output Power of the Piezoelectric Element 1
-        customvalue[59] = ((par[10]*par[12])/par[14])*xrms[4];
+        //customvalue[59] = ((par[10]*par[12])/par[14])*xrms[4]*xrms[4];
+        customvalue[59] = par[12]*xrms[4]*xrms[4];
         // Peak to Peak Average Electrical Output Power of the Piezoelectric Element 2
-        customvalue[60] = ((par[11]*par[13])/par[15])*xrms[5];
+        //customvalue[60] = ((par[11]*par[13])/par[15])*xrms[5]*xrms[5];
+        customvalue[60] = par[13]*xrms[5]*xrms[5];
         // Sum of Peak to Peak Average Electrical Output Power of the Piezoelectric Elements
         customvalue[61] = customvalue[59] + customvalue[60];
         // Output Power Density of the system
@@ -779,9 +784,11 @@ void customcalc_linear_2DoF_EH(double *x, double *par, double t, double *xrms, d
         }
 
         // Peak to Peak Average Electrical Output Power of the Piezoelectric Element 1
-        customvalue[59] = ((par[6]*par[8])/par[10])*xrms[4]; 
+        //customvalue[59] = ((par[6]*par[8])/par[10])*xrms[4]*xrms[4];
+        customvalue[59] = par[8]*xrms[4]*xrms[4]; 
         // Peak to Peak Average Electrical Output Power of the Piezoelectric Element 2
-        customvalue[60] = ((par[7]*par[9])/par[11])*xrms[5];
+        //customvalue[60] = ((par[7]*par[9])/par[11])*xrms[5]*xrms[5];
+        customvalue[60] = par[9]*xrms[5]*xrms[5];
         // Sum of Peak to Peak Average Electrical Output Power of the Piezoelectric Elements
         customvalue[61] = customvalue[59] + customvalue[60];
         // Output Power Density of the system
