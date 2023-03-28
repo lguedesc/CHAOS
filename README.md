@@ -39,7 +39,7 @@ We're excited to share that we have plans to expand **CHAOS** and bring more cap
 * Cloned Dynamics method for the computation of the Lyapunov Spectra ([doi:10.1007/s11071-011-9989-2](https://doi.org/10.1007/s11071-011-9989-2))
 * Lyapunov Dimension (Kaplan-Yorke Dimension) and Kolmogorov-Sinai Entropy
 * New module to handle general dynamical systems with all the features available
-* Dynamic Integrity Measurements for the Evaluation of Safe Basins
+* Dynamic Integrity Measurements for the Evaluation of Safe Basins ([doi:10.1016/0022-460X(89)90699-8](https://doi.org/10.1016/0022-460X(89)90699-8))
 * Better input files
 * Better Menu
 
