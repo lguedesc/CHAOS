@@ -559,6 +559,33 @@ void linear_2DoF_EH(int dim, double *x, double t, double *par, double *f) {
     }
 }
 
+void linear_EMEH(int dim, double *x, double t, double *par, double *f) {
+    /* OMEGA = par[0]   |   theta    = par[5]  
+       A     = par[1]   |   Rl       = par[6]
+       m     = par[2]   |   Rc       = par[7]
+       c     = par[3]   |   L        = par[8]
+       k     = par[4]   |                      */
+    double ddxb = -par[1]*par[0]*par[0]*sin(par[0] * t);
+    if (dim == 3) {
+        f[0] = x[1];
+        f[1] = - ddxb - (1/par[2])*(par[3]*x[1] + par[4]*x[0] - par[5]*x[2]);
+        f[2] = - (1/par[8])*((par[6] + par[7])*x[2] + par[5]*x[1]);
+    }
+    else if (dim == 12) {
+        f[0] = x[1];
+        f[1] = - ddxb - (1/par[2])*(par[3]*x[1] + par[4]*x[0] - par[5]*x[2]);
+        f[2] = - (1/par[8])*((par[6] + par[7])*x[2] + par[5]*x[1]);
+        for (int i = 0; i < 3; i ++) {
+            f[3 + i] = x[6 + i];
+            f[6 + i] = -(1/par[2])*((par[4] - par[5])*x[3 + i] + par[3]*x[6 + i]);
+            f[9 + i] = -(1/par[8])*(par[5]*x[6 + i] + (par[6] + par[7])*x[9 + i]);
+        }
+    }
+    else {
+        error();
+    }
+}
+
 /* Adeodato (2020) SMA Model*/
 
 static double sma_strain(double displ, double t, double t0, double strain_0, double L0) {

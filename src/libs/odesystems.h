@@ -20,6 +20,7 @@ void pend_oscillator_EH(int dim, double *x, double t, double *par, double *f);
 void pend_oscillator_wout_pend_EH(int dim, double *x, double t, double *par, double *f);
 void duffing_2DoF_EH(int dim, double *x, double t, double *par, double *f);
 void linear_2DoF_EH(int dim, double *x, double t, double *par, double *f);
+void linear_EMEH(int dim, double *x, double t, double *par, double *f);
 
 // Adeodato SMA Model
 void adeodato_sma_oscillator(int dim, double *x, double t, double *par, double *f);
