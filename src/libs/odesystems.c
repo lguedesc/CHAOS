@@ -736,3 +736,31 @@ void duffing_cldyn(int dim, double *x, double t, double *par, double *f) {
         error();
     }    
 }
+
+void chuas_circuit(int dim, double *x, double t, double *par, double *f) {
+	/*
+		OMEGA = par[0]
+		alpha = par[1]
+		beta  = par[2]
+		m0    = par[3]
+		m1    = par[4]
+	*/
+	if (dim == 3) {
+		f[0] = par[1]*(x[1] - x[0] - (par[4]*x[0] + 0.5*(par[3] - par[4])*(fabs(x[0] + 1) - fabs(x[0] - 1))));
+		f[1] = x[0] - x[1] + x[2];
+		f[2] = -par[2]*x[1];
+	}
+	else if (dim == 12) {
+		f[0] = par[1]*(x[1] - x[0] - (par[4]*x[0] + 0.5*(par[3] - par[4])*(fabs(x[0] + 1) - fabs(x[0] - 1))));
+		f[1] = x[0] - x[1] + x[2];
+		f[2] = -par[2]*x[1];
+		for(int i = 0; i < 3; i++) {
+			f[3 + i] = 0;
+			f[6 + i] = 0;
+			f[9 + i] = 0;
+		}
+	}
+	else {
+		error();
+	}
+}

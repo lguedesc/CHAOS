@@ -36,6 +36,10 @@ void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, doub
 #define GNL_FUNC_3 halvorsen
 #define GNL_OUTPUTNAME_3 "halvorsen"
 
+#define GNL_FUNC_4 chuas_circuit
+#define GNL_CUSTOM_4 customcalc_chuas_circuit
+#define GNL_OUTPUTNAME_4 "chuas_circuit"
+
 #define OS_FUNC_1 duffing
 #define OS_CUSTOM_1 customcalc
 #define OS_OUTPUTNAME_1 "duffing"
@@ -101,7 +105,7 @@ void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, doub
 #define OS_OUTPUTNAME_16 "lin_EM_EH"
 
 #define MAX_NAMELENGTH 120
-#define NUM_OF_GNL_SYSTEMS 3
+#define NUM_OF_GNL_SYSTEMS 4
 #define NUM_OF_OS_SYSTEMS 16
 #define NUM_OF_TOOLBOXES 2
 #define NUM_OF_OS_MODULES 11
@@ -126,7 +130,8 @@ char *OSsystemNames[NUM_OF_OS_SYSTEMS] = {  "Duffing Oscillator",
  
 char *GNLsystemNames[NUM_OF_GNL_SYSTEMS] = {"Lorenz System",
                                             "Lotka-Volterra Predator-Prey Model",
-                                            "Halvorsen System" };
+                                            "Halvorsen System",
+											"Chua's Circuit" };
 
 char *toolboxesNames[NUM_OF_TOOLBOXES] = {  "General Nonlinear Dynamics Toolbox",
                                             "Harmonic Nonlinear Oscillators Toolbox" };
@@ -158,6 +163,10 @@ void call_GNL_system(unsigned int system, unsigned int module) {
         case 3:
             execute_GNL_modules(module, GNL_FUNC_3, GNL_OUTPUTNAME_3, GNLsystemNames[2]);
             break;
+		case 4:
+			execute_GNL_modules(module, GNL_FUNC_4, GNL_OUTPUTNAME_4, GNLsystemNames[3]);
+			break;
+
         default:
             printf("Invalid...\n");
             exit(0);

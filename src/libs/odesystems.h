@@ -27,3 +27,6 @@ void adeodato_sma_oscillator(int dim, double *x, double t, double *par, double *
 
 // Not Implemented
 void duffing_cldyn(int dim, double *x, double t, double *par, double *f);
+
+// Automatically Added
+void chuas_circuit(int dim, double *x, double t, double *par, double *f);

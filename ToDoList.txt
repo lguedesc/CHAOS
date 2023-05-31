@@ -1,4 +1,5 @@
-*** FUTURE FEATURES (TO BE IMPLEMENTED) ***
+*** CHAOS - FUTURE FEATURES (TO BE IMPLEMENTED) ***
+0. Implement linearized equations by entering the jacobian instead of the full system
 1. Better input files: The user can put the variables in any order, just by declaring it by name. Example dim=3, nRMS=2; Maybe declaring the system in the input file removing the "choose dynamical system" menu
 2. Insert a customcalc before integrator to contemplate customvalues initial conditions
 3. Finish the general dynamical systems toolbox (Lorenz, Lotk-Volterra, Halvorsen, Rossler, etc) - Add missing modules and change timestep to be defined by the user, not by number of divisions
@@ -14,5 +15,12 @@
 13. Implement Harmonic Balance Method to find all solution branches of a parameter domain. (See if it is possible)
 
 
-*** KNOWN ISSUES AND POSSIBLE BUGS ***
+*** CHAOS - KNOWN ISSUES AND POSSIBLE BUGS ***
 1. Bug in progress bar in dyndiag (showing two %%) and bifurcation (when starting from a advance number, it bugs in 100% always)
+
+
+*** CHAOS Forge - FUTURE FEATURES (TO BE IMPLEMENTED) ***
+1. Check for duplicate fields in equations and lin equatinos (f[0], f[1], etc)
+2. If CHAOS #0 field is implemented, CHAOS Forge needs to change as well.
+3. Add the option to overwrite system if it already exists
+4. Option to run makefile for CHAOS compilation or compile automatically
