@@ -20,6 +20,38 @@ static void error(void) {
     exit(1);
 }
 
+void lin_eqs(int rdim, double jac[rdim][rdim], double *x, double *f) {
+
+    for (int i = 0; i < rdim; i++) {
+        for (int j = 0; j < rdim; j++) {
+            for (int k = 0; k < rdim; k++) {
+                f[rdim*(j+1) + i] = f[rdim*(j+1) + i] + jac[j][k]*x[rdim*(k+1) + i];
+            }
+        }
+    }
+    /* 
+       Example for a duffing system:
+
+        rdim = (-1 + sqrt(1 + 4*6))/2 = (-1 + sqrt(25))/2 = (-1 + 5)/2 = 4/2 = 2 ---> rdim = 2
+
+       j = 0; k = 0:
+        f[2 + i] = f[2 + i] + jac[0][0]*x[2 + i] = 0 + 0*x[2 + i] = 0
+
+       j = 0; k = 1:
+        f[2 + i] = f[2 + i] + jac[0][1]*x[4 + i] = 0 + 1*x[4 + i] = x[4 + i]
+
+       j = 1; k = 0:
+        f[4 + i] = f[4 + i] + jac[1][0]*x[2 + i] = 0 + (-par[3] - 3*par[4]*x[0]*x[0])*x[2 + i] = (-par[3] - 3*par[4]*x[0]*x[0])*x[2 + i]
+
+       j = 1; k = 1:
+        f[4 + i] = f[4 + i] + jac[1][1]*x[4 + i] = (-par[3] - 3*par[4]*x[0]*x[0])*x[2 + i] - par[2]*x[4]
+    
+        f[2 + i] = x[4 + i];
+        f[4 + i] = (-par[3] - 3*par[4]*x[0]*x[0])*x[2 + i] - par[2]*x[4];
+    */
+}
+
+
 // General Nonlinear Systems
 void halvorsen(int dim, double *x, double t, double *par, double *f) {
     // OMEGA = par[0]
@@ -186,6 +218,31 @@ void duffing(int dim, double *x, double t, double *par, double *f) {
     else {
         error();
     }    
+}
+
+void duffing_test_jac(int dim, double *x, double t, double *par, double *f) {
+    // OMEGA = par[0]
+    // gamma = par[1]
+    // zeta = par[2]
+    // alpha = par[3]
+    // beta = par[4]
+    if (dim == 2) {
+        // System   
+        f[0] = x[1];
+        f[1] = par[1]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0];
+    }
+    else if (dim == 6) {
+        double rdim = (-1 + sqrt(1 + 4*dim))/2;
+        double jac[2][2] = {{                           0,         1}, 
+                            {-par[3] - 3*par[4]*x[0]*x[0], -2*par[2]} };
+        // System with linearized equations
+        f[0] = x[1];
+        f[1] = par[1]*sin(par[0] * t) - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0];
+        lin_eqs((int)rdim, jac, x, f);
+    }
+    else {
+        error();
+    }     
 }
 
 void linear_oscillator(int dim, double *x, double t, double *par, double *f) {

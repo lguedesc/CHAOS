@@ -10,7 +10,7 @@ pltconf.plot_params(True, 10, 0.2)
 save = True
 
 system = "duffing"
-ext = ".pdf"
+ext = ".png"
 filenum = 1
 simulation = "ftimeseries"
 
