@@ -1287,7 +1287,7 @@ int main(void) {
     system.equations = add_identation(system.equations, 2);
     system.lin_equations = add_identation(system.lin_equations, 3);
     /* 6. Modify CHAOS source code */
-    //add_ode(system);
+    add_ode(system);
     add_customcalc(system);
     add_number_of_systems(system.group);
     add_system_information(system);
