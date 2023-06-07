@@ -3,7 +3,7 @@ dim = 2
 name = Test Oscillator
 abrev = TOsc
 outfile = test_oscillator
-group = HOS
+group = OS
 
 # COMMENTS:
 par[0] = Forcing frequency
