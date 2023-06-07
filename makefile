@@ -43,7 +43,7 @@ MODULES=src/modules/convergence_test.c src/modules/time_series.c src/modules/poi
 HOSMODULES=src/modules/HOS_time_series.c src/modules/HOS_ftime_series.c src/modules/HOS_bifurcation.c src/modules/HOS_fbifurcation.c src/modules/HOS_dyndiag.c src/modules/HOS_fdyndiag.c src/modules/HOS_fforcedbasin.c
 FILES=src/main.c $(LIBS) $(MODULES) $(HOSMODULES) 
 
-CFORGEFILES = src/libs/msg.c src/libs/basic.c src/cforge.c
+CFORGEFILES = src/libs/msg.c src/libs/iofiles.c src/libs/basic.c src/cforge.c
 # Identify CFORGE flags based on Compiler /Wall /Werror
 CFORGEFLAGS   :=
 ifeq ($(CC),icx) 

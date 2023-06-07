@@ -6,8 +6,12 @@
 #include <ctype.h>
 #include <math.h>
 #include <stdarg.h>
+#include <sys/stat.h>
+#include <time.h>
 #include "libs/msg.h"
 #include "libs/basic.h"
+#include "libs/iofiles.h"
+
 
 #define MAX_LINE_LENGTH 10000       // 10 Kb
 
@@ -49,14 +53,6 @@ size_t get_file_size(FILE *fp) {
     rewind(fp);
 
     return size;
-}
-
-char *get_input_filename(void) {
-    char *filename = malloc(200 * sizeof(*filename));
-    printf("Enter Input Filename: ");
-    scanf("%s", filename);
-    return filename;
-    /* The user is responsible to free (filename) after the function call */
 }
 
 FILE *open_file(char *filename, const char *mode, bool msg) {
@@ -782,10 +778,8 @@ void add_number_of_systems(char* group) {
         if (strstr(buffer, keyword) != NULL) {
             found = true;
             sscanf(buffer, "%*s %*s %d\n", &number);
-            print_warning("number = %d\n", number);
             // Get also the current position of the line that NUM_OF_SYSTEMS is declared
             current_position = ftell(file) - strlen(buffer);
-            print_warning("current_position = %ld\n", current_position);
             break;
         }
     }
@@ -1210,9 +1204,9 @@ void file_tutorial() {
 bool asks_for_tutorial() {
     char choice;
     bool proceed;
+    printf("To begin, CHAOS Forge requires an input file with the some key information.\n");
+    print_warning("Do you need help to create your input file? [y/n]: ");
     do {
-        printf("To begin, CHAOS Forge requires an input file with the some key information.\n");
-        print_warning("Do you need help to create your input file? [y/n]: ");
         scanf(" %c", &choice);
         if (choice == 'y' || choice == 'Y') {
             // Continue with the program
@@ -1237,6 +1231,129 @@ void welcome() {
     tutorial = asks_for_tutorial();
     if (tutorial == true) {
         file_tutorial();
+    }
+}
+
+/* Backup */
+bool asks_for_backup() {
+    char choice;
+    bool proceed;
+    print_warning("It is highly recommended to make a backup before continuing.\n");
+    print_warning("Do you want to create a backup? [y/n]: ");
+    do {
+        scanf(" %c", &choice);
+        if (choice == 'y' || choice == 'Y') {
+            // Continue with the program
+            proceed = true;
+            break;
+        } else if (choice == 'n' || choice == 'N') {
+            // Exit the program
+            proceed = false;
+            break;
+        } else {
+            printf("Invalid choice. Please enter 'y' or 'n'.\n");
+        }
+    } while (1);
+    return proceed;
+}
+
+void copy_file(char *filepath, char *dest) {
+    size_t bytes_read;
+    // Open source file
+    FILE *file = open_file(filepath, "rb", false);
+    // Open destination file
+    FILE *destfile = open_file(dest, "wb", false);
+    // Get the size pf
+    size_t filesize = get_file_size(file);
+    char *buffer = malloc(filesize);    
+    // Copy the contents of the source file to the destination file
+    while ((bytes_read = fread(buffer, 1, sizeof(buffer), file)) > 0) {
+        fwrite(buffer, 1, bytes_read, destfile);
+    }
+    // free memory
+    free(buffer);
+    // Close files
+    fclose(file); fclose(destfile);
+}   
+
+void get_current_date_time(int *day, char month[4], int *year, int *hour, int *minute, int *second) {
+    time_t current_time;
+    struct tm *local_time;
+
+    int mon;
+    // Get the current time
+    current_time = time(NULL);
+
+    // Convert the current time to the local time zone
+    local_time = localtime(&current_time);
+
+    // Retrieve the date components
+    (*day) = local_time->tm_mday;
+    mon = local_time->tm_mon + 1;  // Month starts from 0
+    (*year) = local_time->tm_year + 1900;  // Year starts from 1900
+
+    // Retrieve the time components
+    (*hour) = local_time->tm_hour;
+    (*minute) = local_time->tm_min;
+    (*second) = local_time->tm_sec;
+
+    // Convert month to string form
+    if (mon == 1) { strcpy(month, "jan"); }
+    else if (mon == 2) { strcpy(month, "feb"); }
+    else if (mon == 3) { strcpy(month, "mar"); }
+    else if (mon == 4) { strcpy(month, "apr"); }
+    else if (mon == 5) { strcpy(month, "may"); }
+    else if (mon == 6) { strcpy(month, "jun"); }
+    else if (mon == 7) { strcpy(month, "jul"); }
+    else if (mon == 8) { strcpy(month, "aug"); }
+    else if (mon == 9) { strcpy(month, "sep"); }
+    else if (mon == 10) { strcpy(month, "oct"); }
+    else if (mon == 11) { strcpy(month, "nov"); }
+    else if (mon == 12) { strcpy(month, "dez"); }
+    else {
+        print_error("Error retrieving month to create backup.\n");
+        print_exit_prog();
+        exit(EXIT_FAILURE);
+    }
+}
+
+char *create_bkp_dir() {
+    char *rawdir = "backup/";
+    char *dir = convert_dir(rawdir);
+    // Get time and date
+    int day; char mon[4]; int year; int hour; int min; int sec;
+    get_current_date_time(&day, mon, &year, &hour, &min, &sec);
+    //Create full string directory
+    size_t n = 22;
+    char *fulldir = malloc(n);
+    snprintf(fulldir, strlen(dir) + n + 1, "%s%d-%s-%d_%dh%dm%ds/", dir, day, mon, year, hour, min, sec);
+    // Check if directory exists. If not, create
+    directory_exists(fulldir);
+    return fulldir;
+}
+
+void backup() {
+    // Asks for backup
+    bool proceed = asks_for_backup();
+    if (proceed != true) {
+        return;
+    }
+    // Create directory
+    char *backup_dir = create_bkp_dir();
+    // Source Directories
+    char *main_fulldir = convert_dir("src/main.c");
+    char *ode_c_fulldir = convert_dir("src/libs/odesystems.c");
+    char *ode_h_fulldir = convert_dir("src/libs/odesystems.h");
+    char *custom_c_fulldir = convert_dir("src/libs/customcalc.c");
+    char *custom_h_fulldir = convert_dir("src/libs/customcalc.h");
+    // Copy files
+    char *srcfilenames[5] = {main_fulldir, ode_c_fulldir, ode_h_fulldir, custom_c_fulldir, custom_h_fulldir};
+    char *destfilenames[5] = { "main.c", "odesystems.c", "odesystems.h", "customcalc.c", "customcalc.h" };
+    size_t size = strlen(backup_dir) + 12 + 1;
+    char destdir[size]; 
+    for (int i = 0; i < 5; i++) {
+        snprintf(destdir, size, "%s%s", backup_dir, destfilenames[i]);
+        copy_file(srcfilenames[i], destdir);
     }
 }
 
@@ -1285,7 +1402,9 @@ int main(void) {
     system.comments = add_identation(system.comments, 2);
     system.equations = add_identation(system.equations, 2);
     system.lin_equations = add_identation(system.lin_equations, 3);
-    /* 6. Modify CHAOS source code */
+    /* 6. Make a backup for files that will be modified */
+    backup();
+    /* 7. Modify CHAOS source code */
     add_ode(system);
     add_customcalc(system);
     add_number_of_systems(system.group);
