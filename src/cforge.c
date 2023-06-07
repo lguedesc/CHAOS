@@ -193,10 +193,10 @@ bool check_if_string_is_number(const char* str) {
 }
 
 void check_group(char *str) {
-    if((strcmp(str, "GNL") != 0) && (strcmp(str, "OS") != 0)) {
+    if((strcmp(str, "GNL") != 0) && (strcmp(str, "HOS") != 0)) {
         print_error("'%s' is a invalid group! Please choose between the options below:\n", str);
         print_error("   1. General Nonlinear Systems by entering 'group = GNL' in the input file;\n");
-        print_error("   2. Harmonic Oscillators by entering 'group = OS' in the input file.\n");
+        print_error("   2. Harmonic Oscillators by entering 'group = HOS' in the input file.\n");
         print_exit_prog();
         exit(EXIT_FAILURE);
     }
@@ -696,7 +696,7 @@ char *get_assigned_value(FILE *file, char *input_string, char *key) {
 void add_ode(sys system) {
     char *filepath_c = "src/libs/odesystems.c";
     // Open library file to read and append system of equations
-    FILE *cfile = open_file(filepath_c, "a+", true);
+    FILE *cfile = open_file(filepath_c, "ab+", true);
     printf("Writing contents to '%s' file...\n", filepath_c);
     // Write contents .c file
     fprintf(cfile, "\nvoid %s(int dim, double *x, double t, double *par, double *f) {\n", system.outfile);
@@ -723,7 +723,7 @@ void add_ode(sys system) {
 
     char *filepath_h = "src/libs/odesystems.h";
     // Open header file to read and append the function declaration of system of equations
-    FILE *hfile = open_file(filepath_h, "a+", true);
+    FILE *hfile = open_file(filepath_h, "ab+", true);
     printf("Writing contents to '%s' file...\n", filepath_h);
     // Write content
     fprintf(hfile, "\nvoid %s(int dim, double *x, double t, double *par, double *f);\n", system.outfile);
@@ -737,7 +737,7 @@ void add_ode(sys system) {
 void add_customcalc(sys system) {
     // Open library c file to read and append system of equations
     char *filepath_c = "src/libs/customcalc.c";
-    FILE * cfile = open_file(filepath_c, "a+", true);
+    FILE * cfile = open_file(filepath_c, "ab+", true);
     // Write content in c file
     printf("Writing contents to '%s' file...\n", filepath_c); 
     fprintf(cfile, "\nvoid customcalc_%s(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {\n", system.outfile);
@@ -750,7 +750,7 @@ void add_customcalc(sys system) {
 
     // Open header file to read and append the function declaration of system of equations
     char *filepath_h = "src/libs/customcalc.h";
-    FILE *hfile = open_file(filepath_h, "a+", true);
+    FILE *hfile = open_file(filepath_h, "ab+", true);
     // Write content
     printf("Writing contents to '%s' file...\n", filepath_h);
     fprintf(hfile, "\nvoid customcalc_%s(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode);\n", system.outfile);
@@ -763,7 +763,7 @@ void add_customcalc(sys system) {
 void add_number_of_systems(char* group) {
     char *filepath = "src/main.c";
     // Open main file to read and write the information
-    FILE *file = open_file(filepath, "r+", true);
+    FILE *file = open_file(filepath, "rb+", true);
     // Allocate memory for the buffer and for the keyword that will be searched for within main file
     size_t buffersize = get_size_of_longest_line(file);
     char *buffer = malloc(buffersize);
@@ -782,8 +782,10 @@ void add_number_of_systems(char* group) {
         if (strstr(buffer, keyword) != NULL) {
             found = true;
             sscanf(buffer, "%*s %*s %d\n", &number);
+            print_warning("number = %d\n", number);
             // Get also the current position of the line that NUM_OF_SYSTEMS is declared
             current_position = ftell(file) - strlen(buffer);
+            print_warning("current_position = %ld\n", current_position);
             break;
         }
     }
@@ -879,7 +881,7 @@ char *split_and_add_text(FILE *file, long split_pos, char *str_add) {
 void add_system_information(sys system) {
     char *filepath = "src/main.c";
     // Open main file to read and write the information
-    FILE *file = open_file(filepath, "r+", true);
+    FILE *file = open_file(filepath, "rb+", true);
     size_t maxlinesize = get_size_of_longest_line(file);
     // Go to the begginning of the file
     rewind(file);
@@ -910,11 +912,11 @@ void add_system_information(sys system) {
     printf("Closing old %s file...\n", filepath);
     fclose(file);    
     // Create new empty file
-    FILE *new_mainfile = open_file(filepath, "wb", true);
+    FILE *newfile = open_file(filepath, "wb", true);
     // Write new content to file 
-    fwrite(new_content, sizeof(char), strlen(new_content), file);    
+    fwrite(new_content, sizeof(char), strlen(new_content), newfile);    
     // Close file
-    fclose(file);
+    fclose(newfile);
     // free memory
     free_mem(new_content, keyword, newline_1, newline_2, newline_3, NULL);
 }
@@ -922,7 +924,7 @@ void add_system_information(sys system) {
 void add_system_name(sys system) {
     char *filepath = "src/main.c";
     // Open main file to read and write the information
-    FILE *file = open_file(filepath, "r+", true);
+    FILE *file = open_file(filepath, "rb+", true);
     size_t maxlinesize = get_size_of_longest_line(file);
     // Go to the begginning of the file
     rewind(file);
@@ -977,11 +979,11 @@ void add_system_name(sys system) {
     printf("Closing old %s file...\n", filepath);
     fclose(file);    
     // Create new empty file
-    FILE *new_file = open_file(filepath, "wb", true);
+    FILE *newfile = open_file(filepath, "wb", true);
     // Write new content to file 
-    fwrite(new_content, sizeof(char), strlen(new_content), file);    
+    fwrite(new_content, sizeof(char), strlen(new_content), newfile);    
     // Close file
-    fclose(new_file);
+    fclose(newfile);
     // free memory
     free_mem(keyword, new_content, buffer, add_string, NULL);
 }
@@ -989,7 +991,7 @@ void add_system_name(sys system) {
 void add_system_call(sys system) {
     char *filepath = "src/main.c";
     // Open main file to read and write the information
-    FILE *file = open_file(filepath, "r+", true);
+    FILE *file = open_file(filepath, "rb+", true);
     size_t maxlinesize = get_size_of_longest_line(file);
     // Go to the begginning of the file
     rewind(file);
@@ -1051,7 +1053,7 @@ void add_system_call(sys system) {
     // Check for system group to consider the differences
     size_t new_strlen;
     char *add_string = NULL;
-    if (strcmp(system.group, "OS") == 0) {
+    if (strcmp(system.group, "HOS") == 0) {
         new_strlen = strlen(str1) + strlen(str2) + strlen(str3) + strlen(system.group) + 
                      strlen(str4) + strlen(system.group) + strlen(str5) + strlen(str2) +
                      strlen(str6) + strlen(system.group) + strlen(str7) + strlen(str2) + 
@@ -1123,11 +1125,11 @@ void add_system_call(sys system) {
     printf("Closing old %s file...\n", filepath);
     fclose(file);
     // Create new empty file
-    FILE *new_file = open_file(filepath, "wb", true);
+    FILE *newfile = open_file(filepath, "wb", true);
     // Write new content to file 
-    fwrite(new_content, sizeof(char), strlen(new_content), file);    
+    fwrite(new_content, sizeof(char), strlen(new_content), newfile);    
     // Close file
-    fclose(new_file);
+    fclose(newfile);
     // free memory
     free_mem(keyword, new_content, buffer, add_string, NULL);
 }
@@ -1170,7 +1172,7 @@ void file_tutorial() {
     printf("\t- group:   The group the custom dynamical system belongs.\n");
     printf("\t           Currently, the CHAOS package supports two types of\n");
     printf("\t           dynamical systems: General Nonlinear Systems (GNL)\n");
-    printf("\t           and Harmonic Oscillators (OS). This field is very\n");
+    printf("\t           and Harmonic Oscillators (HOS). This field is very\n");
     printf("\t           important as each group have its own unique available\n");
     printf("\t           set of features within the CHAOS package. Also, some\n");
     printf("\t           features as bifurcation diagrams and Poincaré maps\n");
@@ -1285,7 +1287,7 @@ int main(void) {
     system.equations = add_identation(system.equations, 2);
     system.lin_equations = add_identation(system.lin_equations, 3);
     /* 6. Modify CHAOS source code */
-    add_ode(system);
+    //add_ode(system);
     add_customcalc(system);
     add_number_of_systems(system.group);
     add_system_information(system);

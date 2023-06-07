@@ -19,34 +19,36 @@ else
 		OSFLAG+=macos
 	endif
 endif
-# Identify flags based on Compiler
+# Identify flags based on Compiler (icx): /Wall /Werror     (gcc): -Wall -Werror -Wpedantic
 CFLAGS   :=
 ifeq ($(CC),icx) 
 ifeq ($(OSFLAG), win)
-	CFLAGS+=/Qstd:$(CSTD) /Qopenmp /O3 /Qipo
+	CFLAGS+=/Qstd:$(CSTD) /Qopenmp /O3 /Qipo 
 else
 	CFLAGS+=-std=$(CSTD) -qopenmp -O3 -ipo 
 endif
 else ifeq ($(CC),gcc)
-	CFLAGS+=-std=$(CSTD) -fopenmp -O3
+	CFLAGS+=-std=$(CSTD) -fopenmp -O3 
 else ifeq ($(CC),clang)
 	CFLAGS+=-std=$(CSTD) -fopenmp -O3
 else ifeq ($(CC),icc)
 	CFLAGS+=-std=$(CSTD) -qopenmp -no-multibyte-chars -O3 -ipo -diag-disable=10441
 endif
 
+# -Wall -Werror -Wpedantic
+
 #define .c files to be compiled
-LIBS=src/libs/odesystems.c src/libs/interface.c src/libs/iofiles.c src/libs/nldyn.c src/libs/nlosc.c src/libs/customcalc.c
+LIBS=src/libs/odesystems.c src/libs/interface.c src/libs/iofiles.c src/libs/nldyn.c src/libs/nlosc.c src/libs/customcalc.c src/libs/basic.c src/libs/odesolvers.c src/libs/msg.c
 MODULES=src/modules/convergence_test.c src/modules/time_series.c src/modules/poinc_map.c src/modules/lyap_exp_wolf.c src/modules/ftime_series.c src/modules/bifurcation.c src/modules/fbifurcation.c src/modules/dyndiag.c src/modules/fdyndiag.c src/modules/epbasin.c src/modules/forcedbasin.c 
-OSMODULES=src/modules/OS_time_series.c src/modules/OS_ftime_series.c src/modules/OS_bifurcation.c src/modules/OS_fbifurcation.c src/modules/OS_dyndiag.c src/modules/OS_fdyndiag.c src/modules/OS_fforcedbasin.c
-FILES=src/main.c $(LIBS) $(MODULES) $(OSMODULES) 
+HOSMODULES=src/modules/HOS_time_series.c src/modules/HOS_ftime_series.c src/modules/HOS_bifurcation.c src/modules/HOS_fbifurcation.c src/modules/HOS_dyndiag.c src/modules/HOS_fdyndiag.c src/modules/HOS_fforcedbasin.c
+FILES=src/main.c $(LIBS) $(MODULES) $(HOSMODULES) 
 
 CFORGEFILES = src/libs/msg.c src/libs/basic.c src/cforge.c
-# Identify CFORGE flags based on Compiler
+# Identify CFORGE flags based on Compiler /Wall /Werror
 CFORGEFLAGS   :=
 ifeq ($(CC),icx) 
 ifeq ($(OSFLAG), win)
-	CFORGEFLAGS+=/Qstd:$(CSTD)
+	CFORGEFLAGS+=/Qstd:$(CSTD) 
 else
 	CFORGEFLAGS+=-std=$(CSTD) 
 endif

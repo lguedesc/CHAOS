@@ -1,0 +1,20 @@
+# INFO:
+dim = 2
+name = Test Oscillator
+abrev = TOsc
+outfile = test_oscillator
+group = HOS
+
+# COMMENTS:
+par[0] = Forcing frequency
+par[1] = Forcing amplitude
+par[2] = Damping Coefficient
+par[3] = Spring Stiffness
+
+# EQUATIONS:
+f[0] = x[1];
+f[1] = -(1/par[2])*(par[2]*x[1] + par[3]*x[0]) + par[1]*sin(par[0]*t);
+
+# LINEARIZED EQUATIONS:
+f[2 + i] = x[4 + i];
+f[4 + i] = -2*par[2]*par[3]*x[4 + i] - par[3]*par[3]*x[2 + i];
