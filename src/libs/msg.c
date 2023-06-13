@@ -79,6 +79,16 @@ void print_cyan(char *msg, ...) {
     reset_color();
 }
 
+void print_debug(char *msg, ...) {
+    red();
+    va_list args;
+    va_start(args, msg);
+    printf("DEBUG: ");
+    vprintf(msg, args);
+    va_end(args);
+    reset_color();
+}
+
 /* Specific Messages */
 
 void print_exit_prog() {

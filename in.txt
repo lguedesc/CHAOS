@@ -1,0 +1,37 @@
+dim = 5
+npar = 4
+maxper = 6
+
+np = 1000
+ndiv = 6000
+trans = 750
+
+t0 = 0
+IC = { 0.1, 1.0, 
+       -3.0,   
+       10, 5.0 }
+
+p[0] = 1.0 
+p[1] = 0.025
+p[2] = 30.5
+p[3] = 7.6
+
+bifmode = 1
+bifpar = 0
+biflimits { 0.01, 
+            2.0, 
+             500 }
+
+nrms = 3
+rms = { 1, 2, 4 }
+
+nccalc = 5
+nccalc_ = 3
+ccalc_ = { 0, 3, 5 }
+nccalc* = 2
+ccalc* = { 2, 5 }
+
+
+/* Use the same idea of check lists to 
+   check if there are more parameters than
+   the number declared in 'npar'. */

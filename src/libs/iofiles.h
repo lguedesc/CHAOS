@@ -9,6 +9,9 @@ void directory_exists(const char *pathname);
 bool file_exists(const char* filename);
 FILE *create_output_file(char *name, const char *ext, const char *dir);
 char *get_input_filename(void);
+size_t get_file_size(FILE *fp);
+size_t get_size_of_longest_line(FILE *file);
+FILE *open_file(char *filename, const char *mode, bool msg);
 
 // Write Results in file
 void write_results(FILE *output_file, int dim, double t, double *x, int mode);

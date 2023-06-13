@@ -174,19 +174,19 @@ void check_section_flags_within_file(FILE *file) {
     }
 }
 
-bool check_if_string_is_number(const char* str) {
-    int i = 0;
+//bool check_if_string_is_number(const char* str) {
+//    int i = 0;
     // Check for optional sign
-    if (str[i] == '+' || str[i] == '-')
-        i++;
+//    if (str[i] == '+' || str[i] == '-')
+//        i++;
     // Check for digits
-    while (str[i] != '\0') {
-        if (!isdigit(str[i]))
-            return false;  // Not a number
-        i++;
-    }
-    return true;  // All characters are numbers
-}
+//    while (str[i] != '\0') {
+//        if (!isdigit(str[i]))
+//            return false;  // Not a number
+//        i++;
+//    }
+//    return true;  // All characters are numbers
+//}
 
 void check_group(char *str) {
     if((strcmp(str, "GNL") != 0) && (strcmp(str, "OS") != 0)) {
@@ -266,7 +266,7 @@ void check_outname(char *str) {
 }
 
 int check_dim(char *str) {
-    bool valid_dim = check_if_string_is_number(str);
+    bool valid_dim = check_if_string_is_number(str, "int");
     int dim;
     if (valid_dim == true) {
         dim = atoi(str);

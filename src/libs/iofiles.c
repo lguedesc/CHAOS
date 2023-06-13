@@ -6,6 +6,8 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <sys/stat.h>
+#include "msg.h"
+
 #ifdef _WIN32
     #include <direct.h>
     const char SEP = '\\';
@@ -14,7 +16,9 @@
 #endif    
 
 // Define the maximum number of repeatable files that the program can create in the directory
-#define MAX_FILE_NUM 1000
+#define MAX_FILE_NUM 1000       
+// Define the maximum line length allowed to be read in a file
+#define MAX_LINE_LENGTH 10000       // 10 Kb
 // Define function to print name of the variable in a string
 #define getName(var)  #var
 
@@ -158,6 +162,77 @@ char *get_input_filename(void) {
     return filename;
     /* The user is responsible to free (filename) after the function call */
 }
+
+size_t get_file_size(FILE *fp) {
+    // Seek the end of the file
+    fseek(fp, 0L, SEEK_END);
+    // Return the current file position
+    size_t size = ftell(fp);
+    // Go back to the beggining of the file
+    rewind(fp);
+
+    return size;
+}
+
+size_t get_size_of_longest_line(FILE *file) {
+    // Go to the begginning of the file
+    rewind(file);
+    // Declare variables
+    int linenum = 0;
+    int current_linenum = 0;
+    size_t largest_linesize = 0;
+    int c;
+    int pos = 0;
+    // Reads each character of the file
+    while((c = fgetc(file)) != EOF) {
+        // increase position
+        pos++;
+        // check if c char reaches a newline
+        if (c == '\n') {
+            // increase line number
+            current_linenum++;
+            if (pos > largest_linesize) {
+                largest_linesize = pos;
+                linenum = current_linenum;
+            }
+            // reset position for new line
+            pos = 0;
+        }
+    }
+    
+    if (largest_linesize > MAX_LINE_LENGTH) {
+        print_error("Contents written at line '%d' within the input file exceeds the maximum line length. Please split the information across more lines before running the program again.\n", linenum);
+        print_exit_prog();
+        exit(EXIT_FAILURE);
+    }
+
+    return largest_linesize;
+}
+
+FILE *open_file(char *filename, const char *mode, bool msg) {
+    if (msg == true) {
+        if (strcmp(mode, "w") == 0) {
+        printf("\nCreating new '%s' file...\n", filename);
+        }
+        else {
+            printf("\nSearching for '%s' file...\n", filename);
+        }
+    }
+    FILE *inputfile = fopen(filename, mode);
+    if (inputfile == NULL) {
+        printf("Could not open file '%s'\n", filename);
+        exit(EXIT_FAILURE);
+    } 
+    else {
+        size_t size = get_file_size(inputfile);
+        if (msg == true) {
+            print_success("File '%s' (%zu bytes) loaded successfully!\n", filename, size);
+        }
+        return inputfile;
+    }
+}
+
+
 
 // Write Results for Nonlinear Dynamics Toolbox
 
