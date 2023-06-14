@@ -51,18 +51,22 @@ bool check_if_string_is_number_old(const char* str) {
     return true;  // All characters are numbers
 }
 
-bool check_if_string_is_number(const char *str, const char *type) {
+bool check_if_string_is_number(const char *str, const char *type, bool only_positive) {
     int i = 0;
     bool has_decimal = false;
     // Check for optional sign
-    if (str[i] == '+' || str[i] == '-')
-        i++;
-    // Check for digits
-    while (str[i] != '\0') {
-        // Skip newline and tab characters
-        if (str[i] == '\n' || str[i] == '\t') {
+    if (only_positive == true) {
+        if (str[i] == '+') {
             i++;
         }
+    }
+    else {
+        if (str[i] == '+' || str[i] == '-') {
+            i++;
+        }
+    }
+    // Check for digits
+    while (str[i] != '\0') {
         if (isdigit(str[i])) {
             i++;
         }
@@ -73,6 +77,10 @@ bool check_if_string_is_number(const char *str, const char *type) {
                 return false;   
             }
             has_decimal = true;
+            i++;
+        }
+        else if ((str[i] == '\n') || (str[i] == '\t')) {
+            // Allow newline and tab characters
             i++;
         }
         else {
@@ -94,4 +102,21 @@ bool check_if_string_is_number(const char *str, const char *type) {
         exit(EXIT_FAILURE);
     }
     return true;
+}
+
+bool check_if_string_is_negative_number(const char *str) {
+    // Trim leading whitespace
+    while (isspace(*str)) {
+        str++;
+    }
+    if (str[0] == '-') {  // Check if the first character is a minus sign
+        // Check if the remaining characters are digits
+        for (int i = 1; str[i] != '\0'; i++) {
+            if (str[i] < '0' || str[i] > '9') {
+                return false;  // Found a non-digit character
+            }
+        }
+        return true;  // All characters are digits after the minus sign
+    }
+    return false;  // First character is not a minus sign
 }

@@ -266,7 +266,7 @@ void check_outname(char *str) {
 }
 
 int check_dim(char *str) {
-    bool valid_dim = check_if_string_is_number(str, "int");
+    bool valid_dim = check_if_string_is_number(str, "int", true);
     int dim;
     if (valid_dim == true) {
         dim = atoi(str);

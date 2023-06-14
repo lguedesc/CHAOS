@@ -2,7 +2,7 @@
 # To use Intel compiler (icx) in windows, insert at terminal before call make:
 # call "C:\Program Files (x86)\Intel\oneAPI\setvars.bat" intel64
 
-CC=icx
+CC=gcc
 CSTD=c17
 NAME=CHAOS
 CFORGENAME = CHAOSForge
@@ -112,6 +112,46 @@ else
 endif
 
 test_cforge: cforge run_cforge
+
+RIFLAGS   :=
+ifeq ($(CC),icx) 
+ifeq ($(OSFLAG), win)
+	RIFLAGS+=/Qstd:$(CSTD) /Wall /Werror
+else
+	RIFLAGS+=-std=$(CSTD) 
+endif
+else ifeq ($(CC),gcc)
+	RIFLAGS+=-std=$(CSTD)
+else ifeq ($(CC),clang)
+	RIFLAGS+=-std=$(CSTD)
+else ifeq ($(CC),icc)
+	RIFLAGS+=-std=$(CSTD) -no-multibyte-chars -diag-disable=10441
+endif
+
+RINAME=read_in
+RIFILES=src/libs/msg.c src/libs/iofiles.c src/libs/basic.c src/read_input.c
+ri:
+ifeq ($(OSFLAG), win)
+	@if not exist "bin\" mkdir "bin\"
+	$(CC) $(RIFLAGS) -o bin\$(RINAME) $(RIFILES)
+#	@scripts\assign_icon_win.bat $(NAME)
+else ifeq ($(OSFLAG), macos)
+	@mkdir -p bin
+	$(CC) $(RIFLAGS) -o bin/$(RINAME) $(RIFILES)
+#	@bash scripts/assign_icon_macos.sh
+else
+	@mkdir -p bin
+	$(CC) $(RIFLAGS) -o bin/$(RINAME) $(RIFILES)
+endif
+
+run_ri:
+ifeq ($(OSFLAG), win)
+	@bin\$(RINAME).exe
+else
+	@./bin/$(RINAME)
+endif
+
+test_ri: ri run_ri
 
 clean_bin:
 ifeq ($(OSFLAG), win)

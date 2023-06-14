@@ -482,7 +482,7 @@ void read_and_check_ccalc_indexes(char *ccalcstring, int nccalc, intpar *ccalc, 
 int main () {
     // Open File and allocate memory for buffer
     char* name = "input.txt";
-    FILE *input = fopen(name, "r");
+    FILE *input = fopen(name, "rb");
     if (input == NULL) {
         // Return error if input does not exist 
         perror(name);
