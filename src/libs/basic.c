@@ -25,7 +25,7 @@ int count_int_digits(int number) {
     return count;
 }
 
-void free_mem(void* first, ...)
+void free_mem(void *first, ...)
 {
     va_list args;
     va_start(args, first);
@@ -35,6 +35,19 @@ void free_mem(void* first, ...)
         current = va_arg(args, void*);
     }
     va_end(args);
+}
+
+void free_2D_mem(void **array_2D, int nrows) {
+    // Safety check
+    if (array_2D == NULL) {
+        return;
+    }
+    // Free memory for each string in the array
+    for (int i = 0; i < nrows; i++) {
+        free(array_2D[i]);
+    }
+    // Free memory for the array itself
+    free(array_2D);
 }
 
 bool check_if_string_is_number_old(const char* str) {
@@ -120,3 +133,31 @@ bool check_if_string_is_negative_number(const char *str) {
     }
     return false;  // First character is not a minus sign
 }
+
+char **malloc_string_array(int nstrings, int maxlen) {
+    // Create pointer and allocate memory for the number of strings
+    char **str_array = malloc(nstrings * sizeof(char*));
+    // Safety check
+    if (str_array == NULL) {
+        print_warning("Failed to allocate memory for the string array\n");
+        return NULL;
+    }
+    // Allocate memory for each string in the array
+    for (int i = 0; i < nstrings; i++) {
+        str_array[i] = malloc((maxlen + 1) * sizeof(char));
+        // Safety check
+        if (str_array[i] == NULL) {
+            print_warning("Failed to allocate memory for a string in the string array.\n");
+            // Clean up the previously allocated memory
+            for (int j = 0; j < i; j++) {
+                free(str_array[j]);
+            }
+            free(str_array);
+            return NULL;
+        }
+        // Initialize the string with null characters
+        memset(str_array[i], '\0', (maxlen + 1));
+    }
+    return str_array;
+}
+

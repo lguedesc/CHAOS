@@ -14,13 +14,15 @@
 12. Implement Lyapunov Dimension (Kaplan-Yorke Dimension) and Kolmogorov-Sinai Entropy
 13. Implement Harmonic Balance Method to find all solution branches of a parameter domain. (See if it is possible)
 
-
 *** CHAOS - KNOWN ISSUES AND POSSIBLE BUGS ***
 1. Bug in progress bar in dyndiag (showing two %%) and bifurcation (when starting from a advance number, it bugs in 100% always)
 
+*** CHAOS - IMPROVE FEATURES (TO BE IMPLEMENTED) ***
+1. Remove the need of dimension (dim) and number of parameters (npar) to be inserted in the input file.
 
 *** CHAOS Forge - FUTURE FEATURES (TO BE IMPLEMENTED) ***
 1. Check for duplicate fields in equations and lin equatinos (f[0], f[1], etc)
 2. If CHAOS #0 field is implemented, CHAOS Forge needs to change as well.
 3. Add the option to overwrite system if it already exists
 4. Option to run makefile for CHAOS compilation or compile automatically
+5. Option to recover the original file from a backup

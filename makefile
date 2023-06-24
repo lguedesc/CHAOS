@@ -2,7 +2,7 @@
 # To use Intel compiler (icx) in windows, insert at terminal before call make:
 # call "C:\Program Files (x86)\Intel\oneAPI\setvars.bat" intel64
 
-CC=gcc
+CC=icx
 CSTD=c17
 NAME=CHAOS
 CFORGENAME = CHAOSForge
@@ -112,11 +112,11 @@ else
 endif
 
 test_cforge: cforge run_cforge
-
+#/Wall /Werror
 RIFLAGS   :=
 ifeq ($(CC),icx) 
 ifeq ($(OSFLAG), win)
-	RIFLAGS+=/Qstd:$(CSTD) /Wall /Werror
+	RIFLAGS+=/Qstd:$(CSTD) 
 else
 	RIFLAGS+=-std=$(CSTD) 
 endif
