@@ -122,6 +122,93 @@ void check_for_index_overflow(input *params, int nparams, char *buffer) {
     }
 }
 
+void check_for_duplicate_parameter(FILE *file, input *params, int nparams, char *buffer, size_t bufsize) {
+    // Safety check
+    file_safety_check(file);
+    // Declare variable to check how many times a name was found
+    int found;
+    // Declare variable to check if programs needs to be closed
+    bool close = false;
+    // Loop through each name in the struct params
+    for (int i = 0; i < nparams; i++) {
+        // Reset value of found
+        found = 0;
+        // Go to the beggining of the file
+        rewind(file);
+        // Read line by line searching for keywords
+        while(fgets(buffer, bufsize, file) != NULL) {
+            // Split line into the buffer with the following separators
+            // to get the keyword
+            char *key = strtok(buffer, " ,:;={}");
+            // Check if key is equal to param_names[i]
+            if (strcmp(key, params[i].name) == 0) {
+                // Increment found if it is equal
+                found++;
+            }
+        }
+        // Check if name was found more than once
+        if (found > 1) {
+            close = true;
+            print_error("%d instances of parameter '%s' found within the input file.\n", found, params[i].name);
+        }
+    }
+    // Check if the there is duplicated to kill execution
+    if (close == true) {
+        print_error("Check parameters in the input file before running the program again.\n");
+        print_exit_prog();
+        exit(EXIT_FAILURE);
+    } else {
+        return;
+    }
+}  
+
+void check_for_duplicate_list(FILE *file, char* keyword, char *buffer, size_t bufsize) {
+    // Safety check
+    file_safety_check(file);
+    // Declare variable to check how many times the listname was found
+    int found = 0;
+    // Go to the beggining of the file
+    rewind(file);
+    // Read line by line searching for keyword: listname
+    while (fgets(buffer, bufsize, file) != NULL) {
+        // Split line into the buffer with the following separators
+        // to get the keyword
+        char *key = strtok(buffer, " ,:;={}");
+        // Check if key is equal to listname
+        if (strcmp(key, keyword) == 0) {
+            found++;
+        }
+    }
+    if (found > 1) {
+        print_error("%d instances of list '%s' found within the input file.\n", found, keyword);
+        print_error("Check parameters in the input file before running the program again.\n");
+        print_exit_prog();
+        exit(EXIT_FAILURE);
+    } else {
+        return;
+    }
+}
+
+bool check_optional_parameter(FILE *file, char *param_name) {
+    bool declared = false;
+    // Safety check
+    file_safety_check(file);
+    // Set the position to the beggining of the input file
+    rewind(file);
+    // Allocate memory for buffer
+    size_t bufsize = get_size_of_longest_line(file);
+    char *buffer = malloc(bufsize);
+    // Read the file line by line
+    while(fgets(buffer, bufsize, file) != NULL) {
+        // Split line into the buffer with the following separators
+        char *key = strtok(buffer, " ,:;={}");
+        if (strcmp(key, param_name) == 0) {
+            declared = true;
+        }
+    }
+    return declared;
+}
+
 /* Intermediary Steps for Calling Parameter Reading Functions */
 
 int get_vector_dimension(int n, input *par, char *parname) {
@@ -198,11 +285,7 @@ void read_parameter(input *params, char *key, char *svalue, char *type, bool onl
 
 void read_and_check_parameters(FILE *file, int nparams, input *params, char *param_type, bool only_positive) {
     // Safety check
-    if (file == NULL) {
-        print_error("File to check parameters could not be openeed.\n");
-        print_exit_prog();
-        exit(EXIT_FAILURE);
-    }
+    file_safety_check(file);
     // Set the position to the beggining of the input file
     rewind(file);
     // Allocate memory for buffer
@@ -238,16 +321,16 @@ void read_and_check_parameters(FILE *file, int nparams, input *params, char *par
 
 char *read_and_check_list(FILE *file, char *keyword, char *listname) {
     // Safety check
-    if (file == NULL) {
-        print_error("File to check parameter list could not be openeed.\n");
-        print_exit_prog();
-        exit(EXIT_FAILURE);
-    }
+    file_safety_check(file);
     // Return the position to the start of the file
     rewind(file);
     // Allocate memory for buffer
     size_t bufsize = get_size_of_longest_line(file);
     char *buffer = malloc(bufsize);
+    rewind(file);
+    // Check for list duplicate
+    check_for_duplicate_list(file, keyword, buffer, bufsize);
+    // Set the position to the beggining of the input file again
     rewind(file);
     // Allocate memory for string
     size_t strsize = get_file_size(file);
@@ -289,7 +372,7 @@ char *read_and_check_list(FILE *file, char *keyword, char *listname) {
     return string;
 }
 
-void read_and_check_list_params(char *list_string, int listsize, input *paramlist, char *listname, char* sizename, char *param_type, bool only_positive) {
+void read_and_check_list_params(char *list_string, int listsize, input *paramlist, char *listname, char* sizename, char *param_type, bool only_positive) {    
     // Declare svalue and get the first token "parameter name" to be discarted
     char *svalue = strtok(list_string, " ,;:={}\n\r\t");
     // Get IC values
@@ -311,18 +394,15 @@ void read_and_check_list_params(char *list_string, int listsize, input *paramlis
 
 void read_and_check_array_parameters(FILE *file, int nparams, input *params, char *param_type, bool only_positive) {
     // Safety check
-    if (file == NULL) {
-        print_error("File to check parameters could not be openeed.\n");
-        print_exit_prog();
-        exit(EXIT_FAILURE);
-    }
+    file_safety_check(file);
     // Set the position to the beggining of the input file
     rewind(file);
     // Allocate memory for buffer
     size_t bufsize = get_size_of_longest_line(file);
     char *buffer = malloc(bufsize);
+    check_for_duplicate_parameter(file, params, nparams, buffer, bufsize);
+    // Set the position to the beggining of the input file again
     rewind(file);
-    
     // Read each line of the input file
     while(fgets(buffer, bufsize, file) != NULL) {
         // Split line into the buffer with the following separators
@@ -341,6 +421,62 @@ void read_and_check_array_parameters(FILE *file, int nparams, input *params, cha
     free(buffer);
 }
 
+/* Functions to read specific block of parameters */
+void handle_program_params(FILE *file, size_t nprogpar, input *progpar, char **progparnames) {
+    // Safety check
+    file_safety_check(file);
+    // Initialize struct
+    init_input_struct(nprogpar, progpar, progparnames);
+    // Read prog parameters and check if all were inserted in the input file
+    read_and_check_parameters(file, nprogpar, progpar, "int", true);
+}
+
+void handle_initial_conditions(FILE *file, int dim, input *ICpar, input *tpar) {
+    // Declare parameter names
+    char *tname = "t0";
+    char **ICnames = define_list_element_names(dim, "IC");
+    // Initialize structures
+    init_input_struct(dim, ICpar, ICnames);
+    init_input_struct(1, tpar, &tname);
+    // Read file to store IC parameter list and check if it is inserted in the input file
+    char *ICstring = read_and_check_list(file, "IC", "IC = { IC[0], IC[1], ... }");
+    read_and_check_list_params(ICstring, dim, ICpar, "IC", "dim (dimension of the system)", "double", true);  
+    // Read file to store time parameters and check if it is inserted in the input file
+    read_and_check_parameters(file, 1, tpar, "double", true);
+    // Free memory
+    free_2D_mem((void**)ICnames, dim);
+}
+
+void handle_system_params(FILE *file, int npar, input *syspar) {
+    // Safety check
+    file_safety_check(file);
+    // Declare parameter names
+    char **sysparnames = define_list_element_names(npar, "p");
+    // Initialize structures
+    init_input_struct(npar, syspar, sysparnames);
+    // Read file to store system parameters and check if it is inserted in the input file
+    read_and_check_array_parameters(file, npar, syspar, "double", false);
+    // Free memory
+    free_2D_mem((void**)sysparnames, npar);
+}
+
+void handle_bifurc_params(FILE *file, int nbifpar, int nbiflims, input *bifpar, input *biflimits, char **bifnames) {
+    // Safety check
+    file_safety_check(file);
+    // Declare parameter names
+    char **biflimnames = define_list_element_names(nbiflims, "biflimits");
+    // Initialize structs
+    init_input_struct(nbifpar, bifpar, bifnames);
+    init_input_struct(nbiflims, biflimits, biflimnames);
+    // Read file to store bifurcation limits and check if it is properly defined in the input file
+    read_and_check_parameters(file, nbifpar, bifpar, "int", true);
+    char *bifstring = read_and_check_list(file, "biflimits", "biflimits = { initial, final, number of points }");
+    read_and_check_list_params(bifstring, nbiflims, biflimits, "biflimits", "3", "double", false);
+    // Free memory
+    free_2D_mem((void**)biflimnames, nbiflims);
+}
+
+
 int main(void) {
     // Load File
     char *input_filename = get_input_filename();
@@ -349,15 +485,13 @@ int main(void) {
     // HANDLE PROGRAM PARAMETERS
     /* ====================================================================== */
     // Declare parameter names
-    char *progparnames[] = {"dim", "npar", "np", "ndiv", "trans", "maxper", 
-                            "bifmode", "bifpar"}; 
+    char *progparnames[] = {"dim", "npar", "np", "ndiv", "trans", "maxper"}; 
     // Get the number of parameters in progparnames
     size_t nprogpar = sizeof(progparnames) / sizeof(progparnames[0]);
     // Declare Structure and Initialize it
     input progpar[nprogpar]; 
-    init_input_struct(nprogpar, progpar, progparnames);
-    // Read prog parameters and check if all were inserted in the input file
-    read_and_check_parameters(file, nprogpar, progpar, "int", true);
+    // Get program params
+    handle_program_params(file, nprogpar, progpar, progparnames);
     /* ====================================================================== */
     // HANDLE INITIAL CONDITIONS
     /* ====================================================================== */
@@ -366,18 +500,8 @@ int main(void) {
     // Declare Struct and variables to store IC parameters and t0
     input ICpar[dim];   // Initial conditions
     input tpar;         // Initial Time
-    // Declare parameter names
-    char *tname = "t0";
-    //char **ICnames = define_IC_names(dim);
-    char **ICnames = define_list_element_names(dim, "IC");
-    // Initialize structures
-    init_input_struct(dim, ICpar, ICnames);
-    init_input_struct(1, &tpar, &tname);
-    // Read file to store IC parameter list and check if it is inserted in the input file
-    char *ICstring = read_and_check_list(file, "IC", "IC = { IC[0], IC[1], ... }");
-    read_and_check_list_params(ICstring, dim, ICpar, "IC", "dim (dimension of the system)", "double", true);  
-    // Read file to store time parameters and check if it is inserted in the input file
-    read_and_check_parameters(file, 1, &tpar, "double", true);
+    // Get program params
+    handle_initial_conditions(file, dim, ICpar, &tpar);
     /* ====================================================================== */
     // HANDLE SYSTEM PARAMETERS
     /* ====================================================================== */
@@ -385,12 +509,39 @@ int main(void) {
     int npar = get_vector_dimension(nprogpar, progpar, "npar");
     // Declare struct to store system parameters
     input syspar[npar];
+    // Get system's parameters
+    handle_system_params(file, npar, syspar);
+    /* ====================================================================== */
+    // HANDLE BIFURCATION PARAMETERS
+    /* ====================================================================== */
     // Declare parameter names
-    char **sysparnames = define_list_element_names(npar, "p");
-    // Initialize structures
-    init_input_struct(npar, syspar, sysparnames);
-    // Read file to store system parameters and check if it is inserted in the input file
-    read_and_check_array_parameters(file, npar, syspar, "double", false);
+    char *bifnames[] = {"bifmode", "bifpar"}; 
+    // Get the number of parameters for each input struct
+    size_t nbifpar = sizeof(bifnames) / sizeof(bifnames[0]);
+    int nbiflims = 3;
+    // Declare Structures 
+    input bifpar[nbifpar];
+    input biflimits[nbiflims];
+    // Get bifurcation parameters
+    handle_bifurc_params(file, nbifpar, nbiflims, bifpar, biflimits, bifnames);
+    /* ====================================================================== */
+    // HANDLE RMS PARAMETERS
+    /* ====================================================================== */
+    /*
+    // Declare struct to store RMS list size, initialize it and read from file
+    input nrms;
+    init_input_struct(1, &nrms, "nrms");
+    // Check if nrms is declared in the input file
+    bool rms = check_optional_parameter(file, "nrms");
+    if (rms == true) {        
+        read_and_check_parameters(file, 1, &nrms, "int", true);
+        // Declare struct to store RMS list and initialize it
+        input rmslist = 
+    } else {
+        nrms.value = 0;
+        nrms.read = true;
+    }
+    */
     /* ====================================================================== */
     // PRINT TO CHECK
     /* ====================================================================== */
@@ -405,15 +556,16 @@ int main(void) {
     printf("%s = %g\n", tpar.name, *(double*)tpar.value);
     print_warning("\nSYSTEM PARAMETERS:\n");
     for (int i = 0; i < npar; i++) {
-        printf("%s = %g\n", syspar[i].name, *(double*)syspar[i].value);
+       printf("%s = %g\n", syspar[i].name, *(double*)syspar[i].value);
     }
-
-
-    // NEED CHECKING FOR DUPLICATES!!!
-
+    print_warning("\nBIFURCATION PARAMETERS:\n");
+    for (int i = 0; i < nbifpar; i++) {
+        printf("%s = %d\n", bifpar[i].name, *(int*)bifpar[i].value);
+    }
+    for (int i = 0; i < nbiflims; i++) {
+        printf("%s = %g\n", biflimits[i].name, *(double*)biflimits[i].value);
+    }
 
     // free memory
     free(input_filename);
-    free_2D_mem((void**)ICnames, dim);
-    free_2D_mem((void**)sysparnames, npar);
 }

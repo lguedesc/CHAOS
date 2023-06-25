@@ -161,3 +161,18 @@ char **malloc_string_array(int nstrings, int maxlen) {
     return str_array;
 }
 
+void file_safety_check(FILE *file) {
+    if (file == NULL) {
+        print_error("File to check parameters could not be openeed.\n");
+        print_exit_prog();
+        exit(EXIT_FAILURE);
+    }
+}
+
+void ptr_safety_check(void* ptr) {
+    if (ptr == NULL) {
+        print_debug("NULL pointer found.\n");
+        print_exit_prog();
+        exit(EXIT_FAILURE);
+    }
+}

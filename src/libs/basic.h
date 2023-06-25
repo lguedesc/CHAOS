@@ -7,3 +7,5 @@ bool check_if_string_is_number_old(const char* str);
 bool check_if_string_is_number(const char *str, const char *type, bool only_positive);
 bool check_if_string_is_negative_number(const char *str);
 char **malloc_string_array(int nstrings, int maxlen);
+void file_safety_check(FILE *file);
+void ptr_safety_check(void* ptr);

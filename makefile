@@ -28,7 +28,7 @@ else
 	CFLAGS+=-std=$(CSTD) -qopenmp -O3 -ipo 
 endif
 else ifeq ($(CC),gcc)
-	CFLAGS+=-std=$(CSTD) -fopenmp -O3 
+	CFLAGS+=-std=$(CSTD) -fopenmp -O3 -Wall
 else ifeq ($(CC),clang)
 	CFLAGS+=-std=$(CSTD) -fopenmp -O3
 else ifeq ($(CC),icc)
