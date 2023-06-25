@@ -103,33 +103,23 @@ void check_for_list_overflow(int n, int listlength, char *listname, char *length
     }
 }
 
-void check_for_parameter_overflow(FILE *file, char *arrayname, int nparams, int nparamsname) {
-    // Safety check
-    if (file == NULL) {
-        print_error("File to check parameter list could not be openeed.\n");
-        print_exit_prog();
-        exit(EXIT_FAILURE);
-    }
-    // Go to the beggining of the file
-    rewind(file);
-    // Allocate memory for buffer
-    size_t bufsize = get_size_of_longest_line(file);
-    char *buffer = malloc(bufsize);
-    rewind(file);
-    // 
-    int number = 0;
-    while (fgets(buffer, bufsize, file) != NULL) {
-        if (sscanf(buffer, "%s[%d]", arrayname, &number)) {
-            if (number >= nparams) {
-                print_error("INPUT ERROR: Parameters '%s[%d]' is bigger than '%s' declared in the input file.\n", arrayname, number, nparamsname);
-                print_error("Check parameter(s) in the input file before running the program again.\n");
-                print_exit_prog();
-                exit(EXIT_FAILURE);
+void check_for_index_overflow(input *params, int nparams, char *buffer) {
+    // Get the parameter prefix of the array by scanning all the characters 
+    // of the first name of struct params until it gets to the character "["
+    char param_prefix[strlen(params[0].name) + 1];
+    sscanf(params[0].name, "%[^[]", param_prefix);
+    // Declare variable to check if there is any index greater than nparams in the input file
+    int index = 0;
+    if (sscanf(buffer, "%s[^=] = %*f%*[^\n]", param_prefix) == 1) {
+        if (sscanf(param_prefix, "%*[^0123456789]%d", &index) == 1) {
+            if (index > nparams - 1) {
+            print_error("INPUT ERROR: Parameter '%s' is greater than '%d' as declared in the input file.\n", param_prefix, nparams);
+            print_error("Check parameter(s) in the input file before running the program again.\n");
+            print_exit_prog();
+            exit(EXIT_FAILURE);
             }
-        }
+        }           
     }
-    // Free memory
-    free(buffer);
 }
 
 /* Intermediary Steps for Calling Parameter Reading Functions */
@@ -206,8 +196,7 @@ void read_parameter(input *params, char *key, char *svalue, char *type, bool onl
     }
 }
 
-/*
-void read_and_check_parameters(FILE* file, int nparams, input *params, char *param_type, bool only_positive) {
+void read_and_check_parameters(FILE *file, int nparams, input *params, char *param_type, bool only_positive) {
     // Safety check
     if (file == NULL) {
         print_error("File to check parameters could not be openeed.\n");
@@ -246,54 +235,6 @@ void read_and_check_parameters(FILE* file, int nparams, input *params, char *par
     // Free memory
     free(buffer);
 }
-*/
-
-void read_and_check_parameters(FILE* file, int nparams, input *params, char *param_type, bool only_positive) {
-    // Safety check
-    if (file == NULL) {
-        print_error("File to check parameters could not be openeed.\n");
-        print_exit_prog();
-        exit(EXIT_FAILURE);
-    }
-    // Set the position to the beggining of the input file
-    rewind(file);
-    // Allocate memory for buffer
-    size_t bufsize = get_size_of_longest_line(file);
-    char *buffer = malloc(bufsize);
-    rewind(file);
-    // Declare variable to hold the value of program parameters read
-    int allread;
-    bool found_greater_value = false; // Flag to track if a greater value is found
-    while(fgets(buffer, bufsize, file)) {
-        // Split line into the buffer with the following separators
-        char *key = strtok(buffer, " ,:;={}");
-        char *svalue = strtok(NULL, " ,:;={}");
-        // Reset allread variable
-        allread = 0;
-        // Sweep accross all parameters
-        for (int i = 0; i < nparams; i++) {
-            read_parameter(&params[i], key, svalue, param_type, only_positive);
-            // Add a value to allread if the parameter is already read
-            if (params[i].read == true) {
-                allread++;
-            }
-        }
-        // If allread is equal to the number of parameters, break the loop
-        if (allread == nparams) {
-            break;
-        }
-    }
-    // Check if all program input parameters were inserted
-    check_for_missing_parameters(params, nparams);
-    
-    // TRYING TO CHECK IF PARAMETERS ARE GREATER THAN IT SHOULD
-    // Check if indexes of parameters are greater than it should
-    check_for_index_overflow(file, nparams, "p");
-
-    // Free memory
-    free(buffer);
-}
-
 
 char *read_and_check_list(FILE *file, char *keyword, char *listname) {
     // Safety check
@@ -368,40 +309,37 @@ void read_and_check_list_params(char *list_string, int listsize, input *paramlis
     check_for_missing_parameters(paramlist, listsize);
 }
 
-void check_for_index_overflow(FILE *file, int nparams, const char* base_string) {
-    // Reset the position to the beginning of the input file
+void read_and_check_array_parameters(FILE *file, int nparams, input *params, char *param_type, bool only_positive) {
+    // Safety check
+    if (file == NULL) {
+        print_error("File to check parameters could not be openeed.\n");
+        print_exit_prog();
+        exit(EXIT_FAILURE);
+    }
+    // Set the position to the beggining of the input file
     rewind(file);
-    // Allocate memory for a buffer
+    // Allocate memory for buffer
     size_t bufsize = get_size_of_longest_line(file);
     char *buffer = malloc(bufsize);
     rewind(file);
-    // Construct the parameter format string
-    char param_format[strlen(base_string) + 1];
-    snprintf(param_format, sizeof(param_format), "%s[%%d]", base_string);
-    // Declare a variable to track if a parameter with greater index is found
-    bool found = false;
-    // Declare variable to hold the index value
-    int index = 0;
-    // Read input file line by line
+    
+    // Read each line of the input file
     while(fgets(buffer, bufsize, file) != NULL) {
         // Split line into the buffer with the following separators
         char *key = strtok(buffer, " ,:;={}");
         char *svalue = strtok(NULL, " ,:;={}");
-        // Get index value
-        sscanf(key, param_format, &index);
-        // Check if index is greater than nparams
-        if (index > nparams) {
-            found = true;
-            print_error("INPUT ERROR: Parameter '%s[%d]' is greater than '%d' as declared in the input file.\n", base_string, index, nparams);
-            print_error("Check parameter(s) in the input file before running the program again.\n");
-            print_exit_prog();
-            exit(EXIT_FAILURE);
+        // Check if there is any parameter with index greater than nparams in the input file
+        check_for_index_overflow(params, nparams, buffer);
+        // Sweep accross all parameters and read parameters
+        for (int i = 0; i < nparams; i++) {
+            read_parameter(&params[i], key, svalue, param_type, only_positive);
         }
     }
+    // Check if all program input parameters were inserted
+    check_for_missing_parameters(params, nparams);
     // Free memory
     free(buffer);
 }
-
 
 int main(void) {
     // Load File
@@ -452,7 +390,7 @@ int main(void) {
     // Initialize structures
     init_input_struct(npar, syspar, sysparnames);
     // Read file to store system parameters and check if it is inserted in the input file
-    read_and_check_parameters(file, npar, syspar, "double", false);
+    read_and_check_array_parameters(file, npar, syspar, "double", false);
     /* ====================================================================== */
     // PRINT TO CHECK
     /* ====================================================================== */
@@ -471,7 +409,7 @@ int main(void) {
     }
 
 
-    // TRYING TO CHECK IF PARAMETERS ARE GREATER THAN IT SHOULD
+    // NEED CHECKING FOR DUPLICATES!!!
 
 
     // free memory
