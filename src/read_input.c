@@ -196,8 +196,10 @@ bool check_optional_parameter(FILE *file, char *param_name) {
     // Set the position to the beggining of the input file
     rewind(file);
     // Allocate memory for buffer
-    size_t bufsize = get_size_of_longest_line(file);
+    size_t bufsize = get_size_of_longest_line(file);;
     char *buffer = malloc(bufsize);
+    // Set the position to the beggining of the input file again
+    rewind(file);
     // Read the file line by line
     while(fgets(buffer, bufsize, file) != NULL) {
         // Split line into the buffer with the following separators
@@ -206,7 +208,23 @@ bool check_optional_parameter(FILE *file, char *param_name) {
             declared = true;
         }
     }
+    // Free memory
+    free(buffer);
+
     return declared;
+}
+
+void check_out_of_range_list_param(int limit, input *param, int nparams) {
+    // Variable to check if there is a invalid value
+    bool invalid = true;
+    for (int i = 0; i < nparams; i++) {
+        if (*(int*)param[i].value > limit - 1) {
+            print_error("Parameter '%s' is out of range. The list must contain parameters from 0 to %d.\n", param[i].name, limit-1);
+            print_error("Check parameters in the input file before running the program again.\n");
+            print_exit_prog();
+            exit(EXIT_FAILURE);
+        }
+    }
 }
 
 /* Intermediary Steps for Calling Parameter Reading Functions */
@@ -476,6 +494,21 @@ void handle_bifurc_params(FILE *file, int nbifpar, int nbiflims, input *bifpar, 
     free_2D_mem((void**)biflimnames, nbiflims);
 }
 
+void handle_rms_params(FILE *file, int list_len, input *rmslist, int dim) {
+    // Safety check
+    file_safety_check(file);
+    // Define rmslist names
+    char **rmsnames = define_list_element_names(list_len, "rms");
+    // Initialize structure
+    init_input_struct(list_len, rmslist, rmsnames);
+    // Read file to store rms parameter list and check if it is inserted in the input file
+    char *rmsstring = read_and_check_list(file, "rms", "rms = { variable index 0, variable index 1, ... }");
+    read_and_check_list_params(rmsstring, list_len, rmslist, "rms", "nrms (number of rms calculations)", "int", true);
+    // Check if the elements in list are invalid (greater than dimension of the system)
+    check_out_of_range_list_param(dim, rmslist, list_len);
+    // Free memory
+    free_2D_mem((void**)rmsnames, list_len);
+}
 
 int main(void) {
     // Load File
@@ -492,6 +525,11 @@ int main(void) {
     input progpar[nprogpar]; 
     // Get program params
     handle_program_params(file, nprogpar, progpar, progparnames);
+    // Print to check 
+    print_warning("\nPROGRAM PARAMETERS:\n");
+    for (int i = 0; i < nprogpar; i++) {
+        printf("%s = %d\n", progpar[i].name, *(int*)progpar[i].value);
+    }
     /* ====================================================================== */
     // HANDLE INITIAL CONDITIONS
     /* ====================================================================== */
@@ -502,6 +540,12 @@ int main(void) {
     input tpar;         // Initial Time
     // Get program params
     handle_initial_conditions(file, dim, ICpar, &tpar);
+    // Print to check
+    print_warning("\nINITIAL CONDITIONS:\n");
+    for (int i = 0; i < dim; i++) {
+        printf("%s = %g\n", ICpar[i].name, *(double*)ICpar[i].value);
+    }
+    printf("%s = %g\n", tpar.name, *(double*)tpar.value);
     /* ====================================================================== */
     // HANDLE SYSTEM PARAMETERS
     /* ====================================================================== */
@@ -511,6 +555,11 @@ int main(void) {
     input syspar[npar];
     // Get system's parameters
     handle_system_params(file, npar, syspar);
+    // Print to check
+    print_warning("\nSYSTEM PARAMETERS:\n");
+    for (int i = 0; i < npar; i++) {
+       printf("%s = %g\n", syspar[i].name, *(double*)syspar[i].value);
+    }
     /* ====================================================================== */
     // HANDLE BIFURCATION PARAMETERS
     /* ====================================================================== */
@@ -524,40 +573,7 @@ int main(void) {
     input biflimits[nbiflims];
     // Get bifurcation parameters
     handle_bifurc_params(file, nbifpar, nbiflims, bifpar, biflimits, bifnames);
-    /* ====================================================================== */
-    // HANDLE RMS PARAMETERS
-    /* ====================================================================== */
-    /*
-    // Declare struct to store RMS list size, initialize it and read from file
-    input nrms;
-    init_input_struct(1, &nrms, "nrms");
-    // Check if nrms is declared in the input file
-    bool rms = check_optional_parameter(file, "nrms");
-    if (rms == true) {        
-        read_and_check_parameters(file, 1, &nrms, "int", true);
-        // Declare struct to store RMS list and initialize it
-        input rmslist = 
-    } else {
-        nrms.value = 0;
-        nrms.read = true;
-    }
-    */
-    /* ====================================================================== */
-    // PRINT TO CHECK
-    /* ====================================================================== */
-    print_warning("\nPROGRAM PARAMETERS:\n");
-    for (int i = 0; i < nprogpar; i++) {
-        printf("%s = %d\n", progpar[i].name, *(int*)progpar[i].value);
-    }
-    print_warning("\nINITIAL CONDITIONS:\n");
-    for (int i = 0; i < dim; i++) {
-        printf("%s = %g\n", ICpar[i].name, *(double*)ICpar[i].value);
-    }
-    printf("%s = %g\n", tpar.name, *(double*)tpar.value);
-    print_warning("\nSYSTEM PARAMETERS:\n");
-    for (int i = 0; i < npar; i++) {
-       printf("%s = %g\n", syspar[i].name, *(double*)syspar[i].value);
-    }
+    // Print to check
     print_warning("\nBIFURCATION PARAMETERS:\n");
     for (int i = 0; i < nbifpar; i++) {
         printf("%s = %d\n", bifpar[i].name, *(int*)bifpar[i].value);
@@ -565,7 +581,39 @@ int main(void) {
     for (int i = 0; i < nbiflims; i++) {
         printf("%s = %g\n", biflimits[i].name, *(double*)biflimits[i].value);
     }
+    /* ====================================================================== */
+    // HANDLE RMS PARAMETERS
+    /* ====================================================================== */
+    // Declare struct to store RMS list size, initialize it and read from file
+    input nrms;
+    char *rmsname = "nrms";
+    init_input_struct(1, &nrms, &rmsname);
+    // Check if nrms is declared in the input file
+    bool rmscalc = check_optional_parameter(file, "nrms");
+    if (rmscalc == true) {        
+        // Give the values to struct nrms
+        read_and_check_parameters(file, 1, &nrms, "int", true);
+        // Get length of the rms list
+        int list_len = *(int*)nrms.value;
+        // Check if nrms is greater than zero to continue
+        if (list_len > 0) {
+            // Declare struct to store RMS list
+            input rmslist[list_len];
+            // Get RMS parameters         
+            handle_rms_params(file, list_len, rmslist, dim);
+            // Print to check
+            print_warning("\nRMS PARAMETERS:\n");
+            printf("%s = %d\n", nrms.name, *(int*)nrms.value);
+            for (int i = 0; i < *(int*)nrms.value; i++) {
+                printf("%s = %d\n", rmslist[i].name, *(int*)rmslist[i].value);
+            }
+        }
+    } else {
+        nrms.value = 0;
+        nrms.read = true;
+    }
+    
 
-    // free memory
+    // Free memory
     free(input_filename);
 }

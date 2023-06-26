@@ -27,7 +27,7 @@ biflimits =  { 0.01,
                500 }
 
 nrms = 3
-rms = { 1, 2, 4 }
+rms = { 1, 4, 6 }
 
 nccalc = 5
 nccalc_ = 3
