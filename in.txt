@@ -34,3 +34,9 @@ nccalc_ = 3
 ccalc_ = { 0, 3, 5 }
 nccalc* = 2
 ccalc* = { 2, 5 }
+
+
+/* nccalc: number of custom values to be calculated
+   nccalc_: number of custom values that will be printed on screen (or the end of)
+   nccalc*: number of custom values that will be performed in the body of the integration
+*/

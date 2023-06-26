@@ -17,7 +17,7 @@ typedef struct {
     bool read;
 } input;
 
-void init_input_struct(size_t length, input params[length], char *inputnames[]) {
+static void init_input_struct(size_t length, input params[length], char *inputnames[]) {
     // Check pointer args
     if (inputnames == NULL) {
         print_debug(" Passing NULL pointer to init_input_struct() function\n");
@@ -34,7 +34,7 @@ void init_input_struct(size_t length, input params[length], char *inputnames[]) 
 
 /* Safety Check Functions */
 
-void check_for_empty_parameter(char *key, char *svalue) {
+static void check_for_empty_parameter(char *key, char *svalue) {
     if (strcmp(svalue, "\n") == 0) {
         print_error("INPUT ERROR: parameter '%s' in the input file is empty.\n", key);
         print_error("Add parameter(s) to the input file before running the program again.\n");
@@ -46,7 +46,7 @@ void check_for_empty_parameter(char *key, char *svalue) {
     }
 }
 
-void check_if_str_is_valid(char *key, char *svalue, char *type, bool only_positive) {
+static void check_if_str_is_valid(char *key, char *svalue, char *type, bool only_positive) {
     bool isnumber = check_if_string_is_number(svalue, type, only_positive);
     if (isnumber == false) {
         if (only_positive == true) {
@@ -64,7 +64,7 @@ void check_if_str_is_valid(char *key, char *svalue, char *type, bool only_positi
     }
 }
 
-void check_for_missing_parameters(input *params, int nparams) {
+static void check_for_missing_parameters(input *params, int nparams) {
     // Variables to determine if there is missing parameters in the input file
     bool missing_par = false;
     // Sweep the values of structures to check if there is -1 (not read) in any of the values
@@ -85,7 +85,7 @@ void check_for_missing_parameters(input *params, int nparams) {
     }
 }
 
-void check_if_list_exists(char *string, char *defaultstring, char *listname) {
+static void check_if_list_exists(char *string, char *defaultstring, char *listname) {
     if (strcmp(string, defaultstring) == 0) { 
         print_error("INPUT ERROR: Cannot find parameter '%s' in the input file.\n", listname);
         print_error("Add parameter's list to the input file before running the program again.\n");
@@ -94,7 +94,7 @@ void check_if_list_exists(char *string, char *defaultstring, char *listname) {
     }
 }
 
-void check_for_list_overflow(int n, int listlength, char *listname, char *lengthname) {
+static void check_for_list_overflow(int n, int listlength, char *listname, char *lengthname) {
     if (n > listlength) {
         print_error("INPUT ERROR: List of '%s' parameters is bigger than '%s' declared in the input file.\n", listname, lengthname);
         print_error("Check parameter(s) in the input file before running the program again.\n");
@@ -103,7 +103,7 @@ void check_for_list_overflow(int n, int listlength, char *listname, char *length
     }
 }
 
-void check_for_index_overflow(input *params, int nparams, char *buffer) {
+static void check_for_index_overflow(input *params, int nparams, char *buffer) {
     // Get the parameter prefix of the array by scanning all the characters 
     // of the first name of struct params until it gets to the character "["
     char param_prefix[strlen(params[0].name) + 1];
@@ -122,7 +122,7 @@ void check_for_index_overflow(input *params, int nparams, char *buffer) {
     }
 }
 
-void check_for_duplicate_parameter(FILE *file, input *params, int nparams, char *buffer, size_t bufsize) {
+static void check_for_duplicate_parameter(FILE *file, input *params, int nparams, char *buffer, size_t bufsize) {
     // Safety check
     file_safety_check(file);
     // Declare variable to check how many times a name was found
@@ -162,7 +162,7 @@ void check_for_duplicate_parameter(FILE *file, input *params, int nparams, char 
     }
 }  
 
-void check_for_duplicate_list(FILE *file, char* keyword, char *buffer, size_t bufsize) {
+static void check_for_duplicate_list(FILE *file, char* keyword, char *buffer, size_t bufsize) {
     // Safety check
     file_safety_check(file);
     // Declare variable to check how many times the listname was found
@@ -189,7 +189,7 @@ void check_for_duplicate_list(FILE *file, char* keyword, char *buffer, size_t bu
     }
 }
 
-bool check_optional_parameter(FILE *file, char *param_name) {
+static bool check_optional_parameter(FILE *file, char *param_name) {
     bool declared = false;
     // Safety check
     file_safety_check(file);
@@ -214,7 +214,7 @@ bool check_optional_parameter(FILE *file, char *param_name) {
     return declared;
 }
 
-void check_out_of_range_list_param(int limit, input *param, int nparams) {
+static void check_out_of_range_list_param(int limit, input *param, int nparams) {
     // Variable to check if there is a invalid value
     bool invalid = true;
     for (int i = 0; i < nparams; i++) {
@@ -229,7 +229,7 @@ void check_out_of_range_list_param(int limit, input *param, int nparams) {
 
 /* Intermediary Steps for Calling Parameter Reading Functions */
 
-int get_vector_dimension(int n, input *par, char *parname) {
+static int get_vector_dimension(int n, input *par, char *parname) {
     int value = 0;
     for (int i = 0; i < n; i++) {
         if (strcmp(par[i].name, parname) == 0) {  
@@ -239,7 +239,7 @@ int get_vector_dimension(int n, input *par, char *parname) {
     return value;
 }
 
-char **define_list_element_names(int nelements, char *basename) {
+static char **define_list_element_names(int nelements, char *basename) {
     // Count dim digits to form "x[dim]" string    
     int digits = count_int_digits(nelements);
     // Allocate memory for a string array that will hold the name "x[0]", "x[1]", "x[2]", ...
@@ -253,7 +253,7 @@ char **define_list_element_names(int nelements, char *basename) {
 
 /* Parameter Reading Functions */
 
-void read_parameter(input *params, char *key, char *svalue, char *type, bool only_positive) {
+static void read_parameter(input *params, char *key, char *svalue, char *type, bool only_positive) {
     // If key is equal to attribute name, then..
     if (strncmp(key, (*params).name, BUFSIZE) == 0) {
         //printf("svalue = %s\n", svalue);
@@ -301,7 +301,7 @@ void read_parameter(input *params, char *key, char *svalue, char *type, bool onl
     }
 }
 
-void read_and_check_parameters(FILE *file, int nparams, input *params, char *param_type, bool only_positive) {
+static void read_and_check_parameters(FILE *file, int nparams, input *params, char *param_type, bool only_positive) {
     // Safety check
     file_safety_check(file);
     // Set the position to the beggining of the input file
@@ -337,7 +337,7 @@ void read_and_check_parameters(FILE *file, int nparams, input *params, char *par
     free(buffer);
 }
 
-char *read_and_check_list(FILE *file, char *keyword, char *listname) {
+static char *read_and_check_list(FILE *file, char *keyword, char *listname) {
     // Safety check
     file_safety_check(file);
     // Return the position to the start of the file
@@ -390,7 +390,7 @@ char *read_and_check_list(FILE *file, char *keyword, char *listname) {
     return string;
 }
 
-void read_and_check_list_params(char *list_string, int listsize, input *paramlist, char *listname, char* sizename, char *param_type, bool only_positive) {    
+static void read_and_check_list_params(char *list_string, int listsize, input *paramlist, char *listname, char* sizename, char *param_type, bool only_positive) {    
     // Declare svalue and get the first token "parameter name" to be discarted
     char *svalue = strtok(list_string, " ,;:={}\n\r\t");
     // Get IC values
@@ -410,7 +410,7 @@ void read_and_check_list_params(char *list_string, int listsize, input *paramlis
     check_for_missing_parameters(paramlist, listsize);
 }
 
-void read_and_check_array_parameters(FILE *file, int nparams, input *params, char *param_type, bool only_positive) {
+static void read_and_check_array_parameters(FILE *file, int nparams, input *params, char *param_type, bool only_positive) {
     // Safety check
     file_safety_check(file);
     // Set the position to the beggining of the input file
@@ -527,7 +527,8 @@ int main(void) {
     handle_program_params(file, nprogpar, progpar, progparnames);
     // Print to check 
     print_warning("\nPROGRAM PARAMETERS:\n");
-    for (int i = 0; i < nprogpar; i++) {
+    //for (int i = 0; i < nprogpar; i++) {
+    for (int i = 0; i < 6; i++) {
         printf("%s = %d\n", progpar[i].name, *(int*)progpar[i].value);
     }
     /* ====================================================================== */
@@ -589,7 +590,7 @@ int main(void) {
     char *rmsname = "nrms";
     init_input_struct(1, &nrms, &rmsname);
     // Check if nrms is declared in the input file
-    bool rmscalc = check_optional_parameter(file, "nrms");
+    bool rmscalc = check_optional_parameter(file, rmsname);
     if (rmscalc == true) {        
         // Give the values to struct nrms
         read_and_check_parameters(file, 1, &nrms, "int", true);
@@ -612,7 +613,31 @@ int main(void) {
         nrms.value = 0;
         nrms.read = true;
     }
-    
+    /* ====================================================================== */
+    // HANDLE CUSTOMCALC PARAMETERS
+    /* ====================================================================== */
+    // Declare structs to store ccalc list sizes and initialize it
+    input nccalc;
+    input nend_ccalc;
+    input nbody_ccalc;
+    char *nccalc_name = "nccalc";
+    char *nend_ccalc_name = "nccalc_";
+    char *nbody_ccalc_name = "nccalc*";
+    // Initialize structs
+    init_input_struct(1, &nccalc, nccalc_name);
+    init_input_struct(1, &nend_ccalc, nend_ccalc_name);
+    init_input_struct(1, &nbody_ccalc, nbody_ccalc_name);
+    // Check if ccalc is declared in the input file
+    bool ccalc = check_optional_parameter(file, nccalc_name);
+    if (ccalc == true) {
+        // Give the values to struct nccalc
+        read_and_check_parameters(file, 1, &nccalc, "int", true);
+        // Check if end ccalc and body ccalc are declared in the input file
+        bool end_ccalc = check_optional_parameter(file, nend_ccalc_name);
+        bool body_ccalc = check_optional_parameter(file, nbody_ccalc_name);
+        
+    }
+
 
     // Free memory
     free(input_filename);
