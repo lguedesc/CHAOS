@@ -32,6 +32,13 @@ static void init_input_struct(size_t length, input params[length], char *inputna
     }
 }
 
+void free_input_struct(size_t length, input *params) {
+    for (int i = 0; i < length; i++) {
+        free(params[i].value);
+    }
+    free(params);
+}
+
 /* Safety Check Functions */
 
 static void check_for_empty_parameter(char *key, char *svalue) {
@@ -228,13 +235,26 @@ static void check_out_of_range_list_param(int limit, input *param, int nparams) 
 }
 
 /* Intermediary Steps for Calling Parameter Reading Functions */
-
+/*
 static int get_vector_dimension(int n, input *par, char *parname) {
     int value = 0;
     for (int i = 0; i < n; i++) {
         if (strcmp(par[i].name, parname) == 0) {  
             value = *(int*)par[i].value;
         }
+    }
+    return value;
+}*/
+
+static int find_param_value_by_name(input *par, char *parname) {
+    int value = 0;
+    int i = 0;
+    while (par[i].name[0] != '\0') {
+        if (strcmp(par[i].name, parname) == 0) {
+            value = *(int*)par[i].value;
+            break;
+        }
+        i++;
     }
     return value;
 }
@@ -440,7 +460,7 @@ static void read_and_check_array_parameters(FILE *file, int nparams, input *para
 }
 
 /* Functions to read specific block of parameters */
-void handle_program_params(FILE *file, size_t nprogpar, input *progpar, char **progparnames) {
+static void handle_program_params(FILE *file, size_t nprogpar, input *progpar, char **progparnames) {
     // Safety check
     file_safety_check(file);
     // Initialize struct
@@ -449,7 +469,7 @@ void handle_program_params(FILE *file, size_t nprogpar, input *progpar, char **p
     read_and_check_parameters(file, nprogpar, progpar, "int", true);
 }
 
-void handle_initial_conditions(FILE *file, int dim, input *ICpar, input *tpar) {
+static void handle_initial_conditions(FILE *file, int dim, input *ICpar, input *tpar) {
     // Declare parameter names
     char *tname = "t0";
     char **ICnames = define_list_element_names(dim, "IC");
@@ -465,7 +485,7 @@ void handle_initial_conditions(FILE *file, int dim, input *ICpar, input *tpar) {
     free_2D_mem((void**)ICnames, dim);
 }
 
-void handle_system_params(FILE *file, int npar, input *syspar) {
+static void handle_system_params(FILE *file, int npar, input *syspar) {
     // Safety check
     file_safety_check(file);
     // Declare parameter names
@@ -478,7 +498,7 @@ void handle_system_params(FILE *file, int npar, input *syspar) {
     free_2D_mem((void**)sysparnames, npar);
 }
 
-void handle_bifurc_params(FILE *file, int nbifpar, int nbiflims, input *bifpar, input *biflimits, char **bifnames) {
+static void handle_bifurc_params(FILE *file, int nbifpar, int nbiflims, input *bifpar, input *biflimits, char **bifnames) {
     // Safety check
     file_safety_check(file);
     // Declare parameter names
@@ -494,23 +514,7 @@ void handle_bifurc_params(FILE *file, int nbifpar, int nbiflims, input *bifpar, 
     free_2D_mem((void**)biflimnames, nbiflims);
 }
 
-void handle_rms_params(FILE *file, int list_len, input *rmslist, int dim) {
-    // Safety check
-    file_safety_check(file);
-    // Define rmslist names
-    char **rmsnames = define_list_element_names(list_len, "rms");
-    // Initialize structure
-    init_input_struct(list_len, rmslist, rmsnames);
-    // Read file to store rms parameter list and check if it is inserted in the input file
-    char *rmsstring = read_and_check_list(file, "rms", "rms = { variable index 0, variable index 1, ... }");
-    read_and_check_list_params(rmsstring, list_len, rmslist, "rms", "nrms (number of rms calculations)", "int", true);
-    // Check if the elements in list are invalid (greater than dimension of the system)
-    check_out_of_range_list_param(dim, rmslist, list_len);
-    // Free memory
-    free_2D_mem((void**)rmsnames, list_len);
-}
-
-void handle_optional_list_params(FILE *file, int list_len, input *list, int max_number_element, char *base_listname, char *list_description, char *size_description) {
+static void handle_optional_list_params(FILE *file, int list_len, input *list, int max_number_element, char *base_listname, char *list_description, char *size_description) {
     // Safety Check
     file_safety_check(file);
     // Define list name
@@ -526,6 +530,186 @@ void handle_optional_list_params(FILE *file, int list_len, input *list, int max_
     free_2D_mem((void**)listname, list_len);
 }   
 
+/* Functions to assign values */
+
+void get_program_params(FILE *file, input **progpar, size_t *nprogpar) {
+    // Declare parameter names
+    char *progparnames[] = {"dim", "npar", "np", "ndiv", "trans", "maxper"}; 
+    // Get the number of parameters in progparnames
+    (*nprogpar) = sizeof(progparnames) / sizeof(progparnames[0]);
+    // Declare Structure and Initialize it
+    (*progpar) = malloc((*nprogpar) * sizeof(**progpar)); 
+    // Get program params
+    handle_program_params(file, (*nprogpar), (*progpar), progparnames);
+}
+
+void get_initial_conditions(FILE *file, input *t0par, input **ICpar, int dim) {
+    // Declare Struct and variables to store IC parameters and t0
+    (*ICpar) = malloc(dim * sizeof(**ICpar));   // Initial conditions
+    // Get program params
+    handle_initial_conditions(file, dim, (*ICpar), t0par);
+}
+
+void get_system_params(FILE *file, input **syspar, int npar) {
+    // Declare struct to store system parameters
+    (*syspar) = malloc(npar * sizeof(**syspar));
+    // Get system's parameters
+    handle_system_params(file, npar, (*syspar));
+}
+
+void get_bifurc_params(FILE *file, input **bifpar, input **biflimits) {
+    // Declare parameter names
+    char *bifnames[] = {"bifmode", "bifpar"}; 
+    // Get the number of parameters for each input struct
+    size_t nbifpar = sizeof(bifnames) / sizeof(bifnames[0]);
+    int nbiflims = 3;
+    // Declare Structures 
+    (*bifpar) = malloc(nbifpar * sizeof(**bifpar));
+    (*biflimits) = malloc(nbiflims * sizeof(**biflimits));
+    // Get bifurcation parameters
+    handle_bifurc_params(file, nbifpar, nbiflims, (*bifpar), (*biflimits), bifnames);
+}
+
+void get_rms_params(FILE *file, input *nrms, input **rmslist, int dim) {
+    // Declare the name of the control parameter
+    char *rmsname = "nrms";
+    init_input_struct(1, nrms, &rmsname);
+    // Check if nrms is declared in the input file
+    bool rmscalc = check_optional_parameter(file, rmsname);
+    if (rmscalc == true) {        
+        // Give the values to struct nrms
+        read_and_check_parameters(file, 1, nrms, "int", true);
+        // Get length of the rms list
+        int list_len = *(int*)(*nrms).value;
+        // Check if nrms is greater than zero to continue
+        if (list_len > 0) {
+            // Declare struct to store RMS list
+            (*rmslist) = malloc(list_len * sizeof(**rmslist));
+            // Get RMS parameters         
+            //handle_rms_params(file, list_len, rmslist, dim);
+            handle_optional_list_params(file, list_len, (*rmslist), dim, "rms", "rms = { variable index 0, variable index 1, ... }", "nrms (number of rms calculations)");
+        }
+    } else {
+        (*nrms).value = 0;
+        (*nrms).read = true;
+    }
+}
+
+void get_ccalc_params(FILE *file, input *nccalc, input *nend_ccalc, input *nbody_ccalc, input **end_ccalc_list, input **body_ccalc_list) {
+    // Declare names of params
+    char *nccalc_name = "nccalc";
+    char *nend_ccalc_name = "nccalc_";
+    char *nbody_ccalc_name = "nccalc*";
+    // Initialize structs
+    init_input_struct(1, nccalc, &nccalc_name);
+    init_input_struct(1, nend_ccalc, &nend_ccalc_name);
+    init_input_struct(1, nbody_ccalc, &nbody_ccalc_name);
+    // Check if ccalc is declared in the input file
+    bool ccalc = check_optional_parameter(file, nccalc_name);
+    if (ccalc == true) {
+        // Give the values to struct nccalc
+        read_and_check_parameters(file, 1, nccalc, "int", true);
+        // Get max element
+        int max_element = *(int*)(*nccalc).value;
+        if (max_element > 0) {
+            // Check if end ccalc and body ccalc are declared in the input file
+            bool end_ccalc = check_optional_parameter(file, nend_ccalc_name);
+            bool body_ccalc = check_optional_parameter(file, nbody_ccalc_name);
+            if (end_ccalc == true) {
+                // Give values to struct nend_ccalc
+                read_and_check_parameters(file, 1, nend_ccalc, "int", true);
+                // Get length of nend_ccalc list
+                int end_list_len = *(int*)(*nend_ccalc).value;
+                if (end_list_len > 0) {
+                    // Declare struct to store end_ccalc list
+                    (*end_ccalc_list) = malloc(end_list_len * sizeof(**end_ccalc_list));
+                    // Get end_ccalc parameters
+                    handle_optional_list_params(file, end_list_len, (*end_ccalc_list), max_element, "ccalc_", "ccalc_ = { ccalc_[0], ccalc_[1], ... }", "nccalc (number of custom calculations that will be printed)");
+                }
+            } 
+            else {
+                // Put default values and mark as read
+                (*nend_ccalc).value = 0;
+                (*nend_ccalc).read = true;
+            }
+            if (body_ccalc == true) {
+                // Give values to struct nbody_ccalc
+                read_and_check_parameters(file, 1, nbody_ccalc, "int", true);
+                // Get length of nbody_ccalc list
+                int body_list_len = *(int*)(*nbody_ccalc).value;
+                if (body_list_len > 0) {
+                    // Declare struct to store body_ccalc list
+                    (*body_ccalc_list) = malloc(body_list_len * sizeof(**body_ccalc_list));
+                    // Get body ccalc parameters
+                    handle_optional_list_params(file, body_list_len, (*body_ccalc_list), max_element, "ccalc*", "ccalc* = { ccalc*[0], ccalc*[1], ... }", "nccalc (number of custom calculations that will be printed)");
+                }
+            }
+            else {
+                // Put default values and mark as read
+                (*nbody_ccalc).value = 0;
+                (*nbody_ccalc).read = true;
+            }
+        }        
+    }
+    else {
+        // Put default values and mark as read
+        (*nccalc).value = 0;
+        (*nccalc).read = true;
+        (*nend_ccalc).value = 0;
+        (*nend_ccalc).read = true;
+        (*nbody_ccalc).value = 0;
+        (*nbody_ccalc).read = true;
+    }
+}
+
+void print_to_check(int nprogpar, int dim, int npar, input *progpar, input *ICpar, input t0par, input *syspar, input *bifpar, input *biflimits, input nrms,
+                    input *rmslist, input nccalc, input nend_ccalc, input *end_ccalc_list, input nbody_ccalc, input *body_ccalc_list) {
+    // Print to check
+    print_warning("\nPROGRAM PARAMETERS:\n");
+    for (int i = 0; i < nprogpar; i++) {
+        printf("%s = %d\n", progpar[i].name, *(int*)progpar[i].value);
+    }
+    print_warning("\nINITIAL CONDITIONS:\n");
+    for (int i = 0; i < dim; i++) {
+        printf("%s = %g\n", ICpar[i].name, *(double*)ICpar[i].value);
+    }
+    printf("%s = %g\n", t0par.name, *(double*)t0par.value);
+    print_warning("\nSYSTEM PARAMETERS:\n");
+    for (int i = 0; i < npar; i++) {
+       printf("%s = %g\n", syspar[i].name, *(double*)syspar[i].value);
+    }
+    print_warning("\nBIFURCATION PARAMETERS:\n");
+    for (int i = 0; i < 2; i++) {
+        printf("%s = %d\n", bifpar[i].name, *(int*)bifpar[i].value);
+    }
+    for (int i = 0; i < 3; i++) {
+        printf("%s = %g\n", biflimits[i].name, *(double*)biflimits[i].value);
+    }
+    if (*(int*)nrms.value > 0) {
+        print_warning("\nRMS PARAMETERS:\n");
+        printf("%s = %d\n", nrms.name, *(int*)nrms.value);
+        for (int i = 0; i < *(int*)nrms.value; i++) {
+            printf("%s = %d\n", rmslist[i].name, *(int*)rmslist[i].value);
+        }
+    }
+    if (*(int*)nccalc.value > 0) {
+        print_warning("\nCUSTOM CALCULATIONS PARAMETERS:\n");
+        printf("%s = %d\n", nccalc.name, *(int*)nccalc.value);
+        if (*(int*)nend_ccalc.value > 0) {
+            printf("%s = %d\n", nend_ccalc.name, *(int*)nend_ccalc.value);
+            for (int i = 0; i < *(int*)nend_ccalc.value; i++) {
+                printf("%s = %d\n", end_ccalc_list[i].name, *(int*)end_ccalc_list[i].value);
+            }
+        } 
+        if (*(int*)nbody_ccalc.value > 0) {
+            printf("%s = %d\n", nbody_ccalc.name, *(int*)nbody_ccalc.value);
+            for (int i = 0; i < *(int*)nbody_ccalc.value; i++) {
+                printf("%s = %d\n", body_ccalc_list[i].name, *(int*)body_ccalc_list[i].value);
+            }
+        }
+    }
+}
+
 int main(void) {
     // Load File
     char *input_filename = get_input_filename();
@@ -533,166 +717,57 @@ int main(void) {
     /* ====================================================================== */
     // HANDLE PROGRAM PARAMETERS
     /* ====================================================================== */
-    // Declare parameter names
-    char *progparnames[] = {"dim", "npar", "np", "ndiv", "trans", "maxper"}; 
-    // Get the number of parameters in progparnames
-    size_t nprogpar = sizeof(progparnames) / sizeof(progparnames[0]);
-    // Declare Structure and Initialize it
-    input progpar[nprogpar]; 
-    // Get program params
-    handle_program_params(file, nprogpar, progpar, progparnames);
-    // Print to check 
-    print_warning("\nPROGRAM PARAMETERS:\n");
-    //for (int i = 0; i < nprogpar; i++) {
-    for (int i = 0; i < 6; i++) {
-        printf("%s = %d\n", progpar[i].name, *(int*)progpar[i].value);
-    }
+    input *progpar = NULL;
+    size_t nprogpar = 0;
+    get_program_params(file, &progpar, &nprogpar);
     /* ====================================================================== */
     // HANDLE INITIAL CONDITIONS
     /* ====================================================================== */
     // Seartch for the value that holds the length of the IC vector
-    int dim = get_vector_dimension(nprogpar, progpar, "dim");
-    // Declare Struct and variables to store IC parameters and t0
-    input ICpar[dim];   // Initial conditions
-    input tpar;         // Initial Time
-    // Get program params
-    handle_initial_conditions(file, dim, ICpar, &tpar);
-    // Print to check
-    print_warning("\nINITIAL CONDITIONS:\n");
-    for (int i = 0; i < dim; i++) {
-        printf("%s = %g\n", ICpar[i].name, *(double*)ICpar[i].value);
-    }
-    printf("%s = %g\n", tpar.name, *(double*)tpar.value);
+    int dim = find_param_value_by_name(progpar, "dim");
+    input t0par;
+    input *ICpar = NULL;
+    get_initial_conditions(file, &t0par, &ICpar, dim);
     /* ====================================================================== */
     // HANDLE SYSTEM PARAMETERS
     /* ====================================================================== */
     // Search for the value that holds the number of parameters
-    int npar = get_vector_dimension(nprogpar, progpar, "npar");
-    // Declare struct to store system parameters
-    input syspar[npar];
-    // Get system's parameters
-    handle_system_params(file, npar, syspar);
-    // Print to check
-    print_warning("\nSYSTEM PARAMETERS:\n");
-    for (int i = 0; i < npar; i++) {
-       printf("%s = %g\n", syspar[i].name, *(double*)syspar[i].value);
-    }
+    int npar = find_param_value_by_name(progpar, "npar");
+    input *syspar = NULL;
+    get_system_params(file, &syspar, npar);    
     /* ====================================================================== */
     // HANDLE BIFURCATION PARAMETERS
     /* ====================================================================== */
-    // Declare parameter names
-    char *bifnames[] = {"bifmode", "bifpar"}; 
-    // Get the number of parameters for each input struct
-    size_t nbifpar = sizeof(bifnames) / sizeof(bifnames[0]);
-    int nbiflims = 3;
-    // Declare Structures 
-    input bifpar[nbifpar];
-    input biflimits[nbiflims];
-    // Get bifurcation parameters
-    handle_bifurc_params(file, nbifpar, nbiflims, bifpar, biflimits, bifnames);
-    // Print to check
-    print_warning("\nBIFURCATION PARAMETERS:\n");
-    for (int i = 0; i < nbifpar; i++) {
-        printf("%s = %d\n", bifpar[i].name, *(int*)bifpar[i].value);
-    }
-    for (int i = 0; i < nbiflims; i++) {
-        printf("%s = %g\n", biflimits[i].name, *(double*)biflimits[i].value);
-    }
+    input *bifpar = NULL;
+    input *biflimits = NULL;
+    get_bifurc_params(file, &bifpar, &biflimits);
     /* ====================================================================== */
     // HANDLE RMS PARAMETERS
     /* ====================================================================== */
     // Declare struct to store RMS list size, initialize it and read from file
     input nrms;
-    char *rmsname = "nrms";
-    init_input_struct(1, &nrms, &rmsname);
-    // Check if nrms is declared in the input file
-    bool rmscalc = check_optional_parameter(file, rmsname);
-    if (rmscalc == true) {        
-        // Give the values to struct nrms
-        read_and_check_parameters(file, 1, &nrms, "int", true);
-        // Get length of the rms list
-        int list_len = *(int*)nrms.value;
-        // Check if nrms is greater than zero to continue
-        if (list_len > 0) {
-            // Declare struct to store RMS list
-            input rmslist[list_len];
-            // Get RMS parameters         
-            //handle_rms_params(file, list_len, rmslist, dim);
-            handle_optional_list_params(file, list_len, rmslist, dim, "rms", "rms = { variable index 0, variable index 1, ... }", "nrms (number of rms calculations)");
-            // Print to check
-            print_warning("\nRMS PARAMETERS:\n");
-            printf("%s = %d\n", nrms.name, *(int*)nrms.value);
-            for (int i = 0; i < *(int*)nrms.value; i++) {
-                printf("%s = %d\n", rmslist[i].name, *(int*)rmslist[i].value);
-            }
-        }
-    } else {
-        nrms.value = 0;
-        nrms.read = true;
-    }
+    input *rmslist = NULL;
+    get_rms_params(file, &nrms, &rmslist, dim);
     /* ====================================================================== */
     // HANDLE CUSTOMCALC PARAMETERS
     /* ====================================================================== */
-    // Declare structs to store ccalc list sizes and initialize it
     input nccalc;
     input nend_ccalc;
     input nbody_ccalc;
-    char *nccalc_name = "nccalc";
-    char *nend_ccalc_name = "nccalc_";
-    char *nbody_ccalc_name = "nccalc*";
-    // Initialize structs
-    init_input_struct(1, &nccalc, &nccalc_name);
-    init_input_struct(1, &nend_ccalc, &nend_ccalc_name);
-    init_input_struct(1, &nbody_ccalc, &nbody_ccalc_name);
-    // Check if ccalc is declared in the input file
-    bool ccalc = check_optional_parameter(file, nccalc_name);
-    if (ccalc == true) {
-        // Give the values to struct nccalc
-        read_and_check_parameters(file, 1, &nccalc, "int", true);
-        // Get max element
-        int max_element = *(int*)nccalc.value;
-        if (max_element > 0) {
-            // Check if end ccalc and body ccalc are declared in the input file
-            bool end_ccalc = check_optional_parameter(file, nend_ccalc_name);
-            bool body_ccalc = check_optional_parameter(file, nbody_ccalc_name);
-            // Print to check
-            print_warning("\nRMS PARAMETERS:\n");
-            printf("%s = %d\n", nccalc.name, *(int*)nccalc.value);
-            if (end_ccalc == true) {
-                // Give values to struct nend_ccalc
-                read_and_check_parameters(file, 1, &nend_ccalc, "int", true);
-                // Get length of nend_ccalc list
-                int end_list_len = *(int*)nend_ccalc.value;
-                if (end_list_len > 0) {
-                    // Declare struct to store end_ccalc list
-                    input end_ccalc_list[end_list_len]; 
-                    // Get end_ccalc parameters
-                    handle_optional_list_params(file, end_list_len, end_ccalc_list, max_element, "ccalc_", "ccalc_ = { ccalc_[0], ccalc_[1], ... }", "nccalc (number of custom calculations that will be printed)");
-                    // Print to check
-                    for (int i = 0; i < end_list_len; i++) {
-                        printf("%s = %d\n", end_ccalc_list[i].name, *(int*)end_ccalc_list[i].value);
-                    }
-                }
-            }
-            if (body_ccalc == true) {
-                // Give values to struct nbody_ccalc
-                read_and_check_parameters(file, 1, &nbody_ccalc, "int", true);
-                // Get length of nbody_ccalc list
-                int body_list_len = *(int*)nbody_ccalc.value;
-                if (body_list_len > 0) {
-                    // Declare struct to store body_ccalc list
-                    input body_ccalc_list[body_list_len];
-                    // Get body ccalc parameters
-                    handle_optional_list_params(file, body_list_len, body_ccalc_list, max_element, "ccalc*", "ccalc* = { ccalc*[0], ccalc*[1], ... }", "nccalc (number of custom calculations that will be printed)");
-                    // Print to check
-                    for (int i = 0; i < body_list_len; i++) {
-                        printf("%s = %d\n", body_ccalc_list[i].name, *(int*)body_ccalc_list[i].value);
-                    }
-                }
-            }
-        }        
-    }
-
+    input *end_ccalc_list = NULL; 
+    input *body_ccalc_list = NULL;
+    get_ccalc_params(file, &nccalc, &nend_ccalc, &nbody_ccalc, &end_ccalc_list, &body_ccalc_list);
+    
+    // Print to check
+    print_to_check(nprogpar, dim, npar, progpar, ICpar, t0par, syspar, bifpar, biflimits, nrms, rmslist, nccalc, nend_ccalc, end_ccalc_list, nbody_ccalc, body_ccalc_list);
     // Free memory
     free(input_filename);
+    free_input_struct(nprogpar, progpar);
+    free_input_struct(dim, ICpar);
+    free_input_struct(npar, syspar);
+    free_input_struct(2, bifpar);
+    free_input_struct(3, biflimits);
+    free_input_struct(*(int*)nrms.value, rmslist);
+    free_input_struct(*(int*)nend_ccalc.value, end_ccalc_list);
+    free_input_struct(*(int*)nbody_ccalc.value, body_ccalc_list);
 }
