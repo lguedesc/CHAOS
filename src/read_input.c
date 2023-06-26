@@ -510,6 +510,22 @@ void handle_rms_params(FILE *file, int list_len, input *rmslist, int dim) {
     free_2D_mem((void**)rmsnames, list_len);
 }
 
+void handle_optional_list_params(FILE *file, int list_len, input *list, int max_number_element, char *base_listname, char *list_description, char *size_description) {
+    // Safety Check
+    file_safety_check(file);
+    // Define list name
+    char **listname = define_list_element_names(list_len, base_listname);
+    // Initialize structure
+    init_input_struct(list_len, list, listname);
+    // Read file to store values of parameter list and check if it is inserted in the input file
+    char *liststring = read_and_check_list(file, base_listname, list_description);
+    read_and_check_list_params(liststring, list_len, list, base_listname, size_description, "int", true);
+    // Check if the elements in list are invalid (greater than max_number_element)
+    check_out_of_range_list_param(max_number_element, list, list_len);
+    // Free memory
+    free_2D_mem((void**)listname, list_len);
+}   
+
 int main(void) {
     // Load File
     char *input_filename = get_input_filename();
@@ -601,7 +617,8 @@ int main(void) {
             // Declare struct to store RMS list
             input rmslist[list_len];
             // Get RMS parameters         
-            handle_rms_params(file, list_len, rmslist, dim);
+            //handle_rms_params(file, list_len, rmslist, dim);
+            handle_optional_list_params(file, list_len, rmslist, dim, "rms", "rms = { variable index 0, variable index 1, ... }", "nrms (number of rms calculations)");
             // Print to check
             print_warning("\nRMS PARAMETERS:\n");
             printf("%s = %d\n", nrms.name, *(int*)nrms.value);
@@ -624,20 +641,57 @@ int main(void) {
     char *nend_ccalc_name = "nccalc_";
     char *nbody_ccalc_name = "nccalc*";
     // Initialize structs
-    init_input_struct(1, &nccalc, nccalc_name);
-    init_input_struct(1, &nend_ccalc, nend_ccalc_name);
-    init_input_struct(1, &nbody_ccalc, nbody_ccalc_name);
+    init_input_struct(1, &nccalc, &nccalc_name);
+    init_input_struct(1, &nend_ccalc, &nend_ccalc_name);
+    init_input_struct(1, &nbody_ccalc, &nbody_ccalc_name);
     // Check if ccalc is declared in the input file
     bool ccalc = check_optional_parameter(file, nccalc_name);
     if (ccalc == true) {
         // Give the values to struct nccalc
         read_and_check_parameters(file, 1, &nccalc, "int", true);
-        // Check if end ccalc and body ccalc are declared in the input file
-        bool end_ccalc = check_optional_parameter(file, nend_ccalc_name);
-        bool body_ccalc = check_optional_parameter(file, nbody_ccalc_name);
-        
+        // Get max element
+        int max_element = *(int*)nccalc.value;
+        if (max_element > 0) {
+            // Check if end ccalc and body ccalc are declared in the input file
+            bool end_ccalc = check_optional_parameter(file, nend_ccalc_name);
+            bool body_ccalc = check_optional_parameter(file, nbody_ccalc_name);
+            // Print to check
+            print_warning("\nRMS PARAMETERS:\n");
+            printf("%s = %d\n", nccalc.name, *(int*)nccalc.value);
+            if (end_ccalc == true) {
+                // Give values to struct nend_ccalc
+                read_and_check_parameters(file, 1, &nend_ccalc, "int", true);
+                // Get length of nend_ccalc list
+                int end_list_len = *(int*)nend_ccalc.value;
+                if (end_list_len > 0) {
+                    // Declare struct to store end_ccalc list
+                    input end_ccalc_list[end_list_len]; 
+                    // Get end_ccalc parameters
+                    handle_optional_list_params(file, end_list_len, end_ccalc_list, max_element, "ccalc_", "ccalc_ = { ccalc_[0], ccalc_[1], ... }", "nccalc (number of custom calculations that will be printed)");
+                    // Print to check
+                    for (int i = 0; i < end_list_len; i++) {
+                        printf("%s = %d\n", end_ccalc_list[i].name, *(int*)end_ccalc_list[i].value);
+                    }
+                }
+            }
+            if (body_ccalc == true) {
+                // Give values to struct nbody_ccalc
+                read_and_check_parameters(file, 1, &nbody_ccalc, "int", true);
+                // Get length of nbody_ccalc list
+                int body_list_len = *(int*)nbody_ccalc.value;
+                if (body_list_len > 0) {
+                    // Declare struct to store body_ccalc list
+                    input body_ccalc_list[body_list_len];
+                    // Get body ccalc parameters
+                    handle_optional_list_params(file, body_list_len, body_ccalc_list, max_element, "ccalc*", "ccalc* = { ccalc*[0], ccalc*[1], ... }", "nccalc (number of custom calculations that will be printed)");
+                    // Print to check
+                    for (int i = 0; i < body_list_len; i++) {
+                        printf("%s = %d\n", body_ccalc_list[i].name, *(int*)body_ccalc_list[i].value);
+                    }
+                }
+            }
+        }        
     }
-
 
     // Free memory
     free(input_filename);
