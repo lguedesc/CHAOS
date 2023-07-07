@@ -5,9 +5,9 @@ from libs import plotconfig as pltconf
 pltconf.plot_params(True, 10, 0.2)
 
 only_steady = False
-nP = 5000
+nP = 300
 nDiv = 1000
-trans = 3750
+trans = 1
 plot_i = nP*trans
 
 save = False
@@ -15,7 +15,7 @@ save = False
 system = "duffing"
 simulation = "timeseries"
 ext = ".pdf"
-filenum = 0
+filenum = 3
 
 df = pltconf.read_CHAOS_data(system, filenum, simulation)
 #=======================================================================#

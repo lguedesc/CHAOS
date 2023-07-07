@@ -6,6 +6,9 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <sys/stat.h>
+#include "defines.h"
+#include "msg.h"
+
 #ifdef _WIN32
     #include <direct.h>
     const char SEP = '\\';
@@ -13,13 +16,11 @@
     const char SEP = '/';
 #endif    
 
-// Define the maximum number of repeatable files that the program can create in the directory
-#define MAX_FILE_NUM 1000
 // Define function to print name of the variable in a string
 #define getName(var)  #var
 
 struct stat info;
-
+/*
 char *convert_dir(const char *rawdir) {
     if (rawdir == NULL) {
         perror(rawdir);
@@ -40,6 +41,39 @@ char *convert_dir(const char *rawdir) {
         #else
             if (*ch == '\\') {
                 *ch = '/';
+            }
+        #endif
+    }
+    // The user is responsible to free (newdir) after function call
+    return newdir;
+}
+*/
+
+char *convert_dir(const char *rawdir) {
+    // Check for string
+    if (rawdir == NULL) {
+        perror("rawdir is NULL");
+        return NULL;
+    }
+    // Get the length of the rawdir string
+    size_t length = strlen(rawdir);
+    // Allocate memory for the newdir string
+    char *newdir = malloc((length + 1) * sizeof(char));
+    if (newdir == NULL) {
+        perror("Memory allocation failed");
+        return NULL;
+    }
+    // Copy the rawdir string into newdir
+    strcpy(newdir, rawdir);
+    // Perform the conversion based on the operating system
+    for (size_t i = 0; i < length; i++) {
+        #ifdef _WIN32
+            if (newdir[i] == '/') {
+                newdir[i] = '\\';
+            }
+        #else
+            if (newdir[i] == '\\') {
+                newdir[i] = '/';
             }
         #endif
     }
@@ -67,6 +101,7 @@ void OSmkdir(char *path) {
     #endif
 }
 
+/*
 void create_dir(const char *pathname) {
     errno = 0;
     // If pathname doesn't exists, return error
@@ -83,6 +118,44 @@ void create_dir(const char *pathname) {
     if (len > n * sizeof(char) - 1) {
         errno = ENAMETOOLONG;                   // Return error if its too long
         perror(pathname);                       // Print error
+        return;
+    }
+    // Copy string pathname into string path
+    strcpy(path, pathname);
+    // Read the string char by char
+    for (ch = path + 1; *ch; ch++) {
+        // Check if ch is a separator
+        if (*ch == SEP) {
+            // Truncate temporarily the string to check if dir exists
+            *ch = '\0';
+            // Check if exists. If not, it is created
+            OSmkdir(path);
+            // Insert the separator again in the string to continue
+            *ch = SEP;
+        }
+    }
+    
+    // Check again the full path to be sure. If dont exist, create
+    OSmkdir(path);   
+    free(path);
+}
+*/
+
+void create_dir(const char *pathname) {
+    errno = 0;
+    // If pathname doesn't exists, return error
+    if (pathname == NULL) {
+        perror(pathname);
+        return;
+    }
+    // Declare variables
+    const size_t len = strlen(pathname);                    // Size of the pathname
+    char *path = malloc(MAX_FILENAME_LEN * sizeof(char));   // Allocate temporary memory to copy pathname
+    char *ch;                                               // Pointer to each character in the string
+    // Check if len is too long to be stored into path
+    if (len > MAX_FILENAME_LEN * sizeof(char) - 1) {
+        errno = ENAMETOOLONG;                               // Return error if its too long
+        perror(pathname);                                   // Print error
         return;
     }
     // Copy string pathname into string path
@@ -129,6 +202,13 @@ bool file_exists(const char* filename) {
 }
 
 FILE *create_output_file(char *name, const char *ext, const char *dir) {
+    // Check for safety
+    if ((name == NULL) || (ext == NULL) || (dir == NULL)) {
+        print_error("Failed to create output file.\n");
+        print_error("Please check the code.\n");
+        print_exit_prog();
+        exit(EXIT_FAILURE);
+    }
     // Check if directory (dir) exists. If not, create
     directory_exists(dir);
     // Creates a variable storing the total size of name (200) 
@@ -151,13 +231,65 @@ FILE *create_output_file(char *name, const char *ext, const char *dir) {
     return fopen(name, "w");
 }
 
+/*
 char *get_input_filename(void) {
     char *filename = malloc(200 * sizeof(*filename));
     printf("  Enter Input Filename: ");
     scanf("%s", filename);
     return filename;
-    /* The user is responsible to free (filename) after the function call */
+    // The user is responsible to free (filename) after the function call //
 }
+*/
+
+FILE *name_and_create_output_files(const char *systemname, const char *directory, const char *module, const char *ext) {
+    // Create output files to store results
+    char output_filename[MAX_FILENAME_LEN + 1];
+    // Convert directory string to match operational system
+    char *dir = convert_dir(directory);
+    snprintf(output_filename, sizeof(output_filename), "%s%s_%s", dir, systemname, module); // Assign name for output file without extension
+    FILE *output_file = create_output_file(output_filename, ext, dir);                       // Create output file 
+    // Free memory
+    free(dir);
+
+    return output_file;
+}
+
+char* get_input_filename(void) {
+    char* filename = malloc((MAX_FILENAME_LEN + 1) * sizeof(char));
+    if (filename == NULL) {
+        print_error("Failed to allocate memory for the input filename.\n");
+        return NULL;
+    }
+    // Clear the input buffer
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+
+    // Asks for the user for the filename
+    printf("Enter Input Filename: ");
+    fflush(stdout);  // Flush stdout to ensure prompt is displayed
+    // Read input using fgets
+    if (fgets(filename, MAX_FILENAME_LEN + 1, stdin) == NULL) {
+        print_error("Failed to read input.\n");
+        free(filename);
+        return NULL;
+    }
+    // Remove trailing newline character, if present
+    size_t length = strlen(filename);
+    if (length > 0 && filename[length - 1] == '\n') {
+        filename[length - 1] = '\0';
+        length--;
+    }
+    // Check if input exceeds maximum length
+    if (length == MAX_FILENAME_LEN && getchar() != '\n') {
+        print_error("Invalid input: Filename exceeds maximum length of %d characters.\n", MAX_FILENAME_LEN);
+        print_error("Please, reduce the name of the file or/and allocate the file in a directory with smaller string size\n");
+        free(filename);
+        return NULL;
+    }
+
+    return filename;
+}
+
 
 // Write Results for Nonlinear Dynamics Toolbox
 

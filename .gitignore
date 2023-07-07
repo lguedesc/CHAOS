@@ -1,6 +1,7 @@
 *.csv
 *.txt
 !input.txt
+!input_new.txt
 !input_wolf.txt
 !input_cldyn.txt
 !in.txt

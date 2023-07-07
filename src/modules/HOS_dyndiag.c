@@ -9,14 +9,13 @@
 #include "../libs/iofiles.h"
 #include "../libs/nlosc.h"
 #include "../libs/interface.h"
-#include "OS_fdyndiag.h"
+#include "HOS_dyndiag.h"
 
-static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *indexX, int *indexY, double **x, int *nrms, int **rmsindex, int *bifmode, 
+static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *indexX, int *indexY, double **x, int *nrms, int **rmsindex, int *bifmode,
                                 int *ncustomvalues, int *nprintf, int **printfindex);
-static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int indexX, int indexY, int nrms, int *rmsindex, int bifmode,
-                        int ncustomvalues, int nprintf, int *printfindex, size_t maxlength, double percname, char* funcname, char* mode);
+static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int indexX, int indexY, int nrms, int *rmsindex, int bifmode,int ncustomvalues, int nprintf, int *printfindex, size_t maxlength, double percname, char* funcname, char* mode);
 
-void OS_fdyndiag(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, size_t, double *, int)) {
+void HOS_dyndiag(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, size_t, double *, int)) {
     // Parameters related to printing information
     size_t maxLen = 71;             // Max length of the info printed on the screen and on info file
     double percName = 0.6;          // Percentage of space occuped by the name of the quantity printed
@@ -42,17 +41,17 @@ void OS_fdyndiag(char *funcname, char* outputname, void (*edosys)(int, double *,
     double *parRange = NULL;
     int *rmsindex = NULL;           // Indexes of state variables that will be submitted to RMS calculation
     int *printfindex = NULL;        // Indexes of custom values that will be printed in the output file
-    read_params_and_IC(input_filename, &DIM, &nPar, &maxPer, &nP, &nDiv, &trans, &t, &par, &parRange, &indexX, &indexY, &x, &nRMS, &rmsindex, &dMode,
+    read_params_and_IC(input_filename, &DIM, &nPar, &maxPer, &nP, &nDiv, &trans, &t, &par, &parRange, &indexX, &indexY, &x, &nRMS, &rmsindex, &dMode, 
                         &nCustomValues, &nPrintf, &printfindex);
     
     // Create output files to store results
     char output_dyndiag_name[200];
     char output_info_name[200];
-    const char *rawdir = "data/FDynDiagram/out/";                                                            // Directory of output file
+    const char *rawdir = "data/DynDiagram/out/";                                                            // Directory of output file
     char *dir = convert_dir(rawdir);
     const char *ext = ".csv";                                                                           // Extension of output file
     const char *ext_info = ".txt";                                                                      // Extension of info file
-    snprintf(output_dyndiag_name, sizeof(output_dyndiag_name), "%s%s_fdyndiag", dir, outputname);            // Assign name for output file without extension
+    snprintf(output_dyndiag_name, sizeof(output_dyndiag_name), "%s%s_dyndiag", dir, outputname);            // Assign name for output file without extension
     snprintf(output_info_name, sizeof(output_info_name), "%s%s_info", dir, outputname);                   // Assign name for output info without extension
     FILE *output_dyndiag = create_output_file(output_dyndiag_name, ext, dir);                             // Create dynamical diagram output file 
     FILE *output_info = create_output_file(output_info_name, ext_info, dir);                            // Create info output file
@@ -60,9 +59,10 @@ void OS_fdyndiag(char *funcname, char* outputname, void (*edosys)(int, double *,
     // Print information in screen and info output file
     print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, indexX, indexY, nRMS, rmsindex, dMode, nCustomValues, nPrintf, printfindex, maxLen, percName, funcname, "screen");
     print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, indexX, indexY, nRMS, rmsindex, dMode, nCustomValues, nPrintf, printfindex, maxLen, percName, funcname, "file");
-   
     // Call solution
-    OS_full_dynamical_diagram_solution(output_dyndiag, DIM, nP, nDiv, trans, maxPer, t, &x, indexX, indexY, parRange, par, nPar, nRMS, rmsindex, edosys, nCustomValues, nPrintf, printfindex, customfunc, dMode);
+    HOS_dynamical_diagram_solution(output_dyndiag, DIM, nP, nDiv, trans, maxPer, t, &x, indexX, indexY, parRange, par, nPar, nRMS, rmsindex, edosys,
+                                    nCustomValues, nPrintf, printfindex, customfunc, dMode);
+    
     // Close output file
     fclose(output_dyndiag);
     fclose(output_info);
@@ -75,7 +75,7 @@ void OS_fdyndiag(char *funcname, char* outputname, void (*edosys)(int, double *,
     free(printfindex);
 }
 
-static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *indexX, int *indexY, double **x, int *nrms, int **rmsindex, int *bifmode, 
+static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *indexX, int *indexY, double **x, int *nrms, int **rmsindex, int *bifmode,
                                 int *ncustomvalues, int *nprintf, int **printfindex) {
     // Open input file
     FILE *input = fopen(name, "r");
@@ -84,7 +84,7 @@ static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  in
         perror(name);
         exit(1);
     }
-    // Determine the mode of the dynamical diagram: 0 to follow attractor, 1 to reset initial conditions in each step
+    // Determine the mode of the bifurcation diagram: 0 to follow attractor, 1 to reset initial conditions in each step
     fscanf(input, "%d", &(*bifmode));
     // Read and assign system constants
     fscanf(input, "%d", dim);
@@ -146,17 +146,12 @@ static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  in
     }
     // Close input file
     fclose(input);
-    /* The user is responsible to free (x), (par) or (parrange) after the function call */
+    /* The user is responsible to free everything allocated after the function call */
 }
 
-static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int indexX, int indexY, int nrms, int *rmsindex, int bifmode,
-                        int ncustomvalues, int nprintf, int *printfindex, size_t maxlength, double percname, char* funcname, char* mode) {
-    //Get time and date
-    time_t tm;
-    time(&tm);
-
+static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int indexX, int indexY, int nrms, int *rmsindex, int bifmode, int ncustomvalues, int nprintf, int *printfindex, size_t maxlength, double percname, char* funcname, char* mode) {
     if (strcmp(mode, "screen") == 0) {   
-        write_prog_parameters_fdyndiag(dim, npar, np, ndiv, maxper, trans, maxlength, percname);
+        write_prog_parameters_dyndiag(dim, npar, np, ndiv, trans, maxlength, percname);
         write_initial_conditions(dim, x, t, maxlength, percname);
         write_sys_parameters(npar, par, maxlength, percname);
         write_dyndiag_info(parrange, indexX, indexY, bifmode, maxlength, percname);
@@ -165,7 +160,7 @@ static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int nd
         partition(2, maxlength);        
     } 
     else if (strcmp(mode, "file") == 0) {
-        fwrite_prog_parameters_fdyndiag(info, funcname, dim, npar, np, ndiv, maxper, trans, maxlength, percname);
+        fwrite_prog_parameters_dyndiag(info, funcname, dim, npar, np, ndiv, trans, maxlength, percname);
         fwrite_initial_conditions(info, dim, x, t, maxlength, percname);
         fwrite_sys_parameters(info, npar, par, maxlength, percname);
         fwrite_dyndiag_info(info, parrange, indexX, indexY, bifmode, maxlength, percname);

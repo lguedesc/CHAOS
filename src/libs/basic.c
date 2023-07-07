@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 int count_int_digits(int number) {
     int count = 0;
@@ -29,6 +30,19 @@ void free_mem(void* first, ...)
     while (current != NULL) {
         free(current);
         current = va_arg(args, void*);
+    }
+    va_end(args);
+}
+
+void close_files(int num_files, ...)
+{
+    va_list args;
+    va_start(args, num_files);
+    for (int i = 0; i < num_files; i++) {
+        FILE* file = va_arg(args, FILE*);
+        if (file != NULL) {
+            fclose(file);
+        }
     }
     va_end(args);
 }

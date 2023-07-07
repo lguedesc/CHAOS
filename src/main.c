@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "libs/interface.h"
 #include "libs/odesystems.h"
 #include "libs/customcalc.h"
@@ -15,103 +16,22 @@
 #include "modules/fdyndiag.h"
 #include "modules/epbasin.h"
 #include "modules/forcedbasin.h"
-#include "modules/OS_time_series.h"
-#include "modules/OS_ftime_series.h"
-#include "modules/OS_bifurcation.h"
-#include "modules/OS_fbifurcation.h"
-#include "modules/OS_dyndiag.h"
-#include "modules/OS_fdyndiag.h"
-#include "modules/OS_fforcedbasin.h"
+#include "modules/HOS_timeseries.h"
+#include "modules/HOS_ftime_series.h"
+#include "modules/HOS_bifurcation.h"
+#include "modules/HOS_fbifurcation.h"
+#include "modules/HOS_dyndiag.h"
+#include "modules/HOS_fdyndiag.h"
+#include "modules/HOS_fforcedbasin.h"
 #include "modules/convergence_test.h"
+#include "libs/defines.h"
 
-void execute_OS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
+void execute_HOS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
                         void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, size_t, double *, int),
-                        char* outputname, char *funcname);
+                        char* outputname, char *funcname, unsigned int dim, unsigned int npar, bool angles);
 void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
 
-#define GNL_FUNC_1 lorenz
-#define GNL_OUTPUTNAME_1 "lorenz"
-#define GNL_FUNC_2 lotka_volterra_predator_prey
-#define GNL_OUTPUTNAME_2 "lotka-volterra"
-#define GNL_FUNC_3 halvorsen
-#define GNL_OUTPUTNAME_3 "halvorsen"
-
-#define GNL_FUNC_4 chuas_circuit
-#define GNL_CUSTOM_4 customcalc_chuas_circuit
-#define GNL_OUTPUTNAME_4 "chuas_circuit"
-
-#define OS_FUNC_1 duffing
-#define OS_CUSTOM_1 customcalc
-#define OS_OUTPUTNAME_1 "duffing"
-
-#define OS_FUNC_2 duffing_2DoF                 
-#define OS_CUSTOM_2 customcalc
-#define OS_OUTPUTNAME_2 "duffing_2DoF"
-
-#define OS_FUNC_3 vanderpol
-#define OS_CUSTOM_3 customcalc
-#define OS_OUTPUTNAME_3 "vanderpol"
-
-#define OS_FUNC_4 pendulum
-#define OS_CUSTOM_4 customcalc
-#define OS_OUTPUTNAME_4 "pendulum"
-
-#define OS_FUNC_5 falksma
-#define OS_CUSTOM_5 customcalc
-#define OS_OUTPUTNAME_5 "falk_sma"
-
-#define OS_FUNC_6 linear_oscillator
-#define OS_CUSTOM_6 customcalc
-#define OS_OUTPUTNAME_6 "linear_oscillator"
-
-#define OS_FUNC_7 duffing_vanderpol
-#define OS_CUSTOM_7 customcalc
-#define OS_OUTPUTNAME_7 "duffing_vanderpol"
-
-#define OS_FUNC_8 bistable_EH               
-#define OS_CUSTOM_8 customcalc_bistable_EH
-#define OS_OUTPUTNAME_8 "bistable_EH"
-
-#define OS_FUNC_9 tristable_EH
-#define OS_CUSTOM_9 customcalc               
-#define OS_OUTPUTNAME_9 "tristable_EH"
-
-#define OS_FUNC_10 pend_oscillator_EH
-#define OS_CUSTOM_10 customcalc_pend_oscillator_EH                 
-#define OS_OUTPUTNAME_10 "pend_oscillator_EH"
-
-#define OS_FUNC_11 pend_oscillator_wout_pend_EH
-#define OS_CUSTOM_11 customcalc                 
-#define OS_OUTPUTNAME_11 "pend_oscillator_EH(without_pend)"
-
-#define OS_FUNC_12 duffing_2DoF_EH
-#define OS_CUSTOM_12 customcalc_duffing_2DoF_EH                 
-#define OS_OUTPUTNAME_12 "duffing_2DoF_EH"
-
-#define OS_FUNC_13 linear_oscillator_2DoF
-#define OS_CUSTOM_13 customcalc                 
-#define OS_OUTPUTNAME_13 "lin_oscillator_2DoF"
-
-#define OS_FUNC_14 linear_2DoF_EH
-#define OS_CUSTOM_14 customcalc_linear_2DoF_EH                 
-#define OS_OUTPUTNAME_14 "lin_2DoF_EH"
-
-#define OS_FUNC_15 adeodato_sma_oscillator
-#define OS_CUSTOM_15 customcalc_adeodato_sma_oscillator                 
-#define OS_OUTPUTNAME_15 "adeodato_sma_oscillator"
-
-#define OS_FUNC_16 linear_EMEH
-#define OS_CUSTOM_16 customcalc                 
-#define OS_OUTPUTNAME_16 "lin_EM_EH"
-
-#define MAX_NAMELENGTH 120
-#define NUM_OF_GNL_SYSTEMS 4
-#define NUM_OF_OS_SYSTEMS 16
-#define NUM_OF_TOOLBOXES 2
-#define NUM_OF_OS_MODULES 11
-#define NUM_OF_GNL_MODULES 3 
-
-char *OSsystemNames[NUM_OF_OS_SYSTEMS] = {  "Duffing Oscillator",
+char *HOSsystemNames[NUM_OF_HOS_SYSTEMS] = {"Duffing Oscillator",
                                             "2 DoF Duffing Oscillator",
                                             "Van Der Pol Oscillator",
                                             "Simple Pendulum",
@@ -136,7 +56,7 @@ char *GNLsystemNames[NUM_OF_GNL_SYSTEMS] = {"Lorenz System",
 char *toolboxesNames[NUM_OF_TOOLBOXES] = {  "General Nonlinear Dynamics Toolbox",
                                             "Harmonic Nonlinear Oscillators Toolbox" };
                             
-char *OSmoduleNames[NUM_OF_OS_MODULES] = {  "Convergence Test (In Development)",
+char *HOSmoduleNames[NUM_OF_HOS_MODULES] = {  "Convergence Test (In Development)",
                                             "Time Series",
                                             "Poincare Map",
                                             "Lyapunov Exponents (Method from Wolf et al., 1985)", 
@@ -173,55 +93,55 @@ void call_GNL_system(unsigned int system, unsigned int module) {
     }
 }
 
-void call_OS_system(unsigned int system, unsigned int module) {
+void call_HOS_system(unsigned int system, unsigned int module) {
     switch(system) {
         case 1:
-            execute_OS_modules(module, OS_FUNC_1, OS_CUSTOM_1, OS_OUTPUTNAME_1, OSsystemNames[0]);
+            execute_HOS_modules(module, HOS_FUNC_1, HOS_CUSTOM_1, HOS_OUTPUTNAME_1, HOSsystemNames[0], HOS_DIM_1, HOS_NPAR_1, HOS_ANGLES_1);
             break;
         case 2:
-            execute_OS_modules(module, OS_FUNC_2, OS_CUSTOM_2, OS_OUTPUTNAME_2, OSsystemNames[1]);
+            execute_HOS_modules(module, HOS_FUNC_2, HOS_CUSTOM_2, HOS_OUTPUTNAME_2, HOSsystemNames[1], HOS_DIM_2, HOS_NPAR_2, HOS_ANGLES_2);
             break;
         case 3:
-            execute_OS_modules(module, OS_FUNC_3, OS_CUSTOM_3, OS_OUTPUTNAME_3, OSsystemNames[2]);
+            execute_HOS_modules(module, HOS_FUNC_3, HOS_CUSTOM_3, HOS_OUTPUTNAME_3, HOSsystemNames[2], HOS_DIM_3, HOS_NPAR_3, HOS_ANGLES_3);
             break;
         case 4:
-            execute_OS_modules(module, OS_FUNC_4, OS_CUSTOM_4, OS_OUTPUTNAME_4, OSsystemNames[3]);
+            execute_HOS_modules(module, HOS_FUNC_4, HOS_CUSTOM_4, HOS_OUTPUTNAME_4, HOSsystemNames[3], HOS_DIM_4, HOS_NPAR_4, HOS_ANGLES_4);
             break;
         case 5:
-            execute_OS_modules(module, OS_FUNC_5, OS_CUSTOM_5, OS_OUTPUTNAME_5, OSsystemNames[4]);
+            execute_HOS_modules(module, HOS_FUNC_5, HOS_CUSTOM_5, HOS_OUTPUTNAME_5, HOSsystemNames[4], HOS_DIM_5, HOS_NPAR_5, HOS_ANGLES_5);
             break;
         case 6:
-            execute_OS_modules(module, OS_FUNC_6, OS_CUSTOM_6, OS_OUTPUTNAME_6, OSsystemNames[5]);
+            execute_HOS_modules(module, HOS_FUNC_6, HOS_CUSTOM_6, HOS_OUTPUTNAME_6, HOSsystemNames[5], HOS_DIM_6, HOS_NPAR_6, HOS_ANGLES_6);
             break;
         case 7:
-            execute_OS_modules(module, OS_FUNC_7, OS_CUSTOM_7, OS_OUTPUTNAME_7, OSsystemNames[6]);
+            execute_HOS_modules(module, HOS_FUNC_7, HOS_CUSTOM_7, HOS_OUTPUTNAME_7, HOSsystemNames[6], HOS_DIM_7, HOS_NPAR_7, HOS_ANGLES_7);
             break;
         case 8:
-            execute_OS_modules(module, OS_FUNC_8, OS_CUSTOM_8, OS_OUTPUTNAME_8, OSsystemNames[7]);
+            execute_HOS_modules(module, HOS_FUNC_8, HOS_CUSTOM_8, HOS_OUTPUTNAME_8, HOSsystemNames[7], HOS_DIM_8, HOS_NPAR_8, HOS_ANGLES_8);
             break;
         case 9:
-            execute_OS_modules(module, OS_FUNC_9, OS_CUSTOM_9, OS_OUTPUTNAME_9, OSsystemNames[8]);
+            execute_HOS_modules(module, HOS_FUNC_9, HOS_CUSTOM_9, HOS_OUTPUTNAME_9, HOSsystemNames[8], HOS_DIM_9, HOS_NPAR_9, HOS_ANGLES_9);
             break;
         case 10:
-            execute_OS_modules(module, OS_FUNC_10, OS_CUSTOM_10, OS_OUTPUTNAME_10, OSsystemNames[9]);
+            execute_HOS_modules(module, HOS_FUNC_10, HOS_CUSTOM_10, HOS_OUTPUTNAME_10, HOSsystemNames[9], HOS_DIM_10, HOS_NPAR_10, HOS_ANGLES_10);
             break;
         case 11:
-            execute_OS_modules(module, OS_FUNC_11, OS_CUSTOM_11, OS_OUTPUTNAME_11, OSsystemNames[10]);
+            execute_HOS_modules(module, HOS_FUNC_11, HOS_CUSTOM_11, HOS_OUTPUTNAME_11, HOSsystemNames[10], HOS_DIM_11, HOS_NPAR_11, HOS_ANGLES_11);
             break;
         case 12:
-            execute_OS_modules(module, OS_FUNC_12, OS_CUSTOM_12, OS_OUTPUTNAME_12, OSsystemNames[11]);
+            execute_HOS_modules(module, HOS_FUNC_12, HOS_CUSTOM_12, HOS_OUTPUTNAME_12, HOSsystemNames[11], HOS_DIM_12, HOS_NPAR_12, HOS_ANGLES_12);
             break;
         case 13:
-            execute_OS_modules(module, OS_FUNC_13, OS_CUSTOM_13, OS_OUTPUTNAME_13, OSsystemNames[12]);
+            execute_HOS_modules(module, HOS_FUNC_13, HOS_CUSTOM_13, HOS_OUTPUTNAME_13, HOSsystemNames[12], HOS_DIM_13, HOS_NPAR_13, HOS_ANGLES_13);
             break;
         case 14:
-            execute_OS_modules(module, OS_FUNC_14, OS_CUSTOM_14, OS_OUTPUTNAME_14, OSsystemNames[13]);
+            execute_HOS_modules(module, HOS_FUNC_14, HOS_CUSTOM_14, HOS_OUTPUTNAME_14, HOSsystemNames[13], HOS_DIM_14, HOS_NPAR_14, HOS_ANGLES_14);
             break;
         case 15:
-            execute_OS_modules(module, OS_FUNC_15, OS_CUSTOM_15, OS_OUTPUTNAME_15, OSsystemNames[14]);
+            execute_HOS_modules(module, HOS_FUNC_15, HOS_CUSTOM_15, HOS_OUTPUTNAME_15, HOSsystemNames[14], HOS_DIM_15, HOS_NPAR_15, HOS_ANGLES_15);
             break;
         case 16:
-            execute_OS_modules(module, OS_FUNC_16, OS_CUSTOM_16, OS_OUTPUTNAME_16, OSsystemNames[15]);
+            execute_HOS_modules(module, HOS_FUNC_16, HOS_CUSTOM_16, HOS_OUTPUTNAME_16, HOSsystemNames[15], HOS_DIM_16, HOS_NPAR_16, HOS_ANGLES_16);
             break;
         default:
             printf("Invalid...\n");
@@ -243,8 +163,8 @@ int main (void) {
         call_GNL_system(system, module);
     }
     else if (toolbox == 2) {
-        identify_simulation(toolbox, &system, &module, toolboxesNames, OSsystemNames, OSmoduleNames, NUM_OF_OS_SYSTEMS, MAX_NAMELENGTH, NUM_OF_OS_MODULES);
-        call_OS_system(system, module);
+        identify_simulation(toolbox, &system, &module, toolboxesNames, HOSsystemNames, HOSmoduleNames, NUM_OF_HOS_SYSTEMS, MAX_NAMELENGTH, NUM_OF_HOS_MODULES);
+        call_HOS_system(system, module);
     }
     else if (toolbox == 0) {
         clear_screen();
@@ -261,42 +181,42 @@ int main (void) {
     end_of_execution(MAX_NAMELENGTH);
 }
 
-void execute_OS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
+void execute_HOS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
                         void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, size_t, double *, int),
-                        char* outputname, char *funcname) {
+                        char* outputname, char *funcname, unsigned int dim, unsigned int npar, bool angles) {
     switch (module) {
         case 1:
             convergence_test(funcname, outputname, edosys);
             break;
         case 2:
-            OS_timeseries(funcname, outputname, edosys, customfunc);
+            HOS_timeseries(funcname, dim, npar, outputname, edosys, customfunc);
             break;
         case 3:
-            poincaremap(funcname, outputname, edosys);
+            poincaremap(funcname, outputname, edosys);  
             break;
         case 4:
             lyapunov_exp_wolf(funcname, outputname, edosys);
             break;
         case 5:
-            OS_ftime_series(funcname, outputname, edosys, customfunc);
+            HOS_ftime_series(funcname, outputname, edosys, customfunc);
             break;
         case 6:
-            OS_bifurcation(funcname, outputname, edosys, customfunc);
+            HOS_bifurcation(funcname, outputname, edosys, customfunc);
             break;
         case 7:
-            OS_fbifurcation(funcname, outputname, edosys, customfunc);
+            HOS_fbifurcation(funcname, outputname, edosys, customfunc);
             break;
         case 8:
-            OS_dyndiag(funcname, outputname, edosys, customfunc);
+            HOS_dyndiag(funcname, outputname, edosys, customfunc);
             break;
         case 9:
-            OS_fdyndiag(funcname, outputname, edosys, customfunc);
+            HOS_fdyndiag(funcname, outputname, edosys, customfunc);
             break;
         case 10:
             epbasin(funcname, outputname, edosys);
             break;
         case 11:
-            OS_fforcedbasin(funcname, outputname, edosys, customfunc);
+            HOS_fforcedbasin(funcname, outputname, edosys, customfunc);
             break;    
         default:
             printf("Invalid Module\n");

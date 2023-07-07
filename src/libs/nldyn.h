@@ -12,7 +12,7 @@ int check_periodicity(int dim, int np, double **poinc, int trans, int *tmp_attra
 int get_attractor(double **poinc, double *LE, int dim, int np, int trans, int *tmp_attractor, int *diffattrac, int maxper);
 double *convert_argument_to_private(double *arg, int nsize);
 void add_one_row_2Dvector(double ***attrac, size_t *rows, size_t cols);
-bool check_if_array_is_all_one(double arr[], int dim);
+bool check_if_array_is_all_one(int arr[], int dim);
 void store_equilibrium_point(size_t *rows, size_t cols, double ***attrac, double *X, int dim, double tol);
 void max_value(double newvalue, double *oldvalue);
 void min_value(double newvalue, double *oldvalue);

@@ -8,6 +8,7 @@ void create_dir(const char *pathname);
 void directory_exists(const char *pathname);
 bool file_exists(const char* filename);
 FILE *create_output_file(char *name, const char *ext, const char *dir);
+FILE *name_and_create_output_files(const char *systemname, const char *directory, const char *module, const char *ext);
 char *get_input_filename(void);
 
 // Write Results in file
