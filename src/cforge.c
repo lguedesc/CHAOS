@@ -12,7 +12,6 @@
 #include "libs/basic.h"
 #include "libs/iofiles.h"
 
-
 #define MAX_LINE_LENGTH 10000       // 10 Kb
 
 typedef struct {
@@ -189,10 +188,10 @@ bool check_if_string_is_number(const char* str) {
 }
 
 void check_group(char *str) {
-    if((strcmp(str, "GNL") != 0) && (strcmp(str, "OS") != 0)) {
+    if((strcmp(str, "GNL") != 0) && (strcmp(str, "HOS") != 0)) {
         print_error("'%s' is a invalid group! Please choose between the options below:\n", str);
         print_error("   1. General Nonlinear Systems by entering 'group = GNL' in the input file;\n");
-        print_error("   2. Harmonic Oscillators by entering 'group = OS' in the input file.\n");
+        print_error("   2. Harmonic Oscillators by entering 'group = HOS' in the input file.\n");
         print_exit_prog();
         exit(EXIT_FAILURE);
     }
@@ -757,7 +756,7 @@ void add_customcalc(sys system) {
 }
 
 void add_number_of_systems(char* group) {
-    char *filepath = "src/main.c";
+    char *filepath = "src/defines.h";
     // Open main file to read and write the information
     FILE *file = open_file(filepath, "rb+", true);
     // Allocate memory for the buffer and for the keyword that will be searched for within main file
@@ -873,7 +872,7 @@ char *split_and_add_text(FILE *file, long split_pos, char *str_add) {
 }
 
 void add_system_information(sys system) {
-    char *filepath = "src/main.c";
+    char *filepath = "src/defines.h";
     // Open main file to read and write the information
     FILE *file = open_file(filepath, "rb+", true);
     size_t maxlinesize = get_size_of_longest_line(file);
@@ -1136,7 +1135,7 @@ void file_tutorial() {
     print_purple("name = Test Oscillator\n");
     print_purple("abrev = TOsc\n");
     print_purple("outfile = test_oscillator\n");
-    print_purple("group = OS\n");
+    print_purple("group = HOS\n");
     print_purple("\n# COMMENTS:\n");
     print_purple("par[0] = Forcing frequency\n");
     print_purple("par[1] = Forcing amplitude\n");
@@ -1165,7 +1164,7 @@ void file_tutorial() {
     printf("\t- group:   The group the custom dynamical system belongs.\n");
     printf("\t           Currently, the CHAOS package supports two types of\n");
     printf("\t           dynamical systems: General Nonlinear Systems (GNL)\n");
-    printf("\t           and Harmonic Oscillators (OS). This field is very\n");
+    printf("\t           and Harmonic Oscillators (HOS). This field is very\n");
     printf("\t           important as each group have its own unique available\n");
     printf("\t           set of features within the CHAOS package. Also, some\n");
     printf("\t           features as bifurcation diagrams and Poincare maps\n");

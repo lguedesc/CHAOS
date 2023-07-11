@@ -9,13 +9,7 @@
 #include "modules/time_series.h"
 #include "modules/poinc_map.h"
 #include "modules/lyap_exp_wolf.h"
-#include "modules/ftime_series.h"
-#include "modules/bifurcation.h"
-#include "modules/fbifurcation.h"
-#include "modules/dyndiag.h"
-#include "modules/fdyndiag.h"
 #include "modules/epbasin.h"
-#include "modules/forcedbasin.h"
 #include "modules/HOS_timeseries.h"
 #include "modules/HOS_ftime_series.h"
 #include "modules/HOS_bifurcation.h"
@@ -29,7 +23,8 @@
 void execute_HOS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
                         void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, size_t, double *, int),
                         char* outputname, char *funcname, unsigned int dim, unsigned int npar, bool angles);
-void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname);
+void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname,
+                         char *funcname, unsigned int dim, unsigned int npar);
 
 char *HOSsystemNames[NUM_OF_HOS_SYSTEMS] = {"Duffing Oscillator",
                                             "2 DoF Duffing Oscillator",
@@ -68,23 +63,23 @@ char *HOSmoduleNames[NUM_OF_HOS_MODULES] = {  "Convergence Test (In Development)
                                             "Basin of Attraction (Fixed Points)",
                                             "Full Basin of Attraction (Forced)" };
 
-char *GNLmoduleNames[NUM_OF_GNL_MODULES] = { "Convergence Test",
+char *GNLmoduleNames[NUM_OF_GNL_MODULES] = { "Convergence Test (In Development)",
                                              "Time Series",
                                              "Lyapunov Exponents (Method from Wolf et al., 1985)"};
 
 void call_GNL_system(unsigned int system, unsigned int module) {
         switch(system) {
         case 1:
-            execute_GNL_modules(module, GNL_FUNC_1, GNL_OUTPUTNAME_1, GNLsystemNames[0]);
+            execute_GNL_modules(module, GNL_FUNC_1, GNL_OUTPUTNAME_1, GNLsystemNames[0], GNL_DIM_1, GNL_NPAR_1);
             break;
         case 2:
-            execute_GNL_modules(module, GNL_FUNC_2, GNL_OUTPUTNAME_2, GNLsystemNames[1]);
+            execute_GNL_modules(module, GNL_FUNC_2, GNL_OUTPUTNAME_2, GNLsystemNames[1], GNL_DIM_2, GNL_NPAR_2);
             break;
         case 3:
-            execute_GNL_modules(module, GNL_FUNC_3, GNL_OUTPUTNAME_3, GNLsystemNames[2]);
+            execute_GNL_modules(module, GNL_FUNC_3, GNL_OUTPUTNAME_3, GNLsystemNames[2], GNL_DIM_3, GNL_NPAR_3);
             break;
 		case 4:
-			execute_GNL_modules(module, GNL_FUNC_4, GNL_OUTPUTNAME_4, GNLsystemNames[3]);
+			execute_GNL_modules(module, GNL_FUNC_4, GNL_OUTPUTNAME_4, GNLsystemNames[3], GNL_DIM_4, GNL_NPAR_4);
 			break;
 
         default:
@@ -186,37 +181,37 @@ void execute_HOS_modules(unsigned int module, void (*edosys)(int, double *, doub
                         char* outputname, char *funcname, unsigned int dim, unsigned int npar, bool angles) {
     switch (module) {
         case 1:
-            convergence_test(funcname, outputname, edosys);
+            convergence_test(funcname, dim, npar, outputname, edosys);
             break;
         case 2:
             HOS_timeseries(funcname, dim, npar, outputname, edosys, customfunc);
             break;
         case 3:
-            poincaremap(funcname, outputname, edosys);  
+            poincaremap(funcname, dim, npar, outputname, edosys);  
             break;
         case 4:
-            lyapunov_exp_wolf(funcname, outputname, edosys);
+            lyapunov_exp_wolf(funcname, dim, npar, outputname, edosys);
             break;
         case 5:
-            HOS_ftime_series(funcname, outputname, edosys, customfunc);
+            HOS_ftime_series(funcname, dim, npar, outputname, edosys, customfunc);
             break;
         case 6:
-            HOS_bifurcation(funcname, outputname, edosys, customfunc);
+            HOS_bifurcation(funcname, dim, npar, outputname, edosys, customfunc);
             break;
         case 7:
-            HOS_fbifurcation(funcname, outputname, edosys, customfunc);
+            HOS_fbifurcation(funcname, dim, npar, outputname, edosys, customfunc);
             break;
         case 8:
-            HOS_dyndiag(funcname, outputname, edosys, customfunc);
+            HOS_dyndiag(funcname, dim, npar, outputname, edosys, customfunc);
             break;
         case 9:
-            HOS_fdyndiag(funcname, outputname, edosys, customfunc);
+            HOS_fdyndiag(funcname, dim, npar, outputname, edosys, customfunc);
             break;
         case 10:
-            epbasin(funcname, outputname, edosys);
+            epbasin(funcname, dim, npar, outputname, edosys);
             break;
         case 11:
-            HOS_fforcedbasin(funcname, outputname, edosys, customfunc);
+            HOS_fforcedbasin(funcname, dim, npar, outputname, edosys, customfunc);
             break;    
         default:
             printf("Invalid Module\n");
@@ -224,16 +219,17 @@ void execute_HOS_modules(unsigned int module, void (*edosys)(int, double *, doub
     }
 }
 
-void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname, char *funcname) {
+void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname,
+                         char *funcname, unsigned int dim, unsigned int npar) {
     switch (module) {
         case 1:
-            convergence_test(funcname, outputname, edosys);
+            convergence_test(funcname, dim, npar, outputname, edosys);
             break;
         case 2:
-            timeseries(funcname, outputname, edosys);
+            timeseries(funcname, dim, npar, outputname, edosys);
             break;
         case 3:
-            lyapunov_exp_wolf(funcname, outputname, edosys);
+            lyapunov_exp_wolf(funcname, dim, npar, outputname, edosys);
             break;
         default:
             printf("Invalid Module\n");

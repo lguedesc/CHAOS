@@ -14,11 +14,13 @@
 
 static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, int nrms, double h, double t, double *x, double *par, int *rmsindex, char* funcname, 
                        int ncustomvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex, size_t maxlength, double percname, char* mode);
-static void read_params_and_IC(int dim, int npar, int *np, int *ndiv, int *trans, int *nrms, double *t, double **par, double **x, int **rmsindex, int *ncustomvalues, int *nprintf, int *nprintscr, int **printfindex, int **printscrindex);
+static void read_params(int dim, int npar, int *np, int *ndiv, int *trans, int *nrms, double *t, double **par, double **x, int **rmsindex, int *ncustomvalues, int *nprintf, int *nprintscr, int **printfindex, int **printscrindex);
+
+static void print_results(FILE *info, int DIM, double *xmin, double *xmax, double *overallxmin, double *overallxmax, int nRMS, int *rmsindex, double *xRMS, double *overallxRMS,
+                          int nCustomValues, int nPrintscr, int *printscrindex, double *customValues, char **customNames);
 
 void HOS_timeseries(char *funcname, unsigned int DIM, unsigned int nPar, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, size_t, double *, int)) {
     // Declare Program Parameters 
-    const double pi = 4 * atan(1);              // Pi number definition
     int nP;                                     // Number of forcing periods analyzed
     int nDiv;                                   // Number of divisions in each forcing period
     int trans;                                  // Number of forcing periods considered transient
@@ -27,8 +29,8 @@ void HOS_timeseries(char *funcname, unsigned int DIM, unsigned int nPar, char* o
     int nPrintf = 0;                            // Number of custom values to be printed in the output file
     int nPrintscr = 0;                          // Number of custom values to be printed on the screen
     double t;                                   // Time
-    double *x = malloc(DIM * sizeof(x));        // State Variables
-    double *par = malloc(nPar * sizeof(par));   // Parameters
+    double *x = NULL;                           // State Variables
+    double *par = NULL;                         // Parameters
     int *rmsindex = NULL;                       // Indexes of state variables that will be submitted to RMS calculation
     double *xRMS = NULL;                        // State Variables RMS values at permanent regime
     double *overallxRMS = NULL;                 // State Variables RMS values at transient + permanent regime
@@ -41,7 +43,7 @@ void HOS_timeseries(char *funcname, unsigned int DIM, unsigned int nPar, char* o
     double *overallxmin = NULL;                 // Overall state variables minimum value at steady state regime 
     double *overallxmax = NULL;                 // Overall state variables maximum value at steady state regime 
 
-    read_params_and_IC(DIM, nPar, &nP, &nDiv, &trans, &nRMS, &t, &par, &x, &rmsindex, &nCustomValues, &nPrintf, &nPrintscr, &printfindex, &printscrindex);
+    read_params(DIM, nPar, &nP, &nDiv, &trans, &nRMS, &t, &par, &x, &rmsindex, &nCustomValues, &nPrintf, &nPrintscr, &printfindex, &printscrindex);
     // Define Timestep
     double h = (2 * PI) / (nDiv * par[0]); // par[0] = OMEGA
     // Create output files
@@ -65,54 +67,33 @@ void HOS_timeseries(char *funcname, unsigned int DIM, unsigned int nPar, char* o
     time_spent += (double)(time_f - time_i) / CLOCKS_PER_SEC; 
     printf("The elapsed time is %f seconds\n", time_spent);
     */
-    // Print min and max values on screen and in info file
-    print_minmax(xmin, xmax, overallxmin, overallxmax, DIM, MAX_PRINT_LEN, PERC_PRINT_NAME);
-    fprint_minmax(output_info, xmin, xmax, overallxmin, overallxmax, DIM, MAX_PRINT_LEN, PERC_PRINT_NAME);
-    // Print RMS calculations in screen and in info file
-    if (nRMS > 0) {
-        print_RMS(nRMS, rmsindex, xRMS, overallxRMS, MAX_PRINT_LEN, PERC_PRINT_NAME);
-        fprint_RMS(output_info, nRMS, rmsindex, xRMS, overallxRMS, MAX_PRINT_LEN, PERC_PRINT_NAME);
-    }
-    // Print custom calculations on screen and in info file
-    if (nCustomValues > 0) {
-        print_customcalc(nPrintscr, printscrindex, customValues, customNames, MAX_PRINT_LEN, PERC_PRINT_NAME);
-        fprint_customcalc(output_info, nPrintscr, printscrindex, customValues, customNames, MAX_PRINT_LEN, PERC_PRINT_NAME);
-    }    
+    
+    // Print some results on the screen
+    print_results(output_info, DIM, xmin, xmax, overallxmin, overallxmax, nRMS, rmsindex, xRMS, overallxRMS, nCustomValues, nPrintscr, printscrindex, customValues, customNames);   
     // Close output file
     close_files(2, output_timeseries, output_info);
     // Free allocated memory
     free_mem(x, par, xRMS, overallxRMS, rmsindex, xmin, xmax, overallxmin, overallxmax, NULL);
     if (nCustomValues > 0) {
-        free(customValues); free(printfindex); free(printscrindex);
-        for (int i = 0; i < nCustomValues; i++) {
-            free(customNames[i]);
-        }
-        free(customNames); 
+        free_mem(customValues, printfindex, printscrindex, NULL);
+        free_2D_mem((void **)customNames, nCustomValues);         
     }
 }
 
-static void read_params_and_IC(int dim, int npar, int *np, int *ndiv, int *trans, int *nrms, double *t, double **par, double **x, int **rmsindex, int *ncustomvalues, int *nprintf, int *nprintscr, int **printfindex, int **printscrindex) {
+static void read_params(int dim, int npar, int *np, int *ndiv, int *trans, int *nrms, double *t, double **par, double **x, int **rmsindex, int *ncustomvalues, int *nprintf, int *nprintscr, int **printfindex, int **printscrindex) {
     // Open input file
     char *input_filename = get_input_filename();
     FILE *input = fopen(input_filename, "r");
-    if (input == NULL) {
-        // Return error if input does not exist 
-        perror(input_filename);
-        exit(1);
-    }
+    file_safety_check(input);
     // Read and assign program parameters
     fscanf(input, "%d %d %d", np, ndiv, trans); 
     // Read and assign initial time
     fscanf(input, "%lf", t);
-    /*// Allocate memory for x[dim] and par[npar] vectors
+    // Allocate memory for x[dim] and par[npar] vectors
     *x = malloc(dim * sizeof **x);
     *par = malloc(npar * sizeof **par);
-    // Security check for pointers
-    if(*x == NULL || *par == NULL) {
-        free(*x); free(*par);
-        printf("Memory allocation for *x or *par did not complete successfully");
-        return;
-    }*/
+    ptr_safety_check(x, "*x in read_params()");
+    ptr_safety_check(par, "*par in read_params()");
     // assign IC to x[dim] vector
     for (int i = 0; i < dim; i++) {
         fscanf(input, "%lf ", &(*x)[i]);     
@@ -179,4 +160,21 @@ static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int tran
         printf("Information could not be printed using mode (%s)...\n", mode);
         return;
     }
+}
+
+static void print_results(FILE *info, int DIM, double *xmin, double *xmax, double *overallxmin, double *overallxmax, int nRMS, int *rmsindex, double *xRMS, double *overallxRMS,
+                          int nCustomValues, int nPrintscr, int *printscrindex, double *customValues, char **customNames) {
+    // Print min and max values on screen and in info file
+    print_minmax(xmin, xmax, overallxmin, overallxmax, DIM, MAX_PRINT_LEN, PERC_PRINT_NAME);
+    fprint_minmax(info, xmin, xmax, overallxmin, overallxmax, DIM, MAX_PRINT_LEN, PERC_PRINT_NAME);
+    // Print RMS calculations in screen and in info file
+    if (nRMS > 0) {
+        print_RMS(nRMS, rmsindex, xRMS, overallxRMS, MAX_PRINT_LEN, PERC_PRINT_NAME);
+        fprint_RMS(info, nRMS, rmsindex, xRMS, overallxRMS, MAX_PRINT_LEN, PERC_PRINT_NAME);
+    }
+    // Print custom calculations on screen and in info file
+    if (nCustomValues > 0) {
+        print_customcalc(nPrintscr, printscrindex, customValues, customNames, MAX_PRINT_LEN, PERC_PRINT_NAME);
+        fprint_customcalc(info, nPrintscr, printscrindex, customValues, customNames, MAX_PRINT_LEN, PERC_PRINT_NAME);
+    }    
 }

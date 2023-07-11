@@ -4,10 +4,10 @@ from libs import plotconfig as pltconf
 
 pltconf.plot_params(True, 10, 0.2)
 
-save = True
+save = False
 system = "duffing"
 ext = ".pdf"
-filenum = 0
+filenum = 1
 simulation = "lyap"
 
 df = pltconf.read_CHAOS_data(system, filenum, simulation)

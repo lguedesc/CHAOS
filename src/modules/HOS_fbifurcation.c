@@ -9,23 +9,19 @@
 #include "../libs/iofiles.h"
 #include "../libs/nlosc.h"
 #include "../libs/interface.h"
+#include "../libs/defines.h"
+#include "../libs/basic.h"
 #include "HOS_fbifurcation.h"
 
-static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *parindex, double **x, int *nrms, int **rmsindex, int *bifmode,
-                               int *ncustomvalues, int *nprintf, int **printfindex);
+static void read_params(int dim, int npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *parindex, double **x, int *nrms, int **rmsindex, int *bifmode,
+                        int *ncustomvalues, int *nprintf, int **printfindex);
 static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int parindex, int nrms, int *rmsindex, int bifmode, char* funcname,
                        int ncustomvalues, int nprintf, int *printfindex, size_t maxlength, double percname, char* mode);
 
-void HOS_fbifurcation(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, size_t, double *, int)) {
-    // Parameters related to printing information
-    size_t maxLen = 71;             // Max length of the info printed on the screen and on info file
-    double percName = 0.6;          // Percentage of space occuped by the name of the quantity printed
+void HOS_fbifurcation(char *funcname, unsigned int DIM, unsigned int nPar, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, size_t, double *, int)) {
     // Declare Program Parameters
-    const double pi = 4 * atan(1);  // Pi number definition
-    int DIM;                        // Dimension of the system
     int nP;                         // Number of forcing periods analyzed
     int nDiv;                       // Number of divisions in each forcing period
-    int nPar;                       // Number of parameters of the system
     int trans;                      // Value of nP in which greater values are considered transient response
     int bMode;                      // Mode of the Bifurcation Diagram: 0 to follow attractor, 1 to reset initial conditions in each step
     int parIndex;                   // Index of control parameter in par array
@@ -34,91 +30,57 @@ void HOS_fbifurcation(char *funcname, char* outputname, void (*edosys)(int, doub
     int nCustomValues = 0;          // If there is a custom function to be called, this is the number of calculations the function is going to perform
     int nPrintf = 0;                // Number of custom values to be printed in the output file
     // Assign values for program parameters, system parameters and initial conditions
-    char *input_filename = get_input_filename();
     double t;
     double *x = NULL;
     double *par = NULL;
     double *parRange = NULL;
     int *rmsindex = NULL;           // Indexes of state variables that will be submitted to RMS calculation
     int *printfindex = NULL;        // Indexes of custom values that will be printed in the output file
-    read_params_and_IC(input_filename, &DIM, &nPar, &maxPer, &nP, &nDiv, &trans, &t, &par, &parRange, &parIndex, &x, &nRMS, &rmsindex, &bMode,
-                        &nCustomValues, &nPrintf, &printfindex);
-    
+    read_params(DIM, nPar, &maxPer, &nP, &nDiv, &trans, &t, &par, &parRange, &parIndex, &x, &nRMS, &rmsindex, &bMode,
+                &nCustomValues, &nPrintf, &printfindex);
     // Create output files to store results
-    char output_bifurc_name[200];
-    char output_info_name[200];
-    char output_poinc_name[200];
-    const char *rawdir = "data/FBifurcation/out/";                                                           // Directory of output file
-    char *dir = convert_dir(rawdir);
-    const char *ext = ".csv";                                                                           // Extension of output file
-    const char *ext_info = ".txt";                                                                      // Extension of info file
-    snprintf(output_poinc_name, sizeof(output_poinc_name), "%s%s_fbifurc_poinc", dir, outputname);     // Assign name for output rk4 without extension
-    snprintf(output_bifurc_name, sizeof(output_bifurc_name), "%s%s_fbifurc", dir, outputname);          // Assign name for output rk4 without extension
-    snprintf(output_info_name, sizeof(output_info_name), "%s%s_info", dir, outputname);                 // Assign name for output info without extension
-    FILE *output_bifurc_poinc = create_output_file(output_poinc_name, ext, dir);                        // Create poincare bifurc output file
-    FILE *output_bifurc = create_output_file(output_bifurc_name, ext, dir);                             // Create bifurc output file 
-    FILE *output_info = create_output_file(output_info_name, ext_info, dir);                            // Create info output file
-    
+    const char *directory = "data/FBifurcation/out/";                                                           // Directory of output file
+    const char *module = "fbifurc";
+    FILE *output_bifurc_poinc = name_and_create_output_files(outputname, directory, "fbifurc_poinc", ".csv");   // Create poincare bifurc output file
+    FILE *output_bifurc = name_and_create_output_files(outputname, directory, module, ".csv");                  // Create bifurc output file 
+    FILE *output_info = name_and_create_output_files(outputname, directory, "info", ".txt");                    // Create info output file
     // Print information in screen and info output file
-    print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, parIndex, nRMS, rmsindex, bMode, funcname, nCustomValues, nPrintf, printfindex, maxLen, percName, "screen");
-    print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, parIndex, nRMS, rmsindex, bMode, funcname, nCustomValues, nPrintf, printfindex, maxLen, percName,"file");
-    // To store the runtime of the program
-    //double time_spent = 0.0;
-    //clock_t time_i = clock();
+    print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, parIndex, nRMS, rmsindex, bMode, funcname, nCustomValues, nPrintf, printfindex, MAX_PRINT_LEN, PERC_PRINT_NAME, "screen");
+    print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, parIndex, nRMS, rmsindex, bMode, funcname, nCustomValues, nPrintf, printfindex, MAX_PRINT_LEN, PERC_PRINT_NAME, "file");
     // Call solution
     HOS_full_bifurcation_solution(output_bifurc, output_bifurc_poinc, DIM, nP, nDiv, trans, maxPer, t, &x, parIndex, parRange, par, nRMS, rmsindex, edosys, nCustomValues, nPrintf, printfindex, customfunc, bMode);    
     // Close output file
-    fclose(output_bifurc);
-    fclose(output_info);
-
-    // Calculate time of execution
-    //clock_t time_f = clock();
-    //time_spent += (double)(time_f - time_i) / CLOCKS_PER_SEC; 
-    //printf("The elapsed time is %f seconds", time_spent);
-
+    close_files(3, output_bifurc, output_bifurc_poinc, output_info);
     // Free allocated memory
-    free(dir);
-    free(input_filename);
-    free(x); free(par); free(parRange);
-    free(rmsindex);
-    free(printfindex);
+    free_mem(x, par, parRange, rmsindex, printfindex, NULL);
 }
 
-static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *parindex, double **x, int *nrms, int **rmsindex, int *bifmode,
+static void read_params(int dim, int npar, int *maxper,  int *np, int *ndiv, int *trans, double *t, double **par, double **parrange, int *parindex, double **x, int *nrms, int **rmsindex, int *bifmode,
                                int *ncustomvalues, int *nprintf, int **printfindex) {
     // Open input file
-    FILE *input = fopen(name, "r");
-    if (input == NULL) {
-        // Return error if input does not exist 
-        perror(name);
-        exit(1);
-    }
+    char *input_filename = get_input_filename();
+    FILE *input = fopen(input_filename, "r");
+    file_safety_check(input);
     // Determine the mode of the bifurcation diagram: 0 to follow attractor, 1 to reset initial conditions in each step
     fscanf(input, "%d", &(*bifmode));
-    // Read and assign system constants
-    fscanf(input, "%d", dim);
-    fscanf(input, "%d", npar);
-    fscanf(input, "%d", maxper);
     // Read and assign program parameters
+    fscanf(input, "%d", maxper);
     fscanf(input, "%d %d %d", np, ndiv, trans); 
     // Read and assign initial time
     fscanf(input, "%lf", t);
     // Allocate memory for x[dim] and par[npar] vectors
-    *x = malloc((*dim) * sizeof **x);
-    *par = malloc((*npar) * sizeof **par);
+    *x = malloc(dim * sizeof **x);
+    *par = malloc(npar * sizeof **par);
     *parrange = malloc (3 * sizeof *parrange);
-    // Security check for pointers
-    if(*x == NULL || *par == NULL || *parrange == NULL) {
-        free(*x); free(*par); free(*parrange);
-        printf("Memory allocation for *x or *par did not complete successfully");
-        return;
-    }
+    ptr_safety_check(x, "*x in read_params()");
+    ptr_safety_check(par, "*par in read_params()");
+    ptr_safety_check(parrange, "*parrange in read_params()");
     // assign IC to x[dim] vector
-    for (int i = 0; i < *dim; i++) {
+    for (int i = 0; i < dim; i++) {
         fscanf(input, "%lf ", &(*x)[i]);     
     }
     // Assign parameter values to par[npar] vector
-    for (int i = 0; i < *npar; i++) {
+    for (int i = 0; i < npar; i++) {
         fscanf(input, "%lf\n", &(*par)[i]);
     }
     // Assign index of control parameter of the diagram
@@ -149,6 +111,8 @@ static void read_params_and_IC(char *name, int *dim, int *npar, int *maxper,  in
     }
     // Close input file
     fclose(input);
+    // Free memory
+    free(input_filename);
     /* The user is responsible to free everything allocated after the function call */
 }
 

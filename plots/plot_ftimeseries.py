@@ -7,11 +7,11 @@ from libs import plotconfig as pltconf
 
 pltconf.plot_params(True, 10, 0.2)
 
-save = True
+save = False
 
 system = "duffing"
 ext = ".png"
-filenum = 1
+filenum = 0
 simulation = "ftimeseries"
 
 df, df_poinc = pltconf.read_CHAOS_data(system, filenum, simulation)

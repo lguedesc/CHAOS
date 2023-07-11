@@ -353,7 +353,9 @@ void write_RMS_calculations_info(int n, int *index, size_t maxlength, double per
     partition(2, maxlength);
     printf("%-*s %-*d\n", spcname, "  Number of RMS Calculations:", spcvalue, n);
     print_list_of_indexes(n, index, spcvalue, spcname, "  State Variables Indexes:");
-    printf("\n");
+    if (n > 0) {
+        printf("\n");
+    }
 }
 
 void fwrite_RMS_calculations_info(FILE *output_file, int n, int *index, size_t maxlength, double percname) {
@@ -364,7 +366,9 @@ void fwrite_RMS_calculations_info(FILE *output_file, int n, int *index, size_t m
     fpartition(output_file, 2, maxlength);
     fprintf(output_file, "%-*s %-*d\n", spcname, "  Number of RMS Calculations:", spcvalue, n);
     fprint_list_of_indexes(output_file, n, index, spcvalue, spcname, "  State Variables Indexes:");
-    fprintf(output_file, "\n");
+    if (n > 0) {
+        fprintf(output_file, "\n");
+    }
 }
 
 void write_custom_info_calculations(int n, int nf, int *findex, int nscr, int *scrindex, size_t maxlength, double percname) {
@@ -872,7 +876,6 @@ void fwrite_basin_info(char* type, FILE *output_file, double *icrange, int index
 void print_attractor(int attrac, int maxper, size_t maxlength, double percname) {
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
-    printf("  Attractor\n");
     partition(2, maxlength);
     // Get the attractor and convert into a string
     char number[5];
@@ -896,12 +899,12 @@ void print_attractor(int attrac, int maxper, size_t maxlength, double percname) 
     else {
         printf("%-*s %-*s\n", spcname, "  Type of Motion:", spcvalue, "Undefined (Escape)");
     } 
+    partition(2, maxlength);
 }
 
 void fprint_attractor(FILE *output_file, int attrac, int maxper, size_t maxlength, double percname) {
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
-    fprintf(output_file, "  Attractor\n");
     fpartition(output_file, 2, maxlength);
     // Get the attractor and convert into a string
     char number[5];
@@ -925,6 +928,7 @@ void fprint_attractor(FILE *output_file, int attrac, int maxper, size_t maxlengt
     else {
         fprintf(output_file, "%-*s %-*s\n", spcname, "  Type of Motion:", spcvalue, "Undefined (Escape)");
     } 
+    fpartition(output_file, 2, maxlength);
 }
 
 void print_RMS(int nRMS, int *rmsindex, double *xRMS, double *overallxRMS, size_t maxlength, double percname) {
@@ -984,7 +988,7 @@ void fprint_customcalc(FILE *output_file, int nprintscr, int *printscrindex, dou
 void print_minmax(double *xmin, double *xmax, double *overallxmin, double *overallxmax, int dim, size_t maxlength, double percname) {
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
-    partition(2, maxlength);
+    //partition(2, maxlength);
     printf("  Minimum and Maximum Values\n");
     partition(2, maxlength);
     // Print min and maximum values
@@ -1005,7 +1009,7 @@ void print_minmax(double *xmin, double *xmax, double *overallxmin, double *overa
 void fprint_minmax(FILE *output_file, double *xmin, double *xmax, double *overallxmin, double *overallxmax, int dim, size_t maxlength, double percname) {
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
-    fpartition(output_file, 2, maxlength);
+    //fpartition(output_file, 2, maxlength);
     fprintf(output_file, "  Minimum and Maximum Values\n");
     fpartition(output_file, 2, maxlength);
     // Print min and maximum values

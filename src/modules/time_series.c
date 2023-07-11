@@ -7,104 +7,67 @@
 #include "../libs/odesystems.h"
 #include "../libs/nldyn.h"
 #include "../libs/iofiles.h"
+#include "../libs/defines.h"
+#include "../libs/basic.h"
 #include "time_series.h"
 
-static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, double *t, double **par, double **x);
+static void read_params(int dim, int npar, int *np, int *ndiv, double *t, double **par, double **x);
 static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, double h, double t, double *x, double *par, char* funcname, char* mode);
 
-void timeseries(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
+void timeseries(char *funcname, unsigned int DIM, unsigned int nPar, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     
     // Declare Program Parameters
-    const double pi = 4 * atan(1);  // Pi number definition
-    int DIM;                        // Dimension of the system
     int nP;                         // Number of forcing periods analyzed
     int nDiv;                       // Number of divisions in each forcing period
-    int nPar;                       // Number of parameters of the system
-
     // Assign values for program parameters, system parameters and initial conditions
-    char *input_filename = get_input_filename();
     double t;
     double *x = NULL;
     double *par = NULL;
-    read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &t, &par, &x);
-    
+    read_params(DIM, nPar, &nP, &nDiv, &t, &par, &x);
     // Define Timestep
-    double h = (2 * pi) / (nDiv * par[0]); // par[0] = OMEGA
-    
+    double h = (2 * PI) / (nDiv * par[0]); // par[0] = OMEGA
     // Create output files to store results
-    char output_rk4_name[200];
-    char output_info_name[200];
-    const char *rawdir = "data/TimeSeries/out/";                                                              // Directory of output file
-    char *dir = convert_dir(rawdir);
-    const char *ext = ".csv";                                                                           // Extension of output file    
-    const char *ext_info = ".txt";                                                                      // Extension of info file
-    snprintf(output_rk4_name, sizeof(output_rk4_name), "%s%s_timeseries", dir, outputname);                      // Assign name for output rk4 without extension
-    snprintf(output_info_name, sizeof(output_info_name), "%s%s_info", dir, outputname);                   // Assign name for output info without extension
-    FILE *output_rk4 = create_output_file(output_rk4_name, ext, dir);    // Create rk4 output file 
-    FILE *output_info = create_output_file(output_info_name, ext_info, dir);  // Create info output file
-    
+    const char *directory = "data/TimeSeries/out/";                                            // Directory of output file
+    const char *module = "timeseries";
+    FILE *output_timeseries = name_and_create_output_files(outputname, directory, module, ".csv");    // Create timeseries output file 
+    FILE *output_info = name_and_create_output_files(outputname, directory, "info", ".txt");   // Create info output file
     // Print information in screen and info output file
     print_info(output_info, DIM, nPar, nP, nDiv, h, t, x, par, funcname, "screen");
     print_info(output_info, DIM, nPar, nP, nDiv, h, t, x, par, funcname, "file");
-    
-    /*
-    // Time variables
-    double time_spent = 0.0;
-    clock_t time_i = clock();
-    */
     // Call solution
-    rk4_solution(output_rk4, DIM, nP, nDiv, t, x, h, par, edosys, write_results);
-
-    /*
-    clock_t time_f = clock();
-    time_spent += (double)(time_f - time_i) / CLOCKS_PER_SEC; 
-    printf("The elapsed time is %f seconds\n", time_spent);
-    */
+    rk4_solution(output_timeseries, DIM, nP, nDiv, t, x, h, par, edosys, write_results);
     // Close output file
-    fclose(output_rk4);
-    fclose(output_info);
-    
+    close_files(2, output_timeseries, output_info);        
     // Free allocated memory
-    free(dir);
-    free(input_filename);
-    free(x); free(par);
+    free_mem(x, par, NULL);
 }
 
-static void read_params_and_IC(char *name, int *dim, int *npar, int *np, int *ndiv, double *t, double **par, double **x) {
+static void read_params(int dim, int npar, int *np, int *ndiv, double *t, double **par, double **x) {
    // Open input file
-    FILE *input = fopen(name, "r");
-    if (input == NULL) {
-        // Return error if input does not exist 
-        perror(name);
-        exit(1);
-    }
-    // Read and assign system constants
-    fscanf(input, "%d", dim);
-    fscanf(input, "%d", npar);
+    char *input_filename = get_input_filename();
+    FILE *input = fopen(input_filename, "r");
+    file_safety_check(input);
     // Read and assign program parameters
     fscanf(input, "%d %d", np, ndiv); 
     // Read and assign initial time
     fscanf(input, "%lf", t);
     // Allocate memory for x[dim] and par[npar] vectors
-    //*x = malloc((*dim) * sizeof(double));
-    *x = malloc((*dim) * sizeof **x);
-    *par = malloc((*npar) * sizeof **par);
-    // Security check for pointers
-    if(*x == NULL || *par == NULL) {
-        free(*x); free(*par);
-        printf("Memory allocation for *x or *par did not complete successfully");
-        return;
-    }
+    *x = malloc(dim * sizeof **x);
+    *par = malloc(npar * sizeof **par);
+    ptr_safety_check(x, "*x in read_params()");
+    ptr_safety_check(par, "*par in read_params()");
     // assign IC to x[dim] vector
-    for (int i = 0; i < *dim; i++) {
+    for (int i = 0; i < dim; i++) {
         fscanf(input, "%lf ", &(*x)[i]);     
     }
     // Assign parameter values to par[npar] vector
-    for (int i = 0; i < *npar; i++) {
+    for (int i = 0; i < npar; i++) {
             fscanf(input, "%lf\n", &(*par)[i]);
     }
     // Close input file
     fclose(input);
+    // Free memory 
+    free(input_filename);
     /* The user is responsible to free (x) and (par) after the function call */
 }
 

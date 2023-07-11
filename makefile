@@ -39,7 +39,7 @@ endif
 
 #define .c files to be compiled
 LIBS=src/libs/odesystems.c src/libs/interface.c src/libs/iofiles.c src/libs/nldyn.c src/libs/nlosc.c src/libs/customcalc.c src/libs/basic.c src/libs/odesolvers.c src/libs/msg.c
-MODULES=src/modules/convergence_test.c src/modules/time_series.c src/modules/poinc_map.c src/modules/lyap_exp_wolf.c src/modules/ftime_series.c src/modules/bifurcation.c src/modules/fbifurcation.c src/modules/dyndiag.c src/modules/fdyndiag.c src/modules/epbasin.c src/modules/forcedbasin.c 
+MODULES=src/modules/convergence_test.c src/modules/time_series.c src/modules/poinc_map.c src/modules/lyap_exp_wolf.c src/modules/epbasin.c
 HOSMODULES=src/modules/HOS_timeseries.c src/modules/HOS_ftime_series.c src/modules/HOS_bifurcation.c src/modules/HOS_fbifurcation.c src/modules/HOS_dyndiag.c src/modules/HOS_fdyndiag.c src/modules/HOS_fforcedbasin.c
 FILES=src/main.c $(LIBS) $(MODULES) $(HOSMODULES) 
 
