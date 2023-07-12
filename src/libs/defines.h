@@ -1,5 +1,5 @@
-#ifndef DEFS_H
-#define DEFS_H
+#ifndef DEFINES_H
+#define DEFINES_H
 
 // macros for compilers
 #define _CRT_SECURE_NO_WARNINGS

@@ -1,3 +1,6 @@
+#ifndef INTERFACE_H
+#define INTERFACE_H
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -82,3 +85,5 @@ void fprint_minmax(FILE *output_file, double *xmin, double *xmax, double *overal
 
 void print_attractor(int attrac, int maxper, size_t maxlength, double percname);
 void fprint_attractor(FILE *output_file, int attrac, int maxper, size_t maxlength, double percname);
+
+#endif

@@ -1,8 +1,10 @@
+#ifndef NLDYN_H
+#define NLDYN_H
+
 #include <stdio.h>
 #include <stdbool.h>
 
 //Methods
-void rk4(int dim, double *x, double t, double h, double *par, double *f, void (*edosys)(int, double *, double, double *, double *));
 void realloc_vector(double **x, int ndim);
 void perturb_wolf(double **x, int dim, int ndim, double **cum, double **s_cum);
 void lyapunov_wolf(double **x, double t, double h, int dim, int ndim, double s_t0, double **cum, double **s_cum, double **lambda, double **s_lambda, double **znorm, double **gsc);
@@ -21,11 +23,10 @@ void min_value(double newvalue, double *oldvalue);
 void progress_bar(int mode, double var, double var_i, double var_f);
 void print_equilibrium_points(FILE* info, double **attrac, size_t rows, size_t cols, int dim);
 // Solutions
-void rk4_solution(FILE *output_file, int dim, int np, int ndiv, double t, double *x, double h, double *par, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, int dim, double t, double *x, int mode));
+void timeseries_solution(FILE *output_file, int dim, int np, int ndiv, double t, double *x, double h, double *par, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, int dim, double t, double *x, int mode));
 void poincare_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double *x, double h, double *par, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, int dim, double t, double *x, int mode));
 void lyap_wolf_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double **x, double h, double *par, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, int dim, double t, double *lambda, double *s_lambda, int mode));
 void full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int *attrac, int maxper, double t, double **x, double h, double *par, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, int dim, double t, double *x, double *lambda, double *s_lambda, int mode));
-//void bifurc_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double *x, int index, double *parrange, double *par, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, int dim, double varpar, double *x, int mode), int bifmode);
 void bifurc_solution(FILE* output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, double t, double *x, int parindex, 
                      double *parrange, double *par, void (*edosys)(int, double *, double, double *, double *), 
                      void (*write_results)(FILE *output_file, int dim, double varpar, double *x, double *xmin, double *xmax, int mode), int bifmode);
@@ -54,3 +55,6 @@ void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
                                          void (*write_results)(FILE *output_file, int dim, double **results, int pixels));
 void convergence_test_solution(int dim, int N, double t, double tf, double *x, int ntries, double *par, 
                                 void (*edosys)(int, double *, double, double *, double *));
+
+
+#endif

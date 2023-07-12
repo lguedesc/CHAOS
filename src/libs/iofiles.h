@@ -1,3 +1,6 @@
+#ifndef IOFILES_H
+#define IOFILES_H
+
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -33,3 +36,5 @@ void EH_p_write_fdyndiag_results(FILE *output_file, int dim, int nrms, int *rmsi
 void EH_p_write_dyndiag_results(FILE *output_file, int dim, int nrms, int *rmsindex, double **results, int pixels, int ncustomvalues, char **customnames, int nprintf, int *printfindex);
 void EH_write_timeseries_results(FILE *output_file, int dim, double t, double *x, int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode);
 void EH_write_ftimeseries_results(FILE *output_file, int dim, double t, double *x, double *lambda, double *s_lambda, int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode);
+
+#endif

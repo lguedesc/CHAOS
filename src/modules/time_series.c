@@ -35,7 +35,7 @@ void timeseries(char *funcname, unsigned int DIM, unsigned int nPar, char* outpu
     print_info(output_info, DIM, nPar, nP, nDiv, h, t, x, par, funcname, "screen");
     print_info(output_info, DIM, nPar, nP, nDiv, h, t, x, par, funcname, "file");
     // Call solution
-    rk4_solution(output_timeseries, DIM, nP, nDiv, t, x, h, par, edosys, write_results);
+    timeseries_solution(output_timeseries, DIM, nP, nDiv, t, x, h, par, edosys, write_results);
     // Close output file
     close_files(2, output_timeseries, output_info);        
     // Free allocated memory

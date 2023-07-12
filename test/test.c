@@ -3,19 +3,39 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct {
+    double value;
+    char *name;
+    int index;
+} cvar;
+
+typedef struct {
+    double *x;
+    char *par;
+    double t0;
+    double t;
+    double *xrms;
+    double *xmin;
+    double *xmax;
+    double *IC;
+    int N;
+    int currenttimestep;
+    double steadystateperc;
+    int ncustomvalues;
+    char **customnames;
+    size_t maxstrlen;
+    double *cvalue;
+} cargs;
+
+double *customcalc(cvar *var, cargs args) {
+
+}
+
+
+
 int main() {
 
-    double *x = malloc(sizeof(*x));
-    double *y = malloc(sizeof(y));
 
-    printf("sizeof(*x) = %zu\n", sizeof(*x));
-    printf("sizeof(y) = %zu\n", sizeof(y));
-    
-    char *c = malloc(sizeof(c));
-    char *k = malloc(sizeof(k));
-
-    printf("sizeof(*c) = %zu\n", sizeof(*c));
-    printf("sizeof(k) = %zu\n", sizeof(k));
     
     return 0;
 }

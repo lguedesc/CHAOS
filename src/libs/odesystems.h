@@ -1,3 +1,6 @@
+#ifndef ODESYSTEMS_H
+#define ODESYSTEMS_H
+
 // General Nonlinear Systems
 void lorenz(int dim, double *x, double t, double *par, double *f);
 void lotka_volterra_predator_prey(int dim, double *x, double t, double *par, double *f);
@@ -30,3 +33,5 @@ void duffing_cldyn(int dim, double *x, double t, double *par, double *f);
 
 // Automatically Added
 void chuas_circuit(int dim, double *x, double t, double *par, double *f);
+
+#endif

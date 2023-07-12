@@ -378,7 +378,7 @@ void print_equilibrium_points(FILE* info, double **attrac, size_t rows, size_t c
 }
 
 // Solutions
-void rk4_solution(FILE *output_file, int dim, int np, int ndiv, double t, double *x, double h, double *par, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, int dim, double t, double *x, int mode)) {
+void timeseries_solution(FILE *output_file, int dim, int np, int ndiv, double t, double *x, double h, double *par, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, int dim, double t, double *x, int mode)) {
     // Allocate x` = f(x)
     double *f = malloc(dim * sizeof *f);
     // Make the header o output file

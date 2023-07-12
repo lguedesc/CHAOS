@@ -1,3 +1,6 @@
+#ifndef NLOSC_H
+#define NLOSC_H
+
 #include <stdio.h>
 
 // Methods
@@ -47,3 +50,5 @@ void HOS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim,
                                                     int ncustomvalues, int nprintf, int *printfindex,
                                                     void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
                                                     int mode));                        
+
+#endif
