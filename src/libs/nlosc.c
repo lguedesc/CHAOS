@@ -6,6 +6,8 @@
 #include "iofiles.h"
 #include "nldyn.h"
 #include "odesolvers.h"
+#include "basic.h"
+#include "interface.h"
 
 #ifdef _OPENMP
     #include <omp.h>
@@ -14,6 +16,7 @@
     #define omp_get_num_threads() 1 
 #endif
 
+// General functions 
 double RMS(double *cum, double measure, int N, int mode) {
     if (mode == 0) {
         // accumulate the value of the square of the measure 

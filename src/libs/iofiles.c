@@ -101,46 +101,6 @@ void OSmkdir(char *path) {
     #endif
 }
 
-/*
-void create_dir(const char *pathname) {
-    errno = 0;
-    // If pathname doesn't exists, return error
-    if (pathname == NULL) {
-        perror(pathname);
-        return;
-    }
-    int n = 200;                                // n*sizeof(char) = max size of path
-    // Declare variables
-    const size_t len = strlen(pathname);        // Size of the pathname
-    char *path = malloc(n * sizeof(char));    // Allocate temporary memory to copy pathname
-    char *ch;                                   // Pointer to each character in the string
-    // Check if len is too long to be stored into path
-    if (len > n * sizeof(char) - 1) {
-        errno = ENAMETOOLONG;                   // Return error if its too long
-        perror(pathname);                       // Print error
-        return;
-    }
-    // Copy string pathname into string path
-    strcpy(path, pathname);
-    // Read the string char by char
-    for (ch = path + 1; *ch; ch++) {
-        // Check if ch is a separator
-        if (*ch == SEP) {
-            // Truncate temporarily the string to check if dir exists
-            *ch = '\0';
-            // Check if exists. If not, it is created
-            OSmkdir(path);
-            // Insert the separator again in the string to continue
-            *ch = SEP;
-        }
-    }
-    
-    // Check again the full path to be sure. If dont exist, create
-    OSmkdir(path);   
-    free(path);
-}
-*/
-
 void create_dir(const char *pathname) {
     errno = 0;
     // If pathname doesn't exists, return error
@@ -230,16 +190,6 @@ FILE *create_output_file(char *name, const char *ext, const char *dir) {
 
     return fopen(name, "w");
 }
-
-/*
-char *get_input_filename(void) {
-    char *filename = malloc(200 * sizeof(*filename));
-    printf("  Enter Input Filename: ");
-    scanf("%s", filename);
-    return filename;
-    // The user is responsible to free (filename) after the function call //
-}
-*/
 
 FILE *name_and_create_output_files(const char *systemname, const char *directory, const char *module, const char *ext) {
     // Create output files to store results
@@ -594,6 +544,7 @@ void p_write_dyndiag_results(FILE *output_file, int dim, double **results, int p
 }
 
 void p_write_epbasin_results(FILE *output_file, double **results, int pixels, int dim) {
+    printf("\n  Writing Results in Output File...\n");
     // Header
     fprintf(output_file, "%s %s ", "CparY", "CparX");
     for (int i = 0; i < dim; i++) {

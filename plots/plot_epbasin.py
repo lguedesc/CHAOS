@@ -73,7 +73,7 @@ save = False
 system = "duffing"
 ext = ".pdf"
 
-filenum = 0
+filenum = 12
 
 if filenum == 0:
     readpath = "data/EPBasin/out/" + system + f"_epbasin.csv"; readpath = pltconf.convert_dir(readpath)

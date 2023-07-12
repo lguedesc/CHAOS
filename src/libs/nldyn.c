@@ -7,15 +7,20 @@
 #include <time.h>
 #include "odesystems.h"
 #include "odesolvers.h"
+#include "defines.h"
+#include "basic.h"
+#include "interface.h"
+#include "iofiles.h"
 
 #ifdef _OPENMP
     #include <omp.h>
+    omp_lock_t lock;
 #else
     #define omp_get_thread_num() 0
     #define omp_get_num_threads() 1 
 #endif
 
-// Methods
+// General Functions
 
 void realloc_vector(double **x, int ndim) {
     /* Realloc x[dim] vector to include new dimensions for linearized equations */
@@ -324,32 +329,6 @@ void min_value(double newvalue, double *oldvalue) {
 }
 
 // Misc
-void progress_bar(int mode, double var, double var_i, double var_f) {
-    double perc;
-    // Actual percentage
-    if (mode == 1) {
-        perc = 100;
-    }
-    else {
-        perc = (var/(var_f - var_i))*100;
-    }
-    // Filled Part of the progress bar
-    int fill = (perc * 50) / 100;  // 50 is the bar length
-    printf("\r  Progress: |");
-    for(int i = 0; i < fill; i++) {
-        printf("#");
-    }
-    // Unfilled part of the progress bar
-    for (int i = 0; i < 50 - fill; i++) {
-        printf(".");
-    }
-    if (perc > 100) {
-        perc = 100;
-    }
-    printf("| %.1lf %% ", perc);
-    fflush(stdout);
-}
-
 void print_equilibrium_points(FILE* info, double **attrac, size_t rows, size_t cols, int dim) {
     printf("\n\n  Possible Stable Equilibrium Points: \n");
     fprintf(info, "\n  Possible Stable Equilibrium Points: \n");
@@ -400,7 +379,6 @@ void poincare_solution(FILE *output_file, int dim, int np, int ndiv, int trans, 
     double *f = malloc(dim * sizeof *f);
     // Make the header of the output file
     write_results(output_file, dim, t, x, 0);
-    // Call Runge-Kutta 4th order integrator n = np * ndiv times
     // Call Runge-Kutta 4th order integrator n = np * ndiv times
     for (int i = 0; i < np; i++) {
         for (int j = 0; j < ndiv; j++) {
@@ -463,6 +441,207 @@ void lyap_wolf_solution(FILE *output_file, int dim, int np, int ndiv, int trans,
     free(znorm); free(gsc); 
 }
 
+void ep_basin_of_attraction_2D(FILE *output_file, FILE *info_file, int dim, int np, int ndiv, double t, double **x, int indexX, int indexY, double *icrange, double *par,
+                               int npar, void (*edosys)(int, double *, double, double *, double *)) {
+    // Declare matrix do store results
+    int pixels = icrange[2]*icrange[5];  // Number of results
+    double **results = malloc(pixels * sizeof **results);
+    for (int i = 0; i < pixels; i++) {
+        results[i] = malloc((3 + dim) * sizeof **results); 
+    }
+    // Declare and define increment of control parameters
+    double icstep[2];        
+    icstep[0] = (icrange[1] - icrange[0])/(icrange[2] - 1); // -1 in the denominator ensures the input resolution
+    icstep[1] = (icrange[4] - icrange[3])/(icrange[5] - 1); // -1 in the denominator ensures the input resolution
+    // Declare variable to store attractors
+    size_t rows = 0; size_t cols = dim + 1;
+    double **attrac = malloc(rows * sizeof **attrac);
+    for (int i = 0; i < rows; i++) {
+        attrac[i] = malloc(cols * sizeof **attrac);
+    }
+    // Start of Parallel Block
+    #pragma omp parallel default(none) shared(dim, ndiv, np, icstep, npar, results, edosys, attrac, rows, cols) \
+                                       firstprivate(x, t, indexX, indexY, icrange, par)
+    {   
+        //Get number and ID of threads
+        int ID = omp_get_thread_num();
+        int nThr = omp_get_num_threads();
+        // Allocate memory for x` = f(x)
+        double *f = malloc(dim * sizeof *f);
+        // Allocate memory to store IC values
+        double *IC = malloc(dim * sizeof *IC);
+        // Convert function arguments as local (private) variables
+        double *X = convert_argument_to_private(*x, dim);
+        double *PAR = convert_argument_to_private(par, npar);
+        // Store Initial Conditions
+        double t0 = t;
+        for (int i = 0; i < dim; i++) {
+            IC[i] = X[i];
+        }
+        // Time step size
+        double h = (2 * PI) / (ndiv * PAR[0]);              // par[0] = OMEGA
+        // Index to identify position to write results
+        int index;
+        // Declare flag and tolerance to identify attractor
+        int flag[dim]; 
+        double tol = 1e-5;
+        // Declare counter for parallelized loop
+        int k, m;
+        #pragma omp for schedule(static) private(k, m, flag) 
+        // Starts the parallel loop for Y control parameter
+        for (k = 0; k < (int)icrange[5]; k++) { 
+            // Starts the loop for X control parameter
+            for (m = 0; m < (int)icrange[2]; m++) {
+                X[indexY] = icrange[3] + k*icstep[1];       // Increment value
+                IC[indexY] = X[indexY];                     // Update IC value to write in result matrix
+                X[indexX] = icrange[0] + m*icstep[0];       // Increment Value
+                IC[indexX] = X[indexX];                     // Update IC value to write in result matrix                
+                // Reset Variables
+                t = t0;
+                // Reset Initial conditions in each basin step
+                for (int i = 0; i < dim; i++) {
+                    X[i] = IC[i];
+                }
+                // Call ODE solver N = nP * nDiv times
+                for (int i = 0; i < np; i++) {
+                    for (int j = 0; j < ndiv; j++) {
+                        rk4(dim, X, t, h, PAR, f, edosys);
+                        t = t + h;
+                    }
+                }
+                // Compare X values to attrac vector and classify a new attractor if necessary
+                // "critical" option to prevent multiple threads from accessing this section of code at the same time
+                #pragma omp critical 
+                {
+                    store_equilibrium_point(&rows, cols, &attrac, X, dim, tol);
+                }
+                // Write corresponding results in matrix
+                index = (int)icrange[2]*k + m;
+                results[index][0] = IC[indexY];
+                results[index][1] = IC[indexX];
+                for (int i = 2; i < 2 + dim; i++) {
+                    results[index][i] = X[i - 2];    
+                }
+                // Compare results of X to values in attractor matrix to classify the attractor
+                for (int i = 0; i < rows; i++) {            
+                    for (int j = 0; j < dim; j ++) {
+                        if (fabs(X[j] - attrac[i][j]) < tol) {
+                            flag[j] = 1;
+                        } else {
+                            flag[j] = 0;
+                        }
+                    }
+                    if (check_if_array_is_all_one(flag, dim) == true) {
+                        results[index][2 + dim] = attrac[i][dim];
+                        break;
+                    }         
+                }
+            }   
+            // Progress Monitor
+            if (ID == 0) {
+                progress_bar(0, (double)k, 0, (icrange[5]-1)/nThr);
+                if (k == ((int)icrange[5] - 1)/nThr ) {
+                    progress_bar(1, (double)k, 0, (icrange[5]-1)/nThr);
+                }
+            }
+        }
+        // Free memory    
+        free(f); 
+    } // End of Parallel Block
+
+    //Print matrix containing the found attractors
+    print_equilibrium_points(info_file, attrac, rows, cols, dim);
+    // Write results in file
+    p_write_epbasin_results(output_file, results, pixels, dim);
+    // Free memory
+    free_2D_mem((void**)results, pixels);
+}
+
+// Not finished (in development)
+
+void convergence_test_solution(int dim, int N, double t, double tf, double *x, int ntries, double *par, 
+                                void (*edosys)(int, double *, double, double *, double *)) {
+    // Allocate x` = f(x)
+    double *f = malloc(dim * sizeof *f);
+    // Create a pointer to memory for the vector of timestep values
+    double *h = malloc(ntries * sizeof *h);
+    // Save initial time and initial conditions
+    double t0 = t;
+    double *IC = malloc(dim * sizeof *IC);
+    for (int i = 0; i < dim; i++) {
+        IC[i] = x[i];
+    }
+    // Create a pointer to memory to store result values
+    double *result = malloc(ntries * sizeof *result);
+    // Declare Analysis Variables
+    double *E = malloc((ntries - 2) * sizeof *E);
+    double ratio;
+    // Call the solution ntries times
+    for (int j = 0; j < ntries; j++) {
+        // Reset initial time and initial conditions
+        t = t0; 
+        for (int k = 0; k < dim; k++) {
+            x[k] = IC[k];
+        }
+        // Assign values to the timestep vector
+        if (j == 0) {
+            h[j] = (tf - t)/N;
+        }
+        else {
+            N = 2*N;
+            h[j] = (tf - t)/N;
+        }
+        if (j < 10) {
+            printf("%s%d%s%20.10d%s%d%s%-20.10lf%s", "  N[", j, "] = ", N, " | t0[", j, "] = ", t, " | ");
+        }
+        else {
+            printf("%s%d%s%19.10d%s%d%s%-19.10lf%s", "  N[", j, "] = ", N, " | t0[", j, "] = ", t, " | ");
+        }
+        // Call Runge-Kutta 4th order integrator n times
+        for (int i = 0; i < N; i++) {
+                rk4(dim, x, t, h[j], par, f, edosys);
+                t = t + h[j];
+        }
+        // Store the last result in the result vector
+        result[j] = x[0];
+        // Compute Error
+        if ((j > 0) && (j < ntries-1)) {
+            E[j] = fabs((result[j] - result[j-1])/(result[j+1] - result[j]));           
+            if (j < 10) {
+                printf("%s%d%s%-20.10lf%s%d%s%-20.10lf%s%d%s%-20.10lf%s%d%s%-20.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j], " | E[", j, "] = ", E[j]);
+            }
+            else if ((j >= 10) && (j < 100))  {
+                printf("%s%d%s%-19.10lf%s%d%s%-19.10lf%s%d%s%-19.10lf%s%d%s%-19.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j], " | E[", j, "] = ", E[j]);
+            }
+            else {
+                printf("%s%d%s%-18.10lf%s%d%s%-18.10lf%s%d%s%-18.10lf%s%d%s%-18.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j], " | E[", j, "] = ", E[j]);
+            }
+        }
+        else {
+            if (j < 10) {
+                printf("%s%d%s%-20.10lf%s%d%s%-20.10lf%s%d%s%-20.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j]);
+            }
+            else if ((j >= 10) && (j < 100)) {
+                printf("%s%d%s%-19.10lf%s%d%s%-19.10lf%s%d%s%-19.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j]);
+            }
+            else {
+                printf("%s%d%s%-18.10lf%s%d%s%-18.10lf%s%d%s%-18.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j]);
+            }
+        }
+    }
+
+    for (int j = 2; j < ntries-1; j++) {
+        ratio = E[j-1]/E[j];
+        printf("%s%d%s%.10lf\n", "  ratio[", j, "] = ", ratio);
+    }
+    
+    // Free Memory
+    free(f); free(h), free(IC), free(result), free(E);
+}
+
+
+// Not in use 
+/*
 void bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, double t, double *x, int parindex, 
                      double *parrange, double *par, void (*edosys)(int, double *, double, double *, double *), 
                      void (*write_results)(FILE *output_file, int dim, double varpar, double *x, double *xmin, double *xmax, int mode), int bifmode) {
@@ -573,10 +752,6 @@ void full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poinc_
     realloc_vector(x, ndim);
     // Assign initial perturbation
     perturb_wolf(x, dim, ndim, &cum, &s_cum);
-    /*printf("after perturb (outside function)\n");
-    for(int i = 0; i < ndim; i++) {
-        printf("x[%i] = %lf (memory: %p)\n", i, (*x)[i], &(*x)[i]);
-    }*/
     // Make the header of output files
     write_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, 1);
     write_results(output_poinc_file, dim, t, (*x), lambda, s_lambda, 3);
@@ -1034,131 +1209,6 @@ void parallel_full_dynamical_diagram_solution(FILE *output_file, int dim, int np
     free(results);
 } 
 
-void ep_basin_of_attraction_2D(FILE *output_file, FILE *info_file, int dim, int np, int ndiv, double t, double **x, int indexX, int indexY, double *icrange, double *par,
-                               int npar, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, double **results, int pixels, int dim)) {
-    // Declare matrix do store results
-    int pixels = icrange[2]*icrange[5];  // Number of results
-    double **results = malloc(pixels * sizeof **results);
-    for (int i = 0; i < pixels; i++) {
-        results[i] = malloc((3 + dim) * sizeof **results); 
-    }
-    // Declare rk4 timestep and pi
-    double h;
-    const double pi = 4 * atan(1);  // Pi number definition
-    // Declare and define increment of control parameters
-    double icstep[2];        
-    icstep[0] = (icrange[1] - icrange[0])/(icrange[2] - 1); // -1 in the denominator ensures the input resolution
-    icstep[1] = (icrange[4] - icrange[3])/(icrange[5] - 1); // -1 in the denominator ensures the input resolution
-    // Declare variable to store attractors
-    size_t rows = 0; size_t cols = dim + 1;
-    double **attrac = malloc(rows * sizeof **attrac);
-    for (int i = 0; i < rows; i++) {
-        attrac[i] = malloc(cols * sizeof **attrac);
-    }
-    // Start of Parallel Block
-    #pragma omp parallel default(none) shared(dim, ndiv, np, icstep, npar, results, edosys, attrac, rows, cols, pi) \
-                                       private(t, h) \
-                                       firstprivate(x, indexX, indexY, icrange, par)
-    {   
-        //Get number of threads
-        int ID = omp_get_thread_num();
-        // Allocate memory for x` = f(x)
-        double *f = malloc(dim * sizeof *f);
-        // Allocate memory to store IC values
-        double *IC = malloc(dim * sizeof *IC);
-        // Convert function arguments as local (private) variables
-        double *X = convert_argument_to_private(*x, dim);
-        double *PAR = convert_argument_to_private(par, npar);
-        // Store Initial Conditions
-        double t0 = t;
-        for (int i = 0; i < dim; i++) {
-            IC[i] = X[i];
-        }
-        // Index to identify position to write results
-        int index;
-        // Declare flag and tolerance to identify attractor
-        int flag[dim]; 
-        double tol = 1e-5;
-        // Declare counter for parallelized loop
-        int k, m;
-        #pragma omp for schedule(static) private(k, m, flag) 
-        // Starts the parallel loop for Y control parameter
-        for (k = 0; k < (int)icrange[5]; k++) { 
-            // Starts the loop for X control parameter
-            for (m = 0; m < (int)icrange[2]; m++) {
-                X[indexY] = icrange[3] + k*icstep[1];       // Increment value
-                IC[indexY] = X[indexY];                     // Update IC value to write in result matrix
-                X[indexX] = icrange[0] + m*icstep[0];       // Increment Value
-                IC[indexX] = X[indexX];                     // Update IC value to write in result matrix                
-                // Reset Variables
-                t = t0;
-                // Reset Initial conditions in each basin step
-                for (int i = 0; i < dim; i++) {
-                    X[i] = IC[i];
-                }
-                // Vary timestep if varpar = par[0], varying also final time and short initial time
-                h = (2 * pi) / (ndiv * PAR[0]);              // par[0] = OMEGA
-                // Call Runge-Kutta 4th order integrator N = nP * nDiv times
-                for (int i = 0; i < np; i++) {
-                    for (int j = 0; j < ndiv; j++) {
-                        rk4(dim, X, t, h, PAR, f, edosys);
-                        t = t + h;
-                    }
-                }
-                // Compare X values to attrac vector and classify a new attractor if necessary
-                // "critical" option to prevent multiple threads from accessing this section of code at the same time
-                #pragma omp critical 
-                {
-                    store_equilibrium_point(&rows, cols, &attrac, X, dim, tol);
-                }
-                // Write corresponding results in matrix
-                index = (int)icrange[2]*k + m;
-                results[index][0] = IC[indexY];
-                results[index][1] = IC[indexX];
-                for (int i = 2; i < 2 + dim; i++) {
-                    results[index][i] = X[i - 2];    
-                }
-                
-                // Compare results of X to values in attractor matrix to classify the attractor
-                for (int i = 0; i < rows; i++) {            
-                    for (int j = 0; j < dim; j ++) {
-                        if (fabs(X[j] - attrac[i][j]) < tol) {
-                            flag[j] = 1;
-                        } else {
-                            flag[j] = 0;
-                        }
-                    }
-                    if (check_if_array_is_all_one(flag, dim) == true) {
-                        results[index][2 + dim] = attrac[i][dim];
-                        break;
-                    }         
-                }
-            }   
-            // Progress Monitor
-            if (ID == 0) {
-                progress_bar(0, (double)k, 0, (icrange[5]-1)/omp_get_num_threads());
-                if (k == ((int)icrange[5] - 1)/omp_get_num_threads() ) {
-                    progress_bar(1, (double)k, 0, (icrange[5]-1)/omp_get_num_threads());
-                }
-            }
-        }
-        // Free memory    
-        free(f); 
-    } // End of Parallel Block
-    
-    //Print matrix containing the found attractors
-    print_equilibrium_points(info_file, attrac, rows, cols, dim);
-    // Write results in file
-    printf("\n  Writing Results in Output File...\n");
-    write_results(output_file, results, pixels, dim);
-
-    // Free memory
-    for (int i = 0; i < pixels; i++) {
-        free(results[i]);
-    }
-    free(results);
-}
-
 void forced_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
                                          int indexX, int indexY, double *icrange, double *par, int npar,
                                          void (*edosys)(int, double *, double, double *, double *), 
@@ -1332,9 +1382,12 @@ void forced_basin_of_attraction_2D(FILE *output_file, int dim, int np, int ndiv,
     free(results);
 }
 
+*/
+
 // Not Finished (In Progress/tests)
+/*
 void perturb_cldyn(double **x, int dim, int ndim, double perturb, double **cum, double **s_cum) {
-    /* Initial perturbation for Cloned System of equations */
+    // Initial perturbation for Cloned System of equations 
     // Attribute value of zero to x[dim] -> x[ndim] vetors
     for (int i = dim; i < ndim; i++) {
         (*x)[i] = 0.0;
@@ -1346,7 +1399,7 @@ void perturb_cldyn(double **x, int dim, int ndim, double perturb, double **cum, 
         (*cum)[i] = 0.0;
         (*s_cum)[i] = 0.0;
     }
-    /* The user is responsible to free (x), (cum) and (s_cum) after the function call */
+    // The user is responsible to free (x), (cum) and (s_cum) after the function call 
 }
 
 void lyapunov_cldyn(double **x, double t, double h, int dim, int ndim, double perturb, double s_t0, double **cum, double **s_cum, double **lambda, double **s_lambda, double **znorm, double **gsc) {
@@ -1361,7 +1414,7 @@ void lyapunov_cldyn(double **x, double t, double h, int dim, int ndim, double pe
             }
         }
     }
-    /* Application of Gram-Schmidt Method to construct a new orthonormal basis */
+    // Application of Gram-Schmidt Method to construct a new orthonormal basis 
     // Normalizes the 1st vector
     (*znorm)[0] = 0;
     for (int i = 0; i < dim; i++) {
@@ -1612,82 +1665,4 @@ void parallel_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
     free(results);
 } 
 
-void convergence_test_solution(int dim, int N, double t, double tf, double *x, int ntries, double *par, 
-                                void (*edosys)(int, double *, double, double *, double *)) {
-    // Allocate x` = f(x)
-    double *f = malloc(dim * sizeof *f);
-    // Create a pointer to memory for the vector of timestep values
-    double *h = malloc(ntries * sizeof *h);
-    // Save initial time and initial conditions
-    double t0 = t;
-    double *IC = malloc(dim * sizeof *IC);
-    for (int i = 0; i < dim; i++) {
-        IC[i] = x[i];
-    }
-    // Create a pointer to memory to store result values
-    double *result = malloc(ntries * sizeof *result);
-    // Declare Analysis Variables
-    double *E = malloc((ntries - 2) * sizeof *E);
-    double ratio;
-    // Call the solution ntries times
-    for (int j = 0; j < ntries; j++) {
-        // Reset initial time and initial conditions
-        t = t0; 
-        for (int k = 0; k < dim; k++) {
-            x[k] = IC[k];
-        }
-        // Assign values to the timestep vector
-        if (j == 0) {
-            h[j] = (tf - t)/N;
-        }
-        else {
-            N = 2*N;
-            h[j] = (tf - t)/N;
-        }
-        if (j < 10) {
-            printf("%s%d%s%20.10d%s%d%s%-20.10lf%s", "  N[", j, "] = ", N, " | t0[", j, "] = ", t, " | ");
-        }
-        else {
-            printf("%s%d%s%19.10d%s%d%s%-19.10lf%s", "  N[", j, "] = ", N, " | t0[", j, "] = ", t, " | ");
-        }
-        // Call Runge-Kutta 4th order integrator n times
-        for (int i = 0; i < N; i++) {
-                rk4(dim, x, t, h[j], par, f, edosys);
-                t = t + h[j];
-        }
-        // Store the last result in the result vector
-        result[j] = x[0];
-        // Compute Error
-        if ((j > 0) && (j < ntries-1)) {
-            E[j] = fabs((result[j] - result[j-1])/(result[j+1] - result[j]));           
-            if (j < 10) {
-                printf("%s%d%s%-20.10lf%s%d%s%-20.10lf%s%d%s%-20.10lf%s%d%s%-20.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j], " | E[", j, "] = ", E[j]);
-            }
-            else if ((j >= 10) && (j < 100))  {
-                printf("%s%d%s%-19.10lf%s%d%s%-19.10lf%s%d%s%-19.10lf%s%d%s%-19.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j], " | E[", j, "] = ", E[j]);
-            }
-            else {
-                printf("%s%d%s%-18.10lf%s%d%s%-18.10lf%s%d%s%-18.10lf%s%d%s%-18.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j], " | E[", j, "] = ", E[j]);
-            }
-        }
-        else {
-            if (j < 10) {
-                printf("%s%d%s%-20.10lf%s%d%s%-20.10lf%s%d%s%-20.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j]);
-            }
-            else if ((j >= 10) && (j < 100)) {
-                printf("%s%d%s%-19.10lf%s%d%s%-19.10lf%s%d%s%-19.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j]);
-            }
-            else {
-                printf("%s%d%s%-18.10lf%s%d%s%-18.10lf%s%d%s%-18.10lf\n", "tf[", j, "] = ", t, " | h[", j, "] = ", h[j], " | result[", j, "] = ", result[j]);
-            }
-        }
-    }
-
-    for (int j = 2; j < ntries-1; j++) {
-        ratio = E[j-1]/E[j];
-        printf("%s%d%s%.10lf\n", "  ratio[", j, "] = ", ratio);
-    }
-    
-    // Free Memory
-    free(f); free(h), free(IC), free(result), free(E);
-}
+*/

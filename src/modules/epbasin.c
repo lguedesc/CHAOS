@@ -37,7 +37,7 @@ void epbasin(char *funcname, unsigned int DIM, unsigned int nPar, char* outputna
     print_info(output_info, DIM, nPar, nP, nDiv, t, x, par, icRange, indexX, indexY, funcname, MAX_PRINT_LEN, PERC_PRINT_NAME, "screen");
     print_info(output_info, DIM, nPar, nP, nDiv, t, x, par, icRange, indexX, indexY, funcname, MAX_PRINT_LEN, PERC_PRINT_NAME, "file");
     // Call solution
-    ep_basin_of_attraction_2D(output_epbasin, output_info, DIM, nP, nDiv, t, &x, indexX, indexY, icRange, par, nPar, edosys, p_write_epbasin_results);    
+    ep_basin_of_attraction_2D(output_epbasin, output_info, DIM, nP, nDiv, t, &x, indexX, indexY, icRange, par, nPar, edosys);    
     // Close output file
     close_files(2, output_epbasin, output_info);
     // Free allocated memory

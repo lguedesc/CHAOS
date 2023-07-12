@@ -15,6 +15,7 @@ void invalid_option(unsigned int option, char* category, size_t maxlength);
 void end_of_execution(size_t maxlength);
 void identify_simulation(unsigned int toolbox, unsigned int *system, unsigned int *module, char **toolboxesNames, char **systemNames, char** moduleNames, size_t numofsystems, size_t maxlength, size_t numofmodules);
 int int_length(int value);
+void progress_bar(int mode, double var, double var_i, double var_f);
 
 // Simulation Prints
 void fpartition(FILE *output_file, int mode, size_t maxlength);

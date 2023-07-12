@@ -5,6 +5,7 @@
 #include <time.h>
 #include <math.h>
 
+// Main Interface 
 void clear_screen() {
     #ifdef _WIN32
         system("cls");
@@ -13,7 +14,6 @@ void clear_screen() {
     #endif
 }
 
-// Main Interface 
 void partition(int mode, size_t maxlength) {
     if (mode == 1) {
         printf(" ");
@@ -136,6 +136,32 @@ int int_length(int value) {
     else {
         return (floor(log10(abs(value))) + 1);
     }
+}
+
+void progress_bar(int mode, double var, double var_i, double var_f) {
+    double perc;
+    // Actual percentage
+    if (mode == 1) {
+        perc = 100;
+    }
+    else {
+        perc = (var/(var_f - var_i))*100;
+    }
+    // Filled Part of the progress bar
+    int fill = (perc * 50) / 100;  // 50 is the bar length
+    printf("\r  Progress: |");
+    for(int i = 0; i < fill; i++) {
+        printf("#");
+    }
+    // Unfilled part of the progress bar
+    for (int i = 0; i < 50 - fill; i++) {
+        printf(".");
+    }
+    if (perc > 100) {
+        perc = 100;
+    }
+    printf("| %.1lf %% ", perc);
+    fflush(stdout);
 }
 
 // Simulation Prints

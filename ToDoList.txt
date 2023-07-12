@@ -18,9 +18,42 @@
 *** CHAOS - KNOWN ISSUES AND POSSIBLE BUGS ***
 1. Bug in progress bar in dyndiag (showing two %%) and bifurcation (when starting from a advance number, it bugs in 100% always)
 
-
 *** CHAOS Forge - FUTURE FEATURES (TO BE IMPLEMENTED) ***
 1. Check for duplicate fields in equations and lin equatinos (f[0], f[1], etc)
 2. If CHAOS #0 field is implemented, CHAOS Forge needs to change as well.
 3. Add the option to overwrite system if it already exists
 4. Option to run makefile for CHAOS compilation or compile automatically
+
+*** Custom Calc Implementation (To be Revamped) ***
+1. Substitute the customcalc vector to a struct that will hold the value, the name and the index of the custom calculation: 
+    typedef struct {
+        double value;
+        char *name;
+        unsigned int index;
+    } cvar;
+
+2. Create a customcalc function just to initialize the struct properly:
+    - In this function, the user have the freedom to use any name of variables,
+      and then, for each variable, it must be called the definition getName(), for instance:
+         double Pout, Pin, t_flip;
+         getName(Pout); getName(Pin); getName(t_flip);
+      each name will be associated with a place in memory in the new struct pointer, for instance:
+
+        cvar *ccalc;
+        strcpy(ccalc[0].name, getName(Pout)); ccalc[0].index = 0; ccalc[0].value = Pout;
+
+3. Then, the customcalc function will be called in four positions of the code:
+    - Before odesolver loop to contemplate initial variables or variables that need a reset;
+    - In the steady state regime inside the odesolver loop;
+    - In the overall timeseries (the last thing that will be called inside the odesolver loop);
+    - After the odesolver loop to calculate values that were accumulated throughout the odesolver loop.
+
+4. The reading of these functions will be done dynamically through a dynamical library (windows: .dll, linux: .os files)
+   so the user dont need to mess with the source code;
+
+5. The creation of the dynamical libraries will be done automatically. The user writes the calculations inside a 
+   input file and a program will handle the creation of the dynamical libraries files. 
+
+6. These files will be stored in a separate folder called user_input_calculations (or somerhing like that);
+
+7. CHAOS will identify the OS and handle the call of these libraries automatically. 

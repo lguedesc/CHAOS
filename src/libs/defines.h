@@ -15,6 +15,9 @@
 // Math constants
 #define PI (4 * atan(1))
 
+// Macro to handle variable names
+#define getName(var) #var
+
 // main program macros 
 #define MAX_NAMELENGTH 120
 #define NUM_OF_GNL_SYSTEMS 4
