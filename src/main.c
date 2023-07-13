@@ -21,7 +21,7 @@
 #include "libs/defines.h"
 
 void execute_HOS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
-                        void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, size_t, double *, int),
+                        void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, double *, int),
                         char* outputname, char *funcname, unsigned int dim, unsigned int npar, bool angles);
 void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname,
                          char *funcname, unsigned int dim, unsigned int npar);
@@ -177,7 +177,7 @@ int main (void) {
 }
 
 void execute_HOS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
-                        void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, size_t, double *, int),
+                        void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, double *, int),
                         char* outputname, char *funcname, unsigned int dim, unsigned int npar, bool angles) {
     switch (module) {
         case 1:

@@ -19,6 +19,10 @@ void store_equilibrium_point(size_t *rows, size_t cols, double ***attrac, double
 void max_value(double newvalue, double *oldvalue);
 void min_value(double newvalue, double *oldvalue);
 
+double *get_system_tol(int dim, double *xmin, double *xmax);
+int check_periodicity_new(int dim, int np, double **poinc, int trans, int maxper, double *xmin, double *xmax, double numtol);
+int get_attractor_new(double **poinc, double *LE, int dim, int np, int trans, int maxper, double *xmin, double *xmax, double numtol);
+
 // Misc
 void print_equilibrium_points(FILE* info, double **attrac, size_t rows, size_t cols, int dim);
 // Solutions

@@ -9,7 +9,7 @@ pltconf.plot_params(True, 10, 0.2)
 
 save = False
 
-system = "duffing"
+system = "bistable_EH"
 ext = ".png"
 filenum = 0
 simulation = "ftimeseries"
@@ -25,7 +25,7 @@ plot_i = nP*trans
 # Figure Parameters                                                     #
 #=======================================================================#
 figsize = pltconf.figsize_in_cm(15, 0.6*15)
-dpi = pltconf.set_fig_quality(save = save, base_dpi = 100)
+dpi = pltconf.set_fig_quality(save = save, base_dpi = 200)
 
 
 fig = plt.figure(1, figsize = figsize, dpi = dpi, layout = "constrained")

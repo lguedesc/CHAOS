@@ -21,7 +21,7 @@ static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int nd
 static void print_results(FILE *info, int DIM, double *xmin, double *xmax, double *overallxmin, double *overallxmax, int nRMS, int *rmsindex, double *xRMS, double *overallxRMS,
                           double nCustomValues, double nPrintscr, int *printscrindex, double *customValues, char **customNames, int attractor, int maxPer);
 
-void HOS_ftime_series(char *funcname, unsigned int DIM, unsigned int nPar, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, size_t, double *, int)) {
+void HOS_ftime_series(char *funcname, unsigned int DIM, unsigned int nPar, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, double *, int)) {
    
     // Declare Program Parameters
     int nP;                         // Number of forcing periods analyzed
@@ -29,7 +29,7 @@ void HOS_ftime_series(char *funcname, unsigned int DIM, unsigned int nPar, char*
     int trans;                      // Value of nP in which greater values are considered transient response
     int attractor;                  // Value of type of motion of the system
     int maxPer;                     // Maximum periodicity to be classified
-    int nRMS = 0;                       // Number of state variables that will be submitted to RMS calculation
+    int nRMS = 0;                   // Number of state variables that will be submitted to RMS calculation
     int nCustomValues = 0;          // If there is a custom function to be called, this is the number of calculations the function is going to perform
     int nPrintf = 0;                // Number of custom values to be printed in the output file
     int nPrintscr = 0;              // Number of custom values to be printed on the screen
@@ -41,13 +41,13 @@ void HOS_ftime_series(char *funcname, unsigned int DIM, unsigned int nPar, char*
     double *xRMS = NULL;            // State Variables RMS values at permanent regime
     double *overallxRMS = NULL;     // State Variables RMS values at transient + permanent regime
     double *customValues = NULL;    // Variable to store all custom values that custom functions calculate
-    char **customNames = NULL;          // Names of the custom values
-    int *printfindex = NULL;            // Indexes of custom values that will be printed in the output file
-    int *printscrindex = NULL;          // Indexes of custom values that will be printed on the screen
-    double *xmin = NULL;                // State variables minimum value at steady state regime
-    double *xmax = NULL;                // State variables maximum value at steady state regime
-    double *overallxmin = NULL;         // Overall state variables minimum value at steady state regime 
-    double *overallxmax = NULL;         // Overall state variables maximum value at steady state regime
+    char **customNames = NULL;      // Names of the custom values
+    int *printfindex = NULL;        // Indexes of custom values that will be printed in the output file
+    int *printscrindex = NULL;      // Indexes of custom values that will be printed on the screen
+    double *xmin = NULL;            // State variables minimum value at steady state regime
+    double *xmax = NULL;            // State variables maximum value at steady state regime
+    double *overallxmin = NULL;     // Overall state variables minimum value at steady state regime 
+    double *overallxmax = NULL;     // Overall state variables maximum value at steady state regime
     read_params(DIM, nPar, &maxPer, &nP, &nDiv, &trans, &nRMS, &t, &par, &x, &rmsindex, &nCustomValues, &nPrintf, &nPrintscr, &printfindex, &printscrindex);
     // Define Timestep
     double h = (2 * PI) / (nDiv * par[0]); // par[0] = OMEGA
@@ -62,7 +62,7 @@ void HOS_ftime_series(char *funcname, unsigned int DIM, unsigned int nPar, char*
     print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, nCustomValues, nPrintf, printfindex, nPrintscr, printscrindex, MAX_PRINT_LEN, PERC_PRINT_NAME, "file");
     // Call solution
     HOS_full_timeseries_solution(output_ftimeseries, output_poinc, DIM, nP, nDiv, trans, &attractor, maxPer, t, &x, h, par, nRMS, rmsindex, &xRMS, &overallxRMS, &xmin, &xmax, 
-                                &overallxmin, &overallxmax, edosys, nCustomValues, &customNames, &customValues, nPrintf, printfindex, nPrintscr, printscrindex, customfunc);
+                                 &overallxmin, &overallxmax, edosys, nCustomValues, &customNames, &customValues, nPrintf, printfindex, nPrintscr, printscrindex, customfunc);
     // Print some results on the screen and in information file
     print_results(output_info, DIM, xmin, xmax, overallxmin, overallxmax, nRMS, rmsindex, xRMS, overallxRMS, nCustomValues, nPrintscr, printscrindex, customValues, customNames, attractor, maxPer);
     // Close output file
@@ -130,11 +130,11 @@ static void read_params(int dim, int npar, int *maxper, int *np, int *ndiv, int*
             fscanf(input, "%d\n", &(*printscrindex)[i]);
         }
     }
-    // Free Memory
-    free(input_filename);
     // Close input file
     fclose(input);
-    /* The user is responsible to free (x) and (par) after the function call */
+    // Free Memory
+    free(input_filename);
+    /* The user is responsible to free the other allocations after the function call */
 }
 
 static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, int nrms, double h, double t, double *x, double *par, int *rmsindex, char* funcname, 

@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -11,10 +10,10 @@
 #include "basic.h"
 #include "interface.h"
 #include "iofiles.h"
+#include "msg.h"
 
 #ifdef _OPENMP
     #include <omp.h>
-    omp_lock_t lock;
 #else
     #define omp_get_thread_num() 0
     #define omp_get_num_threads() 1 
@@ -178,6 +177,117 @@ int check_periodicity(int dim, int np, double **poinc, int trans, int *tmp_attra
     // return result of the first value of tmp_attractor (i.e.: the periodicity)
     return tmp_attractor[0];
 }
+
+double *get_system_tol(int dim, double *xmin, double *xmax) {
+    double diff;
+    double *systol = malloc(dim * sizeof(*systol));
+    for (int i = 0; i < dim; i++) {
+        diff = fabs(xmax[i] - xmin[i]);
+        if (diff == 0) {
+            systol[i] = 1;
+        }
+        else {
+            systol[i] = diff;            
+        }        
+    }
+
+    return systol;
+}
+
+int check_periodicity_new(int dim, int np, double **poinc, int trans, int maxper, double *xmin, double *xmax, double numtol) {
+    // Check Parameters
+    double_ptr_safety_check((void**)poinc, "**poinc in check_periodicity()");
+    ptr_safety_check(xmin, "*xmin in check periodicity()");
+    ptr_safety_check(xmax, "*xmax in check periodicity()");
+    // Declare control variables
+    int attractor = -1;                                 // Returning value of function
+    int tmp_attractor[dim];                             // Variable to hold the attractors found by analyzing each dimension
+    double *systol = get_system_tol(dim, xmin, xmax);   // Tolerance of the system
+    double tol[dim];                                    // Final Tolerance
+    // Determine final tolerance
+    for (int i = 0; i < dim; i++) {
+        tol[i] = systol[i]*numtol;
+        //print_warning("systol[%d] = %lf | tol[%d] = %lf\n", i, systol[i], i, tol[i]);
+    }
+    // Check periodicity in each dimension
+    for (int j = 0; j < dim; j++) {
+        // Check periodicity of a specific j dimension
+        for (int i = 1; i <= maxper; i++) {
+            if ((fabs(poinc[np - trans - 1][j] - poinc[np - trans - 1 - i][j]) <= tol[j])) { 
+                // If it finds a equal value, flag i
+                tmp_attractor[j] = i;
+                //printf("tmp_attractor[%i] = %i\n", j, i);
+                // If the same occurs at 2*i, break and define periodicity
+                if ((fabs(poinc[np - trans - 1][j] - poinc[np - trans - 1 - 2*i][j]) <= tol[j])) {
+                    break;
+                }
+            } 
+            // If i reaches the final number, attractor is period = maxper or greater
+            if (i == maxper) {
+                tmp_attractor[j] = i;
+                //printf("tmp_attractor[%i] = %i\n", j, i);
+            }
+        }
+    }
+    // Get the attractor
+    attractor = get_largest_element_int_array(tmp_attractor, dim);
+
+    return attractor;
+}
+
+int get_attractor_new(double **poinc, double *LE, int dim, int np, int trans, int maxper, double *xmin, double *xmax, double numtol) {
+    // Check Pointer
+    ptr_safety_check(LE, "*LE in get_attractor()");
+    ptr_safety_check(xmin, "*xmin in get_attractor()");
+    ptr_safety_check(xmax, "*xmax in get_attractor()");
+    double_ptr_safety_check((void**)poinc, "**poinc in get_attractor()");
+    // Control variables
+    int attractor = 0;                      // Returning value of the function
+    // Check if the system can show hyperchaotic motion or only chaotic
+    if (dim <= 2) {
+        // Check if system is periodic
+        if (LE[0] < 0 ) {
+            attractor = check_periodicity_new(dim, np, poinc, trans, maxper, xmin, xmax, numtol);
+            //printf("attractor = %i\n", attractor);
+        }
+        // Check if the system is chaotic
+        else if (LE[0] > 0) {
+            attractor = maxper + 1;
+        }
+        // Error
+        else {
+            attractor = 0;          // Escape Point
+            print_warning("Something went wrong trying to determine the type of motion of the system\n");
+        }
+    } 
+    else if (dim > 2) {
+        // Check if system is periodic
+        if (LE[0] < 0 ) {
+            attractor = check_periodicity_new(dim, np, poinc, trans, maxper, xmin, xmax, numtol);
+            //printf("attractor = %i\n", attractor);
+        }
+        // Check if the system is chaotic
+        else if (LE[0] > 0 && LE[1] <= 0) {
+            attractor = maxper + 1;
+        }
+        // Check if the system is hyperchaotic
+        else if (LE[0] > 0 && LE[1] > 0) {
+            attractor = maxper + 2;
+        }
+        // Error
+        else {
+            attractor = 0;          // Escape Point
+            print_warning("Something went wrong trying to determine the type of motion of the system\n");
+        }
+    }
+    else {
+        print_warning("Invalid dimension of the system...\n");
+        return -1;
+    }
+    // Returns the value of the attractor
+    return attractor;
+}
+
 
 int get_attractor(double **poinc, double *LE, int dim, int np, int trans, int *tmp_attractor, int *diffattrac, int maxper) {
     // Initialize variables
@@ -445,20 +555,14 @@ void ep_basin_of_attraction_2D(FILE *output_file, FILE *info_file, int dim, int 
                                int npar, void (*edosys)(int, double *, double, double *, double *)) {
     // Declare matrix do store results
     int pixels = icrange[2]*icrange[5];  // Number of results
-    double **results = malloc(pixels * sizeof **results);
-    for (int i = 0; i < pixels; i++) {
-        results[i] = malloc((3 + dim) * sizeof **results); 
-    }
+    double **results = (double **)alloc_2D_array(pixels, 3 + dim, sizeof(double));
     // Declare and define increment of control parameters
     double icstep[2];        
     icstep[0] = (icrange[1] - icrange[0])/(icrange[2] - 1); // -1 in the denominator ensures the input resolution
     icstep[1] = (icrange[4] - icrange[3])/(icrange[5] - 1); // -1 in the denominator ensures the input resolution
     // Declare variable to store attractors
     size_t rows = 0; size_t cols = dim + 1;
-    double **attrac = malloc(rows * sizeof **attrac);
-    for (int i = 0; i < rows; i++) {
-        attrac[i] = malloc(cols * sizeof **attrac);
-    }
+    double **attrac = (double **)alloc_2D_array(rows, cols, sizeof(double));
     // Start of Parallel Block
     #pragma omp parallel default(none) shared(dim, ndiv, np, icstep, npar, results, edosys, attrac, rows, cols) \
                                        firstprivate(x, t, indexX, indexY, icrange, par)

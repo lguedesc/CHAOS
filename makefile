@@ -113,6 +113,19 @@ endif
 
 test_cforge: cforge run_cforge
 
+test:
+	@echo $(OS)
+ifeq ($(OSFLAG), win)
+	@if not exist "tests\" mkdir "tests\"
+	$(CC) $(CFLAGS) -o tests\tests tests\test.c
+	@test\tests.exe
+else
+	@mkdir -p tests
+	$(CC) $(CFLAGS) -o tests/tests tests/test.c
+	@./tests/tests
+endif
+
+
 clean_bin:
 ifeq ($(OSFLAG), win)
 	@del /Q bin

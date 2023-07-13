@@ -10,9 +10,9 @@ from libs import plotconfig as pltconf
 pltconf.plot_params(True, 10, 0.5)
 
 save = False
-system = "duffing"
+system = "bistable_EH"
 ext = ".pdf"
-num = 0
+num = 2
 
 path = "data/FBifurcation/"
 

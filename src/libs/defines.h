@@ -11,6 +11,7 @@
 // Macros related to printing information
 #define MAX_PRINT_LEN 71            // Max length of the info printed on the screen and on info file
 #define PERC_PRINT_NAME 0.6         // Percentage of space occuped by the name of the quantity printed
+#define MAX_CCALC_NAME_LEN 31       // Maximum length of custom calculations names
 
 // Math constants
 #define PI (4 * atan(1))

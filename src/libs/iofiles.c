@@ -561,9 +561,9 @@ void p_write_epbasin_results(FILE *output_file, double **results, int pixels, in
     }
 }
 
-// Write results for Energy Harvesting Toolbox
+// Write results for Harmonic Oscillator (HOS) Toolbox
 
-void EH_write_bifurc_results(FILE *output_file, int dim, double varpar, double *x, double *xmin, double *xmax, double *overallxmin, double *overallxmax, int nrms, int *rmsindex, double *xrms, double *overallxrms,
+void HOS_write_bifurc_results(FILE *output_file, int dim, double varpar, double *x, double *xmin, double *xmax, double *overallxmin, double *overallxmax, int nrms, int *rmsindex, double *xrms, double *overallxrms,
                              int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode) {
     // Check the mode of the function
     if (mode == 0) {
@@ -634,7 +634,7 @@ void EH_write_bifurc_results(FILE *output_file, int dim, double varpar, double *
     }
 }
 
-void EH_write_fbifurc_results(FILE *output_file, int dim, int np, int trans, double varpar, double *x, double *xmin, double *xmax, double *overallxmin, double *overallxmax, double *LE, int attractor, double **poinc, int diffattrac, int nrms, int *rmsindex, double *xrms, double *overallxrms,
+void HOS_write_fbifurc_results_old(FILE *output_file, int dim, int np, int trans, double varpar, double *x, double *xmin, double *xmax, double *overallxmin, double *overallxmax, double *LE, int attractor, double **poinc, int diffattrac, int nrms, int *rmsindex, double *xrms, double *overallxrms,
                               int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode) {
     // Check the mode of the function
     // Header for poincare bifurc
@@ -719,9 +719,96 @@ void EH_write_fbifurc_results(FILE *output_file, int dim, int np, int trans, dou
     }
 }
 
-void EH_p_write_fdyndiag_results(FILE *output_file, int dim, int nrms, int *rmsindex, double **results, int pixels, int ncustomvalues, char **customnames, int nprintf, int *printfindex) {
+void HOS_write_fbifurc_results(FILE *output_file, int dim, int np, int trans, double varpar, double *x, double *xmin, double *xmax, double *overallxmin, double *overallxmax, double *LE, int attractor, double **poinc, int nrms, int *rmsindex, double *xrms, double *overallxrms,
+                              int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode) {
+    // Check the mode of the function
+    // Header for poincare bifurc
+    if (mode == 0) {
+        fprintf(output_file, "%s ", "Cpar");
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "x[%i] ", i);
+        }
+        fprintf(output_file, "Attractor\n");
+    } 
+    // Write Results for poincare bifurc
+    else if (mode == 1) {
+        for(int q = 0; q < np - trans; q ++) {
+            fprintf(output_file, "%.10lf ", varpar);
+            for (int i = 0; i < dim; i++) {
+                fprintf(output_file, "%.10lf ", poinc[q][i]);
+            }
+            fprintf(output_file, "%d\n", attractor);
+        }
+    }
+    // Header for lyapunov, min, max values, customvalues
+    else if (mode == 2) {
+        fprintf(output_file, "%s ", "Cpar");
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "xMIN[%d] ", i);
+            fprintf(output_file, "xMAX[%d] ", i);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "OverallxMIN[%d] ", i);
+            fprintf(output_file, "OverallxMAX[%d] ", i);
+        }
+        for (int i = 0; i < nrms; i++) {
+            fprintf(output_file, "xRMS[%d] ", rmsindex[i]);
+        }
+        for (int i = 0; i < nrms; i++) {
+            fprintf(output_file, "OverallxRMS[%d] ", rmsindex[i]);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "LE[%d] ", i);
+        }
+        fprintf(output_file, "Attractor ");
+        // If it has any custom calculations, add custom header
+        if (ncustomvalues > 0) { 
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%s ", customnames[printfindex[i]]);
+            } 
+        }
+        fprintf(output_file, "\n");
+    }
+    // Write Results for lyapunov, min, max values, customvalues
+    else if (mode == 3) {
+        fprintf(output_file, "%.10f ", varpar);
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", xmin[i]);
+            fprintf(output_file, "%.10lf ", xmax[i]);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", overallxmin[i]);
+            fprintf(output_file, "%.10lf ", overallxmax[i]);
+        }
+        for (int i = 0; i < nrms; i++) {
+            fprintf(output_file, "%.10lf ", xrms[rmsindex[i]]);
+        }
+        for (int i = 0; i < nrms; i++) {
+            fprintf(output_file, "%.10lf ", overallxrms[rmsindex[i]]);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", LE[i]);
+        }
+        fprintf(output_file, "%d ", attractor);
+        // If it has any custom calculations, add custom values
+        if (ncustomvalues > 0) { 
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%.10lf ", customvalue[printfindex[i]]);
+            } 
+        }
+        fprintf(output_file, "\n");
+    }
+    // Error
+    else {
+        printf("Failed to write results in output file using mode (%d)...\n", mode);
+        return;
+    }
+}
+
+void HOS_p_write_fdyndiag_results(FILE *output_file, int dim, int nrms, int *rmsindex, double **results, int pixels, int ncustomvalues, char **customnames, int nprintf, int *printfindex) {
+    printf("\n\n  Writing Results in Output File...\n");
     // Header
-    fprintf(output_file, "%s %s %s %s ", "CparY", "CparX", "Attractor", "DiffAttrac");
+    fprintf(output_file, "%s %s %s ", "CparY", "CparX", "Attractor");
     for (int i = 0; i < dim; i++) {
         fprintf(output_file, "LE[%d] ", i);
     }
@@ -754,43 +841,44 @@ void EH_p_write_fdyndiag_results(FILE *output_file, int dim, int nrms, int *rmsi
     fprintf(output_file, "\n");
     // Write Results
     for (int i = 0; i < pixels; i++) {
-        fprintf(output_file, "%.10lf %.10lf %d %d ", results[i][0], results[i][1], (int)results[i][2], (int)results[i][3]);
+        fprintf(output_file, "%.10lf %.10lf %d ", results[i][0], results[i][1], (int)results[i][2]);
         for (int j = 0; j < dim; j++) {
-            fprintf(output_file, "%.10lf ", results[i][j+4]); // LE
+            fprintf(output_file, "%.10lf ", results[i][j+3]); // LE
         }
         for (int j = 0; j < dim; j++) {
-            fprintf(output_file, "%.10lf ", results[i][j+4+dim]); // xMAX
+            fprintf(output_file, "%.10lf ", results[i][j+3+dim]); // xMAX
         }
         for (int j = 0; j < dim; j++) {
-            fprintf(output_file, "%.10lf ", results[i][j+4+(2*dim)]); // xMin
+            fprintf(output_file, "%.10lf ", results[i][j+3+(2*dim)]); // xMin
         }
         for (int j = 0; j < dim; j++) {
-            fprintf(output_file, "%.10lf ", results[i][j+4+(3*dim)]); // overallxmax
+            fprintf(output_file, "%.10lf ", results[i][j+3+(3*dim)]); // overallxmax
         }
         for (int j = 0; j < dim; j++) {
-            fprintf(output_file, "%.10lf ", results[i][j+4+(4*dim)]); // overallxmin
+            fprintf(output_file, "%.10lf ", results[i][j+3+(4*dim)]); // overallxmin
         }
         if (nrms > 0) {
             for (int j = 0; j < nrms; j++) {
-                fprintf(output_file, "%.10lf ", results[i][j+4+(5*dim)]); // xRMS
+                fprintf(output_file, "%.10lf ", results[i][j+3+(5*dim)]); // xRMS
             }
             for (int j = 0; j < nrms; j++) {
-                fprintf(output_file, "%.10lf ", results[i][j+4+(5*dim)+nrms]); //OverallxRMS
+                fprintf(output_file, "%.10lf ", results[i][j+3+(5*dim)+nrms]); //OverallxRMS
             }
         }
         // If it has any custom calculations, add custom values
         if (ncustomvalues > 0) {
             for (int j = 0; j < nprintf; j++) {
-                fprintf(output_file, "%.10lf ", results[i][j+4+(5*dim)+(2*nrms)]);  //customvalues
+                fprintf(output_file, "%.10lf ", results[i][j+3+(5*dim)+(2*nrms)]);  //customvalues
             }
         }
         fprintf(output_file, "\n");
     }
 }
 
-void EH_p_write_dyndiag_results(FILE *output_file, int dim, int nrms, int *rmsindex, double **results, int pixels, int ncustomvalues, char **customnames, int nprintf, int *printfindex) {
+void HOS_p_write_dyndiag_results(FILE *output_file, int dim, int nrms, int *rmsindex, double **results, int pixels, int ncustomvalues, char **customnames, int nprintf, int *printfindex) {
+    printf("\n\n  Writing Results in Output File...\n");
     // Header
-    fprintf(output_file, "%s %s %s %s ", "CparY", "CparX", "Attractor", "DiffAttrac");
+    fprintf(output_file, "%s %s %s ", "CparY", "CparX", "Attractor");
     for (int i = 0; i < dim; i++) {
         fprintf(output_file, "xMAX[%d] ", i);
     }
@@ -820,38 +908,38 @@ void EH_p_write_dyndiag_results(FILE *output_file, int dim, int nrms, int *rmsin
     fprintf(output_file, "\n");
     // Write Results
     for (int i = 0; i < pixels; i++) {
-        fprintf(output_file, "%.10lf %.10lf %d %d ", results[i][0], results[i][1], (int)results[i][2], (int)results[i][3]);
+        fprintf(output_file, "%.10lf %.10lf %d ", results[i][0], results[i][1], (int)results[i][2]);
         for (int j = 0; j < dim; j++) {
-            fprintf(output_file, "%.10lf ", results[i][j+4]); // xmax
+            fprintf(output_file, "%.10lf ", results[i][j+3]); // xmax
         }
         for (int j = 0; j < dim; j++) {
-            fprintf(output_file, "%.10lf ", results[i][j+4+dim]); // xmin
+            fprintf(output_file, "%.10lf ", results[i][j+3+dim]); // xmin
         }
         for (int j = 0; j < dim; j++) {
-            fprintf(output_file, "%.10lf ", results[i][j+4+(2*dim)]); // overallxmax
+            fprintf(output_file, "%.10lf ", results[i][j+3+(2*dim)]); // overallxmax
         }
         for (int j = 0; j < dim; j++) {
-            fprintf(output_file, "%.10lf ", results[i][j+4+(3*dim)]); // overallxmin
+            fprintf(output_file, "%.10lf ", results[i][j+3+(3*dim)]); // overallxmin
         }
         if (nrms > 0) {
             for (int j = 0; j < nrms; j++) {
-                fprintf(output_file, "%.10lf ", results[i][j+4+(4*dim)]);
+                fprintf(output_file, "%.10lf ", results[i][j+3+(4*dim)]);
             }
             for (int j = 0; j < nrms; j++) {
-                fprintf(output_file, "%.10lf ", results[i][j+4+(4*dim)+nrms]);
+                fprintf(output_file, "%.10lf ", results[i][j+3+(4*dim)+nrms]);
             }
         }
         // If it has any custom calculations, add custom values
         if (ncustomvalues > 0) {
             for (int j = 0; j < nprintf; j++) {
-                fprintf(output_file, "%.10lf ", results[i][j+4+(4*dim)+(2*nrms)]);
+                fprintf(output_file, "%.10lf ", results[i][j+3+(4*dim)+(2*nrms)]);
             }
         }
         fprintf(output_file, "\n");
     }
 }
 
-void EH_write_timeseries_results(FILE *output_file, int dim, double t, double *x, int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode) {
+void HOS_write_timeseries_results(FILE *output_file, int dim, double t, double *x, int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode) {
     // Check the mode of the function
     if (mode == 1) {
         // Add Header
@@ -899,7 +987,7 @@ void EH_write_timeseries_results(FILE *output_file, int dim, double t, double *x
     }
 }
 
-void EH_write_ftimeseries_results(FILE *output_file, int dim, double t, double *x, double *lambda, double *s_lambda, int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode) {
+void HOS_write_ftimeseries_results(FILE *output_file, int dim, double t, double *x, double *lambda, double *s_lambda, int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode) {
     // Check the mode of the function
     if (mode == 1) {
         // Header

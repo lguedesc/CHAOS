@@ -25,12 +25,12 @@ Currently, **CHAOS** offers an array of features to be used in pre-programmed dy
 * Maximum, Minimum and Root Mean Square (RMS) values of state variables
 * Custom Calculations inserted by the user (need programming in source code)
 
-## Limitations⚠️
+## Limitations ⚠️
 * Need a input file to enter with the simulation and system parameters
 * To insert a new dynamical system or perform custom calculations the user needs to modify the source code. An intuitive tutorial will be available soon.
 * Currently only 4th order Runge-Kutta method is available as a numerical integrator. More will be added in the future.
 
-## Future Features🎯
+## Future Features 🎯
 We're excited to share that we have plans to expand **CHAOS** and bring more capabilities to the package. Here are some of the features we're aiming to implement in our next releases. If you're interested in supporting or participating in the project, we welcome your contributions. You can easily get involved by opening a pull request. 😀"
 
 * Addition of more numerical integrators

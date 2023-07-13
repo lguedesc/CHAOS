@@ -6,13 +6,14 @@
 #include "nlosc.h"
 #include "nldyn.h"
 #include "odesystems.h"
+#include "defines.h"
 
 // Methods
-static void assign_names(char **strings, const int nvalues, char **names, size_t maxstrlen) {
+static void assign_names(char **strings, const int nvalues, char **names) {
     // Get every row of strings and copy to names
     for (int i = 0; i < nvalues; i++) {
-        if (strlen(strings[i]) + 1 >= maxstrlen) {
-            printf("  CUSTOM CALCULATIONS FUNCTION WARNING: One or more given names of the custom values are too big, please assign smaller names of maximum length of %zu before trying to run the program.\n", maxstrlen);
+        if (strlen(strings[i]) + 1 >= MAX_CCALC_NAME_LEN) {
+            printf("  CUSTOM CALCULATIONS FUNCTION WARNING: One or more given names of the custom values are too big, please assign smaller names of maximum length of %zu before trying to run the program.\n", MAX_CCALC_NAME_LEN);
             printf("  Exiting Program...\n");
             exit(1);
         }
@@ -100,11 +101,11 @@ static double duffing_2DoF_EH_ddXCM(double ddX1, double ddX2, double rho) {
 
 
 // Custom Calculations
-void customcalc(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
     return;
 }
 
-void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
     // Mode to define names to be printed in the output file
     if (mode == 0) {    
         char *names[] = {   "ddx[0]",
@@ -129,7 +130,7 @@ void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, doub
                             "TotalPout"
                         };
         // Assign names to custom values
-        assign_names(names, ncustomvalues, customnames, maxstrlen);
+        assign_names(names, ncustomvalues, customnames);
     }
     // Mode to perform calculations in steady state regime of the time series
     else if (mode == 1) { 
@@ -187,7 +188,7 @@ void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, doub
     }
 }
 
-void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
     /* OMEGA   = par[0]   |   zeta_z    = par[5]   |   l         = par[10]   |   chi_PZ = par[15]       |   x[0] = x       |   x[5] = dphi/dt
        gamma   = par[1]   |   zeta_t    = par[6]   |   varphi_PZ = par[11]   |   chi_EM = par[16]       |   x[1] = dx/dt   |   x[6] = v
        mu      = par[2]   |   OMEGA_s   = par[7]   |   kappa_PZ  = par[12]   |                          |   x[2] = z       |   x[7] = i
@@ -229,7 +230,7 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
                             "tflip"
                             };
         // Assign names to custom values
-        assign_names(names, ncustomvalues, customnames, maxstrlen);
+        assign_names(names, ncustomvalues, customnames);
     }
     // Mode to perform calculations in steady state regime of the time series
     else if (mode == 1) { 
@@ -418,7 +419,7 @@ void customcalc_pend_oscillator_EH(double *x, double *par, double t, double *xrm
     }
 }
 
-void customcalc_duffing_2DoF_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc_duffing_2DoF_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
     /* OMEGA   = par[0]   |   alpha_1 = par[5]   |   chi_1    = par[10]   |   kappa_2 = par[15]   |   x1  = x[0] | v2 = x[5]
        gamma   = par[1]   |   alpha_2 = par[6]   |   chi_2    = par[11]   |                       |   dx1 = x[1] |    
        rho     = par[2]   |   beta_1  = par[7]   |   varphi_1 = par[12]   |                       |   x2  = x[2] |
@@ -465,7 +466,7 @@ void customcalc_duffing_2DoF_EH(double *x, double *par, double t, double *xrms, 
         
         
         // Assign names to custom values
-        assign_names(names, ncustomvalues, customnames, maxstrlen);
+        assign_names(names, ncustomvalues, customnames);
     } 
     // Mode to perform calculations in steady state regime of the time series
     else if (mode == 1) {
@@ -609,7 +610,7 @@ void customcalc_duffing_2DoF_EH(double *x, double *par, double t, double *xrms, 
     }
 }
 
-void customcalc_linear_2DoF_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc_linear_2DoF_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
     /* OMEGA   = par[0]   |   OMEGA_s  = par[5]   |   kappa_1 = par[10]   |   x1  = x[0] |  v2 = x[5]
        gamma   = par[1]   |   chi_1    = par[6]   |   kappa_2 = par[11]   |   dx1 = x[1] |    
        rho     = par[2]   |   chi_2    = par[7]   |                       |   x2  = x[2] |
@@ -656,7 +657,7 @@ void customcalc_linear_2DoF_EH(double *x, double *par, double t, double *xrms, d
         
         
         // Assign names to custom values
-        assign_names(names, ncustomvalues, customnames, maxstrlen);
+        assign_names(names, ncustomvalues, customnames);
     } 
     // Mode to perform calculations in steady state regime of the time series
     else if (mode == 1) {
@@ -800,7 +801,7 @@ void customcalc_linear_2DoF_EH(double *x, double *par, double t, double *xrms, d
     }
 }
 
-void customcalc_adeodato_sma_oscillator(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc_adeodato_sma_oscillator(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
     /* System Parameters  |                                                              Shape Memory Properties                                                               |   
        -----------------  -   ----------------------------------------------------------------------------------------------------------------------------------------------   -      
        OMEGA   = par[0]   |   sigma_0    = par[6]   |   beta_0    = par[12]   |   alpha  = par[18]  |  s_2      = par[24]   |   load_ant = par[30]   |   T         = par[36]   |   
@@ -814,7 +815,7 @@ void customcalc_adeodato_sma_oscillator(double *x, double *par, double t, double
         char *names[] = { "Sigma_0", "Sigma_ant", "Sigma", "Strain_0", "Strain_ant", "Strain",
                           "E_0", "E_ant", "E", "Alpha_0", "Alpha_ant", "Alpha", "Beta_0", "Beta_ant", "Beta", "dir_ant", "dir", "load_ant", "load"};
         // Assign names to custom values
-        assign_names(names, ncustomvalues, customnames, maxstrlen);
+        assign_names(names, ncustomvalues, customnames);
 
         // Assign SMA Initial Conditions Properties
         if (t == t0) {
@@ -870,12 +871,12 @@ void customcalc_adeodato_sma_oscillator(double *x, double *par, double t, double
 
 /* Model for customcalc functions: 
 
-void customcalc_name(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode)
+void customcalc_name(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode)
     // Mode to define names to be printed in the output file
     if (mode == 0) {    
         char *names[] = {   "list", "of", "names"   };
         // Assign names to custom values
-        assign_names(names, ncustomvalues, customnames, maxstrlen);
+        assign_names(names, ncustomvalues, customnames);
     } 
     // Mode to perform calculations in steady state regime of the time series
     else if (mode == 1) {
@@ -899,6 +900,6 @@ void customcalc_name(double *x, double *par, double t, double *xrms, double *xmi
         error(mode);
     }
 */
-void customcalc_chuas_circuit(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode) {
+void customcalc_chuas_circuit(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
 	return;
 }

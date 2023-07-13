@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -8,6 +7,7 @@
 #include "odesolvers.h"
 #include "basic.h"
 #include "interface.h"
+#include "defines.h"
 
 #ifdef _OPENMP
     #include <omp.h>
@@ -35,13 +35,110 @@ double RMS(double *cum, double measure, int N, int mode) {
     }
 }
 
+static void store_results_in_matrix_dyndiag(double ***results, int k, int m, double *parrange, double *PAR, int indexY, int indexX,
+                                            int attrac, int dim, double *xmax, double *xmin, double *overallxmax, double *overallxmin,
+                                            int nrms, int *rmsindex, double *xrms, double *overallxrms, int nprintf, int *printfindex, 
+                                            double *customvalues) {
+    // Index to identify position in results array to store results
+    int index = (int)parrange[2]*k + m;
+    // Write Control parameters and attractor in matrix
+    (*results)[index][0] = PAR[indexY];
+    (*results)[index][1] = PAR[indexX];
+    (*results)[index][2] = (double)attrac;
+    int col_offset = 3;
+    // Store xmax[dim] values
+    for (int r = 0; r < dim; r++) {
+        (*results)[index][col_offset + r] = xmax[r];
+    }
+    col_offset += dim;
+    // Store xmin[dim] values
+    for (int r = 0; r < dim; r++) {
+        (*results)[index][col_offset + r] = xmin[r];
+    }
+    col_offset += dim;
+    // Store overallxmax[dim] values
+    for (int r = 0; r < dim; r++) {
+        (*results)[index][col_offset + r] = overallxmax[r];
+    }
+    col_offset += dim;
+    // Store overallxmin[dim] values
+    for (int r = 0; r < dim; r++) {
+        (*results)[index][col_offset + r] = overallxmin[r];
+    }
+    col_offset += dim;
+    // Store xrms[nrms] values 
+    for (int r = 0; r < nrms; r++) {
+        (*results)[index][col_offset + r] = xrms[rmsindex[r]];
+    }
+    col_offset += nrms;
+    // Store overallxrms[nrms] values
+    for (int r = 0; r < nrms; r++) {
+        (*results)[index][col_offset + r] = overallxrms[rmsindex[r]];
+    }
+    col_offset += nrms;
+    // Store customvalues[nprintf] values
+    for (int r = 0; r < nprintf; r++) {
+        (*results)[index][col_offset + r] = customvalues[printfindex[r]];
+    }
+}
+
+static void store_results_in_matrix_fdyndiag(double ***results, int k, int m, double *parrange, double *PAR, int indexY, int indexX,
+                                             int attrac, int dim, double *LE, double *xmax, double *xmin, double *overallxmax, double *overallxmin,
+                                             int nrms, int *rmsindex, double *xrms, double *overallxrms, int nprintf, int *printfindex, 
+                                             double *customvalues) {
+    // Index to identify position in results array to store results
+    int index = (int)parrange[2]*k + m;
+    // Write Control parameters and attractor in matrix
+    (*results)[index][0] = PAR[indexY];
+    (*results)[index][1] = PAR[indexX];
+    (*results)[index][2] = (double)attrac;
+    int col_offset = 3;
+    // Store LE[dim] values
+    for (int r = 0; r < dim; r++) {
+        (*results)[index][col_offset + r] = LE[r];
+    }
+    col_offset += dim;
+    // Store xmax[dim] values
+    for (int r = 0; r < dim; r++) {
+        (*results)[index][col_offset + r] = xmax[r];
+    }
+    col_offset += dim;
+    // Store xmin[dim] values
+    for (int r = 0; r < dim; r++) {
+        (*results)[index][col_offset + r] = xmin[r];
+    }
+    col_offset += dim;
+    // Store overallxmax[dim] values
+    for (int r = 0; r < dim; r++) {
+        (*results)[index][col_offset + r] = overallxmax[r];
+    }
+    col_offset += dim;
+    // Store overallxmin[dim] values
+    for (int r = 0; r < dim; r++) {
+        (*results)[index][col_offset + r] = overallxmin[r];
+    }
+    col_offset += dim;
+    // Store xrms[nrms] values 
+    for (int r = 0; r < nrms; r++) {
+        (*results)[index][col_offset + r] = xrms[rmsindex[r]];
+    }
+    col_offset += nrms;
+    // Store overallxrms[nrms] values
+    for (int r = 0; r < nrms; r++) {
+        (*results)[index][col_offset + r] = overallxrms[rmsindex[r]];
+    }
+    col_offset += nrms;
+    // Store customvalues[nprintf] values
+    for (int r = 0; r < nprintf; r++) {
+        (*results)[index][col_offset + r] = customvalues[printfindex[r]];
+    }
+}
+
 // Solutions
 void HOS_timeseries_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double *x, double h, double *par, int nrms, int *rmsindex, double **xrms, double **overallxrms, 
                              double **xmin, double **xmax, double **overallxmin, double **overallxmax, void (*edosys)(int, double *, double, double *, double *),  
                              int ncustomvalues, char ***customnames, double **customvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex,
-                             void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode)) {
-    // Maximum length of custom names, if there is custom calculations
-    size_t nchars = 20;
+                             void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode)) {
     // Allocate x` = f(x)
     double *f = malloc(dim * sizeof *f);
     // Allocate memory and store initial conditions
@@ -78,10 +175,7 @@ void HOS_timeseries_solution(FILE *output_file, int dim, int np, int ndiv, int t
             (*customvalues)[i] = 0.0;
         }
         // Allocate variable to store the names of the custom values
-        (*customnames) = malloc(ncustomvalues * sizeof *customnames);
-        for (int i = 0; i < ncustomvalues; i++) {
-            (*customnames)[i] = malloc(nchars * sizeof *customnames);
-        }
+        (*customnames) = alloc_string_array(ncustomvalues, MAX_CCALC_NAME_LEN);
     } 
     // Mumber of integration steps
     int N = np*ndiv;
@@ -91,10 +185,10 @@ void HOS_timeseries_solution(FILE *output_file, int dim, int np, int ndiv, int t
     int currenttimestep = 0;
     // Check if there is any custom names to be inserted on the header of the output file
     if (ncustomvalues > 0) {
-        customfunc(x, par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 0);
+        customfunc(x, par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 0);
     }
     // Make the header of the output file
-    EH_write_timeseries_results(output_file, dim, t, x, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 1);
+    HOS_write_timeseries_results(output_file, dim, t, x, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 1);
     // Call Runge-Kutta 4th order integrator n = np * ndiv times
     for (int i = 0; i < np; i++) {
         for (int j = 0; j < ndiv; j++) {
@@ -123,7 +217,7 @@ void HOS_timeseries_solution(FILE *output_file, int dim, int np, int ndiv, int t
                 }
                 // Perform custom calculations in steady state regime (if there is calculations to be done)
                 if (ncustomvalues > 0) {
-                    customfunc(x, par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 1);    
+                    customfunc(x, par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 1);    
                 }
             }
             // Get overall max and min values
@@ -140,10 +234,10 @@ void HOS_timeseries_solution(FILE *output_file, int dim, int np, int ndiv, int t
             }
             // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
             if (ncustomvalues > 0) {
-                customfunc(x, par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 2);
+                customfunc(x, par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 2);
             }
             // Write results in output file
-            EH_write_timeseries_results(output_file, dim, t, x, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 2);
+            HOS_write_timeseries_results(output_file, dim, t, x, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 2);
         }
     }
     // Compute RMS values of state variables (if there is RMS calculations to be performed)
@@ -155,19 +249,1139 @@ void HOS_timeseries_solution(FILE *output_file, int dim, int np, int ndiv, int t
     }
     // Perform custom calculations at the end of the time series (if there is calculations to be done)
     if (ncustomvalues > 0) {
-        customfunc(x, par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 3);
+        customfunc(x, par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 3);
     }
     // Free Memory
-    free(f); free(IC);
+    free_mem(f, IC, NULL);
 }
 
 void HOS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int *attrac, int maxper, double t, double **x, double h, double *par, 
                                  int nrms, int *rmsindex, double **xrms, double **overallxrms, double **xmin, double **xmax, double **overallxmin, double **overallxmax,
                                  void (*edosys)(int, double *, double, double *, double *), 
                                  int ncustomvalues, char ***customnames, double **customvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex,
-                                 void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue, int mode)) {
-    // Maximum length of custom names, if there is custom calculations
-    size_t nchars = 20;
+                                 void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode)) {
+    // Allocate memory for x` = f(x)
+    double *f = malloc(dim * sizeof *f);
+    // Allocate memory and store initial conditions
+    double t0 = t;
+    double *IC = malloc(dim * sizeof *IC);
+    for (int i = 0; i < dim; i++) {
+        IC[i] = (*x)[i];
+    }
+    // Allocate memory for vectors necessary for lyapunov exponents calculation
+    double *cum = malloc(dim * sizeof *cum);            // Cumulative Vector
+    double *lambda = malloc(dim *sizeof *lambda);       // Lyapunov Exponents vector
+    double *s_cum = malloc(dim * sizeof *s_cum);        // Short Cumulative Vector
+    double *s_lambda = malloc(dim * sizeof *s_lambda);  // Short Lyapunov Exponents Vector
+    double *znorm = malloc(dim * sizeof *znorm);        // Norm of Vectors
+    double *gsc = malloc((dim - 1) * sizeof *gsc);      // Inner Products Vector
+    // Assign initial values to Lyapunov exponents vector
+    for (int i = 0; i < dim; i++) {
+        lambda[i] = 0.0;
+        s_lambda[i] = 0.0;
+    }
+    // Allocate RMS variables
+    (*xrms) = malloc(dim * sizeof **xrms);
+    (*overallxrms) = malloc(dim * sizeof **overallxrms);
+    // Initialize xRMS[dim] and overallxRMS[dim] vector
+    for (int i = 0; i < dim; i ++) {
+        (*xrms)[i] = 0.0;
+        (*overallxrms)[i] = 0.0;
+    }
+    // Declare memory to store min, max, overall min and overall max values
+    (*xmax) = malloc(dim * sizeof **xmax);
+    (*xmin) = malloc(dim * sizeof **xmin);
+    (*overallxmax) = malloc(dim * sizeof **overallxmax);
+    (*overallxmin) = malloc(dim * sizeof **overallxmin);
+    // Initialize min, max, overall min and overall max vectors
+    for (int i = 0; i < dim; i ++) {
+        (*xmin)[i] = 0.0;
+        (*overallxmin)[i] = (*x)[i];
+        (*xmax)[i] = 0.0;
+        (*overallxmax)[i] = (*x)[i];
+    }
+    if (ncustomvalues > 0) {
+        // Allocate variable to store custom values
+        (*customvalues) = malloc(ncustomvalues * sizeof **customvalues);
+        // Initialize customvalues[ncustomvalues]
+        for (int i = 0; i < ncustomvalues; i++) {
+            (*customvalues)[i] = 0.0;
+        }
+        // Allocate variable to store the names of the custom values
+        (*customnames) = alloc_string_array(ncustomvalues, MAX_CCALC_NAME_LEN);
+    }
+    // Mumber of integration steps
+    int N = np*ndiv;
+    // Percentage of integration steps considered steady state regime 
+    double steadystateperc = 1 - ((double)trans/(double)np);
+    // Numerical control parameters
+    double numtol = 1e-4;                               // Numerical tolerance for determine the attractor
+    int ndim = dim + (dim * dim);                       // Define new dimension to include linearized dynamical equations
+    double tf = h*np*ndiv;                              // Final time
+    double s_T0 = ((double) trans/ (double) np) * tf;   // Advanced initial time 
+    // Declare vector and allocate memory to store poincare map values: poinc[number of permanent regime forcing periods][dimension original system]
+    double **poinc = (double **)alloc_2D_array(np - trans, dim, sizeof(double));
+     // Declare vector to store the chosen Lyapunov Exponents to determine the attractor
+    double *LE = malloc(dim * sizeof *LE);
+    // Prepare x vector to include perturbed values 
+    realloc_vector(x, ndim);
+    // Assign initial perturbation
+    perturb_wolf(x, dim, ndim, &cum, &s_cum);
+    // Initialize current time step variable
+    int currenttimestep = 0;
+    // Check if there is any custom names to be inserted on the header of the output file
+    if (ncustomvalues > 0) {
+        customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 0);
+    }
+    // Make the header of output files
+    HOS_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 1);
+    write_results(output_poinc_file, dim, t, (*x), 0);
+    // Call ODE solver N = nP * nDiv times
+    for (int i = 0; i < np; i++) {
+        for (int j = 0; j < ndiv; j++) {
+            currenttimestep = ndiv*i +j;
+            rk4(ndim, *x, t, h, par, f, edosys);
+            lyapunov_wolf(x, t, h, dim, ndim, s_T0, &cum, &s_cum, &lambda, &s_lambda, &znorm, &gsc);
+            t = t + h;
+            // Steady State Regime Calculations
+            if (i >= trans) {
+                // Choose any point in the trajectory for poincare section placement
+                if (j == 1) {
+                    // Stores poincare values in poinc[np - trans][dim] vector
+                    for (int p = 0; p < dim; p++) {
+                        poinc[i - trans][p] = (*x)[p];
+                    }
+                    write_results(output_poinc_file, dim, t, (*x), 2);
+                }
+                // Get max and min values at permanent regime
+                for (int q = 0; q < dim; q++) {
+                    // Initialize xmax[dim] and xmin[dim] with first values of x[dim] at permanent regime
+                    if (i == trans && j == 0) {
+                        (*xmax)[q] = (*x)[q];
+                        (*xmin)[q] = (*x)[q];
+                    }
+                    max_value((*x)[q], &(*xmax)[q]);
+                    min_value((*x)[q], &(*xmin)[q]);
+                }
+                // Accumulate squared values to RMS computation in permanent regime
+                if (nrms > 0) {
+                    for (int q = 0; q < nrms; q++) {
+                        (*xrms)[rmsindex[q]] = RMS(&(*xrms)[rmsindex[q]], (*x)[rmsindex[q]], N, 0);
+                    }
+                }
+                // Perform custom calculations in steady state regime (if there is calculations to be done)
+                if (ncustomvalues > 0) {
+                    customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 1);    
+                }
+            }
+            // Get overall max and min values
+            for (int q = 0; q < dim; q++) {
+                    //printf("overallxmax[%d] = %lf\n", q, overallxmax[q]);
+                    max_value((*x)[q], &(*overallxmax)[q]);
+                    min_value((*x)[q], &(*overallxmin)[q]);
+            }
+            // Accumulate squared values to RMS computation for all time domain
+            if (nrms > 0) {
+                for (int q = 0; q < nrms; q++) {
+                    (*overallxrms)[rmsindex[q]] = RMS(&(*overallxrms)[rmsindex[q]], (*x)[rmsindex[q]], N, 0);
+                }
+            }
+            // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
+            if (ncustomvalues > 0) {
+                customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 2);
+            }       
+            // Write Results in output file
+            HOS_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 2);
+        }
+    }
+    // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
+    store_LE(dim, lambda, s_lambda, LE);
+    // Verify the type of motion of the system
+    (*attrac) = get_attractor_new(poinc, LE, dim, np, trans, maxper, (*xmin), (*xmax), numtol);
+    // Compute RMS values of state variables
+    if (nrms > 0) {
+        for (int q = 0; q < nrms; q++) {
+            (*xrms)[rmsindex[q]] = RMS(&(*xrms)[rmsindex[q]], (*x)[rmsindex[q]], N, 1);
+            (*overallxrms)[rmsindex[q]] = RMS(&(*overallxrms)[rmsindex[q]], (*x)[rmsindex[q]], N, 1);
+        }
+    }
+    // Perform "end" type custom calculations if there is calculations to be done
+    if (ncustomvalues > 0) {
+        customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 3);
+    }
+    // Free memory 
+    free_mem(f, cum, s_cum, lambda, s_lambda, znorm, gsc, LE, IC, NULL);
+    free_2D_mem((void**)poinc, np - trans);   
+}
+
+void HOS_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, double t, double *x, int parindex, 
+                        double *parrange, double *par, int nrms, int *rmsindex, void (*edosys)(int, double *, double, double *, double *), 
+                        int ncustomvalues, int nprintf, int *printfindex,
+                        void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue,
+                        int mode), int bifmode) {
+    // Allocate x` = f(x)
+    double *f = malloc(dim * sizeof *f);
+    // Store Initial Conditions
+    double t0 = t;
+    double *IC = malloc(dim * sizeof *IC);
+    for (int i = 0; i < dim; i++) {
+        IC[i] = x[i];
+    }
+    // Declare memory to store min and max values
+    double *xmax = malloc(dim * sizeof *xmax);
+    double *xmin = malloc(dim * sizeof *xmin);
+    double *overallxmin = malloc(dim * sizeof *overallxmin);
+    double *overallxmax = malloc(dim * sizeof *overallxmax);
+    // Allocate RMS variables
+    double *xrms = malloc(dim * sizeof *xrms);
+    double *overallxrms = malloc(dim * sizeof *overallxrms);
+    // Allocate variable to store custom values
+    double *customvalues = malloc(ncustomvalues * sizeof *customvalues);
+    // Allocate variable to store the names of the custom values
+    char **customnames = alloc_string_array(ncustomvalues, MAX_CCALC_NAME_LEN);
+    // Mumber of integration steps
+    int N = np*ndiv;
+    // Percentage of integration steps considered steady state regime 
+    double steadystateperc = 1 - ((double)trans/(double)np);
+    // Declare timestep and pi
+    double h;
+    // Declare and define increment of control parameters
+    double varstep;        
+    varstep = (parrange[1] - parrange[0])/(parrange[2] - 1); // -1 in the denominator ensures the input resolution
+    // Initialize current time step variable
+    int currenttimestep = 0;
+    // Check if there is any custom names to be inserted on the header of the output file
+    if (ncustomvalues > 0) {
+        customfunc(x, par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 0);
+    }
+    // Make the header of the output file
+    HOS_write_bifurc_results(output_poinc_file, dim, par[parindex], x, xmin, xmax, overallxmin, overallxmax, nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 0);    
+    HOS_write_bifurc_results(output_file, dim, par[parindex], x, xmin, xmax, overallxmin, overallxmax, nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 2);
+    // Starts sweep the control parameter
+    for (int k = 0; k < (int)parrange[2]; k++) {
+        par[parindex] = parrange[0] + k*varstep; // Increment value
+        // Check the mode of the bifurcation
+        if (bifmode == 1) {
+            // Reset Initial conditions in each bifurcation step
+            for (int i = 0; i < dim; i++) {
+                x[i] = IC[i];
+            }
+        }
+        // Reset Variables
+        t = t0;
+        currenttimestep = 0;
+        for (int i = 0; i < dim; i ++) {
+            xmin[i] = 0.0;
+            overallxmin[i] = x[i];
+            xmax[i] = 0.0;
+            overallxmax[i] = x[i];
+            xrms[i] = 0.0;
+            overallxrms[i] = 0.0;
+        }
+        if (ncustomvalues > 0) {
+            for (int i = 0; i < ncustomvalues; i++) {
+                customvalues[i] = 0.0;
+            }
+        }
+        // Vary timestep if varpar = par[0]
+        h = (2 * PI) / (ndiv * par[0]);         // par[0] = OMEGA
+        // Call Runge-Kutta 4th order integrator n = np * ndiv times
+        for (int i = 0; i < np; i++) {
+            for (int j = 0; j < ndiv; j++) {
+                currenttimestep = ndiv*i +j;
+                rk4(dim, x, t, h, par, f, edosys);
+                t = t + h;
+                // Apply poincare map at permanent regime
+                if (i >= trans) {
+                    // Get max and min values at permanent regime
+                    for (int q = 0; q < dim; q++) {
+                        // Initialize xmax[dim] and xmin[dim] with first values of x[dim] at permanent regime
+                        if (i == trans && j == 0) {
+                            xmax[q] = x[q];
+                            xmin[q] = x[q];
+                        }
+                        max_value(x[q], &xmax[q]);
+                        min_value(x[q], &xmin[q]);
+                    }
+                    // Choose any point in the trajectory for plane placement
+                    if (j == 1) {
+                        // Print the result in output file
+                        HOS_write_bifurc_results(output_poinc_file, dim, par[parindex], x, xmin, xmax, overallxmin, overallxmax, nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 1);
+                    }
+                    // Accumulate squared values to RMS computation in permanent regime
+                    if (nrms > 0) {
+                        for (int q = 0; q < nrms; q++) {
+                            xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], x[rmsindex[q]], N, 0);
+                        }
+                    }
+                    // Perform custom calculations in steady state regime (if there is calculations to be done)
+                    if (ncustomvalues > 0) {
+                        customfunc(x, par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 1);    
+                    }
+                }
+                // Get overall max and min values
+                for (int q = 0; q < dim; q++) {
+                    max_value(x[q], &overallxmax[q]);
+                    min_value(x[q], &overallxmin[q]);
+                }
+                // Accumulate squared values to RMS computation for all time domain
+                if (nrms > 0) {
+                    for (int q = 0; q < nrms; q++) {
+                        overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], x[rmsindex[q]], N, 0);
+                    }
+                }
+                // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
+                if (ncustomvalues > 0) {
+                    customfunc(x, par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 2);
+                }
+            }
+        }
+        // Compute RMS values of state variables
+        if (nrms > 0) {
+            for (int q = 0; q < nrms; q++) {
+                xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], x[rmsindex[q]], N, 1);
+                overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], x[rmsindex[q]], N, 1);
+            }
+        }
+        // Perform custom calculations at the end of the time series (if there is calculations to be done)
+        if (ncustomvalues > 0) {
+            customfunc(x, par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 3);
+        }
+        // Print results in output file
+        HOS_write_bifurc_results(output_file, dim, par[parindex], x, xmin, xmax, overallxmin, overallxmax, nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 3);
+        // Progress Monitor
+        if (parrange[2] > 100) {
+            if (k % 50 == 0) {
+                progress_bar(0, par[parindex], parrange[0], parrange[1]);
+            }
+            if (k == parrange[2] - 1) {
+                progress_bar(9, par[parindex], parrange[0], parrange[1]);
+            }
+        } else {
+            progress_bar(0, par[parindex], parrange[0], parrange[1]);
+        }
+    }
+    // Free Memory
+    free_mem(f, IC, xmax, xmin, xrms, overallxrms, overallxmin, overallxmax, customvalues, NULL);
+    free_2D_mem((void**)customnames, ncustomvalues);
+}
+
+void HOS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int maxper, double t,
+                                  double **x, int parindex, double *parrange, double *par, int nrms, int *rmsindex, void (*edosys)(int, double *, double, double *, double *), 
+                                  int ncustomvalues, int nprintf, int *printfindex,
+                                  void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue,
+                                  int mode), int bifmode) {
+    // Allocate memory for x` = f(x)
+    double *f = malloc(dim * sizeof *f);
+    // Allocate memory for vectors necessary for lyapunov exponents calculation
+    double *cum = malloc(dim * sizeof *cum);            // Cumulative Vector
+    double *lambda = malloc(dim *sizeof *lambda);       // Lyapunov Exponents vector
+    double *s_cum = malloc(dim * sizeof *s_cum);        // Short Cumulative Vector
+    double *s_lambda = malloc(dim * sizeof *s_lambda);  // Short Lyapunov Exponents Vector
+    double *znorm = malloc(dim * sizeof *znorm);        // Norm of Vectors
+    double *gsc = malloc((dim - 1) * sizeof *gsc);      // Inner Products Vector
+    // Store Initial Conditions
+    double t0 = t;
+    double *IC = malloc(dim * sizeof *IC);
+    for (int i = 0; i < dim; i++) {
+        IC[i] = (*x)[i];
+    }
+    // Declare memory to store min and max values
+    double *xmax = malloc(dim * sizeof *xmax);
+    double *xmin = malloc(dim * sizeof *xmin);
+    double *overallxmin = malloc(dim * sizeof *overallxmin);
+    double *overallxmax = malloc(dim * sizeof *overallxmax);
+    // Allocate RMS variables
+    double *xrms = malloc(dim * sizeof *xrms);
+    double *overallxrms = malloc(dim * sizeof *overallxrms);
+    // Allocate variable to store custom values
+    double *customvalues = malloc(ncustomvalues * sizeof *customvalues);
+    // Allocate variable to store the names of the custom values
+    char **customnames = alloc_string_array(ncustomvalues, MAX_CCALC_NAME_LEN);
+    // Mumber of integration steps
+    int N = np*ndiv;
+    // Percentage of integration steps considered steady state regime 
+    double steadystateperc = 1 - ((double)trans/(double)np);
+    // Declare timestep, final time and short initial time
+    double h, tf, s_T0;
+    // Declare and define increment of control parameters
+    double varstep;        
+    varstep = (parrange[1] - parrange[0])/(parrange[2] - 1); // -1 in the denominator ensures the input resolution
+    // Numerical control parameters
+    int ndim = dim + (dim * dim);                       // Define new dimension to include linearized dynamical equations 
+    // Declare vector and allocate memory to store poincare map values: poinc[number of permanent regime forcing periods][dimension original system]
+    double **poinc = (double **)alloc_2D_array(np - trans, dim, sizeof(double));
+    // Declare vector to store the chosen Lyapunov Exponents to determine the attractor
+    double *LE = malloc(dim * sizeof *LE);
+    // Declare variables related to the determination of the attractor
+    int attrac = 0;
+    double numtol = 1e-4;
+    // Prepare x vector to include perturbed values
+    realloc_vector(x, ndim);
+    // Initialize current time step variable
+    int currenttimestep = 0;
+    // Check if there is any custom names to be inserted on the header of the output file
+    if (ncustomvalues > 0) {
+        customfunc((*x), par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 0);
+    }
+    // Make the header of output files
+    HOS_write_fbifurc_results(output_poinc_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, poinc,
+                             nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 0);
+    HOS_write_fbifurc_results(output_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, poinc,
+                             nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 2);
+    // Starts to increment bifurcation control parameter
+    for (int k = 0; k < (int)parrange[2]; k++) {
+        par[parindex] = parrange[0] + k*varstep; // Increment value
+        // Check the mode of the bifurcation
+        if (bifmode == 1) {
+            // Reset Initial conditions in each bifurcation step
+            for (int i = 0; i < dim; i++) {
+                (*x)[i] = IC[i];
+            }
+        }
+        // Reset Variables
+        t = t0;
+        for (int i = 0; i < dim; i++) {
+            lambda[i] = 0.0;
+            s_lambda[i] = 0.0;
+            LE[i] = 0.0;
+            xmin[i] = 0.0;
+            overallxmin[i] = (*x)[i];
+            xmax[i] = 0.0;
+            overallxmax[i] = (*x)[i];
+            xrms[i] = 0.0;
+            overallxrms[i] = 0.0;
+        }
+        if (ncustomvalues > 0) {
+            for (int i = 0; i < ncustomvalues; i++) {
+                customvalues[i] = 0.0;
+            }
+        }
+        // Vary timestep if varpar = par[0], varying also final time and short initial time
+        h = (2 * PI) / (ndiv * par[0]);              // par[0] = OMEGA
+        tf = h*np*ndiv;                              // Final time
+        s_T0 = ((double) trans/ (double) np) * tf;   // Advanced initial time
+        // Assign initial perturbation
+        perturb_wolf(x, dim, ndim, &cum, &s_cum);
+        // Call Runge-Kutta 4th order integrator N = nP * nDiv times
+        for (int i = 0; i < np; i++) {
+            for (int j = 0; j < ndiv; j++) {
+                currenttimestep = ndiv*i +j;
+                rk4(ndim, *x, t, h, par, f, edosys);
+                lyapunov_wolf(x, t, h, dim, ndim, s_T0, &cum, &s_cum, &lambda, &s_lambda, &znorm, &gsc);
+                t = t + h;
+                // Apply poincare map at permanent regime
+                if (i >= trans) {
+                    // Get max and min values at permanent regime
+                    for (int q = 0; q < dim; q++) {
+                        // Initialize xmax[dim] and xmin[dim] with first values of x[dim] at permanent regime
+                        if (i == trans && j == 0) {
+                            xmax[q] = (*x)[q];
+                            xmin[q] = (*x)[q];
+                        }
+                        max_value((*x)[q], &xmax[q]);
+                        min_value((*x)[q], &xmin[q]);
+                    }
+                    // Accumulate squared values to RMS computation in permanent regime
+                    if (nrms > 0) {
+                        for (int q = 0; q < nrms; q++) {
+                            xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], (*x)[rmsindex[q]], N, 0);
+                        }
+                    }
+                    // Perform custom calculations in steady state regime (if there is calculations to be done)
+                    if (ncustomvalues > 0) {
+                        customfunc((*x), par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 1);    
+                    }
+                    // Choose any point in the trajectory for poincare section placement
+                    if (j == 1) {
+                        // Stores poincare values in poinc[np - trans][dim] vector
+                        for (int p = 0; p < dim; p++) {
+                            poinc[i - trans][p] = (*x)[p];
+                        }
+                    }
+                }
+                // Get overall max and min values
+                for (int q = 0; q < dim; q++) {
+                    max_value((*x)[q], &overallxmax[q]);
+                    min_value((*x)[q], &overallxmin[q]);
+                }
+                // Accumulate squared values to RMS computation for all time domain
+                if (nrms > 0) {
+                    for (int q = 0; q < nrms; q++) {
+                        overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], (*x)[rmsindex[q]], N, 0);
+                    }
+                }
+                // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
+                if (ncustomvalues > 0) {
+                    customfunc((*x), par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 2);
+                }
+            }
+        }
+        // Compute RMS values of state variables
+        for (int q = 0; q < nrms; q++) {
+            xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], (*x)[rmsindex[q]], N, 1);
+            overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], (*x)[rmsindex[q]], N, 1);
+        }
+        // Perform custom calculations at the end of the time series (if there is calculations to be done)
+        if (ncustomvalues > 0) {
+            customfunc((*x), par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 3);
+        }
+        // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
+        store_LE(dim, lambda, s_lambda, LE);
+        // Verify the type of motion of the system
+        attrac = get_attractor_new(poinc, LE, dim, np, trans, maxper, xmin, xmax, numtol);
+        // Write results in file
+        HOS_write_fbifurc_results(output_poinc_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, poinc,
+                             nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 1);
+        HOS_write_fbifurc_results(output_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, poinc,
+                             nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 3);
+        // Progress Monitor
+        if (parrange[2] > 100) {
+            if (k % 50 == 0) {
+                progress_bar(0, par[parindex], parrange[0], parrange[1]);
+            }
+            if (k == parrange[2] - 1) {
+                progress_bar(0, par[parindex], parrange[0], parrange[1]);
+            }
+        } else {
+            progress_bar(0, par[parindex], parrange[0], parrange[1]);
+        }
+    }
+    // Free memory
+    free_mem(f, cum, s_cum, lambda, s_lambda, znorm, gsc, LE, IC, xmax, xmin, overallxmax, overallxmin,
+             xrms, overallxrms, NULL);    
+    free_2D_mem((void**)poinc, np - trans);
+    free_2D_mem((void**)customnames, ncustomvalues);
+}
+
+void HOS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
+                                    int indexX, int indexY, double *parrange, double *par, int npar, int nrms, int *rmsindex,
+                                    void (*edosys)(int, double *, double, double *, double *),
+                                    int ncustomvalues, int nprintf, int *printfindex,
+                                    void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue,
+                                    int mode), int bifmode) {
+    // Declare matrix do store results
+    int pixels = parrange[2]*parrange[5];                   // Number of results
+    int ncols = (3 + (4*dim) + (2*nrms) + nprintf);         // Number of columns (3: CparX, CparY, attrac) + (4: xmin, xmax, overallxmin, overallxmax)*dim + (2: xrms, overallxrms)*nrms + nprintf
+    double **results = (double**)alloc_2D_array(pixels, ncols, sizeof(double));
+    // Declare timestep and tolerance for attractor identification
+    double h;
+    double numtol = 1e-4;
+    // Declare and define increment of control parameters
+    double varstep[2];        
+    varstep[0] = (parrange[1] - parrange[0])/(parrange[2] - 1); // -1 in the denominator ensures the input resolution
+    varstep[1] = (parrange[4] - parrange[3])/(parrange[5] - 1); // -1 in the denominator ensures the input resolution
+    // Declare variable to store attractor
+    int attrac;
+    // Allocate variable to store the names of the custom values
+    char **customnames = alloc_string_array(ncustomvalues, MAX_CCALC_NAME_LEN);
+    // Start of Parallel Block
+    #pragma omp parallel default(none) shared(dim, bifmode, ndiv, np, trans, maxper, varstep, npar, results, edosys, customfunc, customnames, rmsindex, nrms, printfindex, nprintf, ncustomvalues, numtol) \
+                                       private(h, attrac) \
+                                       firstprivate(x, t, indexX, indexY, parrange, par)
+    {   
+        //Get number of threads
+        int ID = omp_get_thread_num();
+        // Allocate memory for x` = f(x)
+        double *f = malloc(dim * sizeof *f);
+        // Declare vector and allocate memory to store poincare map values: poinc[number of permanent regime forcing periods][dimension original system]
+        double **poinc = (double **)alloc_2D_array(np - trans, dim, sizeof(double));
+        // Store Initial Conditions
+        double t0 = t;
+        double *IC = malloc(dim * sizeof *IC);
+        for (int i = 0; i < dim; i++) {
+            IC[i] = (*x)[i];
+        }
+        // Declare memory to store min and max values
+        double *xmax = malloc(dim * sizeof *xmax);
+        double *xmin = malloc(dim * sizeof *xmin);
+        double *overallxmin = malloc(dim * sizeof *overallxmin);
+        double *overallxmax = malloc(dim * sizeof *overallxmax);
+        // Allocate RMS variables
+        double *xrms = malloc(dim * sizeof *xrms);
+        double *overallxrms = malloc(dim * sizeof *overallxrms);
+        // Allocate variable to store custom values
+        double *customvalues = malloc(ncustomvalues * sizeof *customvalues);
+        // Mumber of integration steps
+        int N = np*ndiv;
+        // Percentage of integration steps considered steady state regime 
+        double steadystateperc = 1 - ((double)trans/(double)np);
+        // Convert function arguments as local (private) variables
+        double *X = convert_argument_to_private(*x, dim);
+        double *PAR = convert_argument_to_private(par, npar);
+        // initialize current time step variable
+        int currenttimestep = 0;
+        // Check if there is any custom names to be inserted on the header of the output file
+        if (ncustomvalues > 0) {
+            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 0);
+        }
+        // Declare counter for parallelized loop
+        int k, m;
+        #pragma omp for schedule(static) private(k, m)
+        // Starts the parallel loop for Y control parameter
+        for (k = 0; k < (int)parrange[5]; k++) {
+            PAR[indexY] = parrange[3] + k*varstep[1]; // Increment value
+            // Reset Initial conditions for the beggining of a horizontal line
+            for (int i = 0; i < dim; i++) {
+                X[i] = IC[i];
+            }
+            // Starts the loop for X control parameter
+            for (m = 0; m < (int)parrange[2]; m++) {
+                PAR[indexX] = parrange[0] + m*varstep[0]; // Increment Value
+                // Check the mode of the diagram
+                if (bifmode == 1) {
+                    // Reset Initial conditions in each diagram step
+                    for (int i = 0; i < dim; i++) {
+                        X[i] = IC[i];
+                    }
+                }
+                // Reset Variables
+                t = t0;
+                for (int i = 0; i < dim; i++) {
+                    xrms[i] = 0.0;
+                    overallxrms[i] = 0.0;
+                    xmin[i] = 0.0;
+                    overallxmin[i] = X[i];
+                    xmax[i] = 0.0;
+                    overallxmax[i] = X[i];
+                }
+                if (ncustomvalues > 0) {
+                    for (int i = 0; i < ncustomvalues; i++) {
+                        customvalues[i] = 0.0;
+                    }
+                }
+                // Vary timestep if varpar = par[0], varying also final time and short initial time
+                h = (2 * PI) / (ndiv * PAR[0]);              // par[0] = OMEGA
+                // Call Runge-Kutta 4th order integrator N = nP * nDiv times
+                for (int i = 0; i < np; i++) {
+                    for (int j = 0; j < ndiv; j++) {
+                        currenttimestep = ndiv*i +j;
+                        rk4(dim, X, t, h, PAR, f, edosys);
+                        t = t + h;
+                        // Apply poincare map at permanent regime
+                        if (i >= trans) {
+                            // Get max and min values at permanent regime
+                            for (int q = 0; q < dim; q++) {
+                                // Initialize xmax[dim] and xmin[dim] with first values of x[dim] at permanent regime
+                                if (i == trans && j == 0) {
+                                    xmax[q] = X[q];
+                                    xmin[q] = X[q];
+                                }
+                                max_value(X[q], &xmax[q]);
+                                min_value(X[q], &xmin[q]);
+                            }
+                            // Accumulate squared values to RMS computation in permanent regime
+                            if (nrms > 0) {
+                                for (int q = 0; q < nrms; q++) {
+                                    xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], X[rmsindex[q]], N, 0);
+                                }
+                            }
+                            // Perform custom calculations in steady state regime (if there is calculations to be done)
+                            if (ncustomvalues > 0) {
+                                customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 1);
+                            }
+                            // Choose any point in the trajectory for poincare section placement
+                            if (j == 1) {
+                                // Stores poincare values in poinc[np - trans][dim] vector
+                                for (int p = 0; p < dim; p++) {
+                                    poinc[i - trans][p] = X[p];
+                                }
+                            }
+                        }
+                        // Get overall max and min values
+                        for (int q = 0; q < dim; q++) {
+                            max_value(X[q], &overallxmax[q]);
+                            min_value(X[q], &overallxmin[q]);
+                        }
+                        // Accumulate squared values for RMS computation for all time domain
+                        if (nrms > 0) {
+                            for (int q = 0; q < nrms; q++) {
+                                overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], X[rmsindex[q]], N, 0);
+                            }
+                        }
+                        // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
+                        if (ncustomvalues > 0) {
+                            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 2);
+                        }
+                    }
+                }
+                // Compute RMS values of state variables
+                if (nrms > 0) {
+                    for (int q = 0; q < nrms; q++) {
+                        xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], X[rmsindex[q]], N, 1);
+                        overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], X[rmsindex[q]], N, 1);
+                    }
+                }
+                // Perform custom calculations at the end of the time series (if there is calculations to be done)
+                if (ncustomvalues > 0) {
+                    customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 3);
+                }
+                // Verify the type of motion of the system
+                attrac = check_periodicity_new(dim, np, poinc, trans, maxper, xmin, xmax, numtol);
+                // Write results in matrix
+                store_results_in_matrix_dyndiag(&results, k, m, parrange, PAR, indexY, indexX, attrac, dim, xmax, xmin, overallxmax, overallxmin,
+                                                nrms, rmsindex, xrms, overallxrms, nprintf, printfindex, customvalues);
+            }
+            // Progress Monitor
+            if (ID == 0) {
+                progress_bar(0, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
+                if (k == ((int)parrange[5] - 1)/omp_get_num_threads() ) {
+                    progress_bar(1, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
+                }
+            }
+        }
+        // Free memory    
+        free_mem(f, IC, xmin, xmax, overallxmin, overallxmax, xrms, overallxrms, customvalues, NULL);
+        free_2D_mem((void **)poinc, np - trans);
+    } // End of Parallel Block
+
+    // Write results in file
+    HOS_p_write_dyndiag_results(output_file, dim, nrms, rmsindex, results, pixels, ncustomvalues, customnames, nprintf, printfindex);
+    // Free memory
+    free_2D_mem((void **)results, pixels);
+    free_2D_mem((void **)customnames, ncustomvalues);
+}
+
+void HOS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
+                                        int indexX, int indexY, double *parrange, double *par, int npar, int nrms, int *rmsindex,
+                                        void (*edosys)(int, double *, double, double *, double *),
+                                        int ncustomvalues, int nprintf, int *printfindex,
+                                        void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue,
+                                        int mode), int bifmode) {
+    // Declare matrix do store results
+    int pixels = parrange[2]*parrange[5];  // Number of results
+    int ncols = (3 + (5*dim) + (2*nrms) + nprintf);         // Number of columns (3: CparX, CparY, attrac) + (5: xmin, xmax, overallxmin, overallxmax, LE)*dim + (2: xrms, overallxrms)*nrms + nprintf
+    double **results = (double**)alloc_2D_array(pixels, ncols, sizeof(double));
+    // Declare rk4 timestep, final time, short initial time and numtol
+    double h, tf, s_T0;
+    double numtol = 1e-4;
+    // Declare and define increment of control parameters
+    double varstep[2];        
+    varstep[0] = (parrange[1] - parrange[0])/(parrange[2] - 1); // -1 in the denominator ensures the input resolution
+    varstep[1] = (parrange[4] - parrange[3])/(parrange[5] - 1); // -1 in the denominator ensures the input resolution
+    // Numerical control parameters
+    int ndim = dim + (dim * dim);                       // Define new dimension to include linearized dynamical equations 
+    // Declare variable to store attractor
+    int attrac;
+    // Prepare x vector to include perturbed values
+    realloc_vector(x, ndim);
+    // Allocate variable to store the names of the custom values
+    char **customnames = alloc_string_array(ncustomvalues, MAX_CCALC_NAME_LEN);
+    // Start of Parallel Block
+    #pragma omp parallel default(none) shared(dim, bifmode, ndiv, np, trans, ndim, maxper, varstep, npar, results, edosys, customfunc, customnames, rmsindex, nrms, printfindex, nprintf, ncustomvalues, numtol) \
+                                       private(h, tf, s_T0, attrac) \
+                                       firstprivate(x, t, indexX, indexY, parrange, par)
+    {   
+        //Get number of threads
+        int ID = omp_get_thread_num();
+        // Allocate memory for x` = f(x)
+        double *f = malloc(dim * sizeof *f);
+        // Allocate memory for vectors necessary for lyapunov exponents calculation
+        double *cum = malloc(dim * sizeof *cum);            // Cumulative Vector
+        double *lambda = malloc(dim *sizeof *lambda);       // Lyapunov Exponents vector
+        double *s_cum = malloc(dim * sizeof *s_cum);        // Short Cumulative Vector
+        double *s_lambda = malloc(dim * sizeof *s_lambda);  // Short Lyapunov Exponents Vector
+        double *znorm = malloc(dim * sizeof *znorm);        // Norm of Vectors
+        double *gsc = malloc((dim - 1) * sizeof *gsc);      // Inner Products Vector
+        // Declare vector and allocate memory to store poincare map values: poinc[number of permanent regime forcing periods][dimension original system]
+        double **poinc = (double **)alloc_2D_array(np - trans, dim, sizeof(double));
+        // Declare vector to store the chosen Lyapunov Exponents to determine the attractor
+        double *LE = malloc(dim * sizeof *LE);
+        // Store Initial Conditions
+        double t0 = t;
+        double *IC = malloc(dim * sizeof *IC);
+        for (int i = 0; i < dim; i++) {
+            IC[i] = (*x)[i];
+        }
+        // Declare memory to store min and max values
+        double *xmax = malloc(dim * sizeof *xmax);
+        double *xmin = malloc(dim * sizeof *xmin);
+        double *overallxmin = malloc(dim * sizeof *overallxmin);
+        double *overallxmax = malloc(dim * sizeof *overallxmax);
+        // Allocate RMS variables
+        double *xrms = malloc(dim * sizeof *xrms);
+        double *overallxrms = malloc(dim * sizeof *overallxrms);
+        // Allocate variable to store custom values
+        double *customvalues = malloc(ncustomvalues * sizeof *customvalues);
+        // Mumber of integration steps
+        int N = np*ndiv;
+        // Percentage of integration steps considered steady state regime 
+        double steadystateperc = 1 - ((double)trans/(double)np);
+        // Convert function arguments as local (private) variables
+        double *X = convert_argument_to_private(*x, ndim);
+        double *PAR = convert_argument_to_private(par, npar);
+        // Initialize current time step variable
+        int currenttimestep = 0;
+        // Check if there is any custom names to be inserted on the header of the output file
+        if (ncustomvalues > 0) {
+            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 0);
+        }
+        // Declare counter for parallelized loop
+        int k, m;
+        #pragma omp for schedule(static) private(k, m)
+        // Starts the parallel loop for Y control parameter
+        for (k = 0; k < (int)parrange[5]; k++) {
+            PAR[indexY] = parrange[3] + k*varstep[1]; // Increment value
+            // Reset Initial conditions for the beggining of a horizontal line
+            for (int i = 0; i < dim; i++) {
+                X[i] = IC[i];
+            }
+            // Starts the loop for X control parameter
+            for (m = 0; m < (int)parrange[2]; m++) {
+                PAR[indexX] = parrange[0] + m*varstep[0]; // Increment Value
+                // Check the mode of the diagram
+                if (bifmode == 1) {
+                    // Reset Initial conditions in each diagram step
+                    for (int i = 0; i < dim; i++) {
+                        X[i] = IC[i];
+                    }
+                }
+                // Reset Variables
+                t = t0;
+                for (int i = 0; i < dim; i++) {
+                    lambda[i] = 0.0;
+                    s_lambda[i] = 0.0;
+                    LE[i] = 0.0;
+                    xrms[i] = 0.0;
+                    overallxrms[i] = 0.0;
+                    xmin[i] = 0.0;
+                    overallxmin[i] = X[i];
+                    xmax[i] = 0.0;
+                    overallxmax[i] = X[i];
+                }
+                if (ncustomvalues > 0) {
+                    for (int i = 0; i < ncustomvalues; i++) {
+                        customvalues[i] = 0.0;
+                    }
+                }
+                // Vary timestep if varpar = par[0], varying also final time and short initial time
+                h = (2 * PI) / (ndiv * PAR[0]);              // par[0] = OMEGA
+                tf = h*np*ndiv;                              // Final time
+                s_T0 = ((double) trans/ (double) np) * tf;   // Advanced initial time
+                // Assign initial perturbation
+                perturb_wolf(&X, dim, ndim, &cum, &s_cum);
+                // Call Runge-Kutta 4th order integrator N = nP * nDiv times
+                for (int i = 0; i < np; i++) {
+                    for (int j = 0; j < ndiv; j++) {
+                        currenttimestep = ndiv*i + j;
+                        rk4(ndim, X, t, h, PAR, f, edosys);
+                        lyapunov_wolf(&X, t, h, dim, ndim, s_T0, &cum, &s_cum, &lambda, &s_lambda, &znorm, &gsc);
+                        t = t + h;
+                        // Apply poincare map at permanent regime
+                        if (i >= trans) {
+                            // Get max and min values at permanent regime
+                            for (int q = 0; q < dim; q++) {
+                                // Initialize xmax[dim] and xmin[dim] with first values of x[dim] at permanent regime
+                                if (i == trans && j == 0) {
+                                    xmax[q] = X[q];
+                                    xmin[q] = X[q];
+                                }
+                                max_value(X[q], &xmax[q]);
+                                min_value(X[q], &xmin[q]);
+                            }
+                            // Accumulate squared values to RMS computation in permanent regime
+                            if (nrms > 0) {
+                                for (int q = 0; q < nrms; q++) {
+                                    xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], X[rmsindex[q]], N, 0);
+                                }
+                            }
+                            // Perform custom calculations in steady state regime (if there is calculations to be done)
+                            if (ncustomvalues > 0) {
+                                customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 1);
+                            }
+                            // Choose any point in the trajectory for poincare section placement
+                            if (j == 1) {
+                                // Stores poincare values in poinc[np - trans][dim] vector
+                                for (int p = 0; p < dim; p++) {
+                                    poinc[i - trans][p] = X[p];
+                                }
+                            }
+                        }
+                        // Get overall max and min values
+                        for (int q = 0; q < dim; q++) {
+                            max_value(X[q], &overallxmax[q]);
+                            min_value(X[q], &overallxmin[q]);
+                        }
+                        // Accumulate squared values for RMS computation for all time domain
+                        if (nrms > 0) {
+                            for (int q = 0; q < nrms; q++) {
+                                overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], X[rmsindex[q]], N, 0);
+                            }
+                        }
+                        // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
+                        if (ncustomvalues > 0) {
+                            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 2);
+                        }
+                    }
+                }
+                // Compute RMS values of state variables
+                if (nrms > 0) {
+                    for (int q = 0; q < nrms; q++) {
+                        xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], X[rmsindex[q]], N, 1);
+                        overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], X[rmsindex[q]], N, 1);
+                    }
+                }
+                // Perform custom calculations at the end of the time series (if there is calculations to be done)
+                if (ncustomvalues > 0) {
+                    customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 3);
+                }
+                // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
+                store_LE(dim, lambda, s_lambda, LE);
+                // Verify the type of motion of the system
+                attrac = get_attractor_new(poinc, LE, dim, np, trans, maxper, xmin, xmax, numtol);
+                // Write results in matrix
+                store_results_in_matrix_fdyndiag(&results, k, m, parrange, PAR, indexY, indexX, attrac, dim, LE, xmax, xmin, overallxmax, overallxmin,
+                                                 nrms, rmsindex, xrms, overallxrms, nprintf, printfindex, customvalues);
+            }
+            // Progress Monitor
+            if (ID == 0) {
+                //printf("PAR[%d] = %lf\n", indexX, PAR[indexX]);
+                //printf("%-5s%-3d%-7s%-3d%-12s%-11lf%-11s%-12lf%-14s%-2d%-15s%-2d%-10s%-11lf%-10s%-11lf\n", "[k = ", k, "] [m = ", m, "]: parY = ", PAR[indexY], ", parX = ", PAR[indexX], ", Attractor = ", attrac, ", diffAttrac = ", diffAttrac, ", LE[0] = ", LE[0], ", LE[1] = ", LE[1]);
+                progress_bar(0, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
+                if (k == ((int)parrange[5] - 1)/omp_get_num_threads() ) {
+                    progress_bar(1, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
+                }
+            }
+        }
+        // Free memory    
+        free_mem(f, cum, s_cum, lambda, s_lambda, znorm, gsc, LE, IC, xmax, xmin, overallxmax, overallxmin,
+                  xrms, overallxrms, customvalues, NULL);
+        free_2D_mem((void **)poinc, np - trans);
+    } // End of Parallel Block
+    
+    // Write results in file
+    HOS_p_write_fdyndiag_results(output_file, dim, nrms, rmsindex, results, pixels, ncustomvalues, customnames, nprintf, printfindex);
+    // Free memory
+    free_2D_mem((void **)results, pixels);
+    free_2D_mem((void **)customnames, ncustomvalues);
+}
+
+void HOS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
+                                                    int indexX, int indexY, double *icrange, double *par, int npar, int nrms, int *rmsindex, 
+                                                    void (*edosys)(int, double *, double, double *, double *), 
+                                                    int ncustomvalues, int nprintf, int *printfindex,
+                                                    void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue,
+                                                    int mode)) {
+    // Declare matrix do store results
+    int pixels = icrange[2]*icrange[5];  // Number of results
+    int ncols = (3 + (5*dim) + (2*nrms) + nprintf);         // Number of columns (3: CparX, CparY, attrac) + (5: xmin, xmax, overallxmin, overallxmax, LE)*dim + (2: xrms, overallxrms)*nrms + nprintf
+    double **results = (double**)alloc_2D_array(pixels, ncols, sizeof(double));
+    // Declare rk4 timestep, final time, short initial time and numtol 
+    double h, tf, s_T0;
+    double numtol = 1e-4;
+    // Declare and define increment of control initial conditions
+    double icstep[2];        
+    icstep[0] = (icrange[1] - icrange[0])/(icrange[2] - 1); // -1 in the denominator ensures the input resolution
+    icstep[1] = (icrange[4] - icrange[3])/(icrange[5] - 1); // -1 in the denominator ensures the input resolution
+    // Numerical control parameters
+    int ndim = dim + (dim * dim);                       // Define new dimension to include linearized dynamical equations 
+    // Declare variable to store attractor
+    int attrac;
+    // Prepare x vector to include perturbed values
+    realloc_vector(x, ndim);
+    // Allocate variable to store the names of the custom values
+    char **customnames = alloc_string_array(ncustomvalues, MAX_CCALC_NAME_LEN);
+    // Start of Parallel Block
+    #pragma omp parallel default(none) shared(dim, ndiv, np, trans, ndim, maxper, icstep, npar, results, edosys, customfunc, customnames, rmsindex, nrms, printfindex, nprintf, ncustomvalues, numtol) \
+                                       private(h, tf, s_T0, attrac) \
+                                       firstprivate(x, t, indexX, indexY, icrange, par)
+    {   
+        //Get number of threads
+        int ID = omp_get_thread_num();
+        // Allocate memory for x` = f(x)
+        double *f = malloc(dim * sizeof *f);
+        // Allocate memory for vectors necessary for lyapunov exponents calculation
+        double *cum = malloc(dim * sizeof *cum);            // Cumulative Vector
+        double *lambda = malloc(dim *sizeof *lambda);       // Lyapunov Exponents vector
+        double *s_cum = malloc(dim * sizeof *s_cum);        // Short Cumulative Vector
+        double *s_lambda = malloc(dim * sizeof *s_lambda);  // Short Lyapunov Exponents Vector
+        double *znorm = malloc(dim * sizeof *znorm);        // Norm of Vectors
+        double *gsc = malloc((dim - 1) * sizeof *gsc);      // Inner Products Vector
+        // Declare vector and allocate memory to store poincare map values: poinc[number of permanent regime forcing periods][dimension original system]
+        double **poinc = (double **)alloc_2D_array(np - trans, dim, sizeof(double));
+        // Declare vector to store the chosen Lyapunov Exponents to determine the attractor
+        double *LE = malloc(dim * sizeof *LE);
+        // Declare memory to store min and max values
+        double *xmax = malloc(dim * sizeof *xmax);
+        double *xmin = malloc(dim * sizeof *xmin);
+        double *overallxmin = malloc(dim * sizeof *overallxmin);
+        double *overallxmax = malloc(dim * sizeof *overallxmax);
+        // Allocate RMS variables
+        double *xrms = malloc(dim * sizeof *xrms);
+        double *overallxrms = malloc(dim * sizeof *overallxrms);
+        // Allocate variable to store custom values
+        double *customvalues = malloc(ncustomvalues * sizeof *customvalues);
+        // Mumber of integration steps
+        int N = np*ndiv;
+        // Percentage of integration steps considered steady state regime 
+        double steadystateperc = 1 - ((double)trans/(double)np);
+        // Allocate memory to store IC values
+        double *IC = malloc(dim * sizeof *IC);
+        // Convert function arguments as local (private) variables
+        double *X = convert_argument_to_private(*x, ndim);
+        double *PAR = convert_argument_to_private(par, npar);
+        // Store Initial Conditions
+        double t0 = t;
+        for (int i = 0; i < dim; i++) {
+            IC[i] = X[i];
+        }
+        // Initialize current time step variable
+        int currenttimestep = 0;
+        // Check if there is any custom names to be inserted on the header of the output file
+        if (ncustomvalues > 0) {
+            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 0);
+        }
+        // Declare counter for parallelized loop
+        int k, m;
+        #pragma omp for schedule(static) private(k, m)
+        // Starts the parallel loop for Y control parameter
+        for (k = 0; k < (int)icrange[5]; k++) {
+            // Starts the loop for X control parameter
+            for (m = 0; m < (int)icrange[2]; m++) {
+                X[indexY] = icrange[3] + k*icstep[1]; // Increment value
+                IC[indexY] = X[indexY];                    // Update IC value to write in result matrix
+                X[indexX] = icrange[0] + m*icstep[0]; // Increment Value
+                IC[indexX] = X[indexX];                    // Update IC value to write in result matrix
+                // Reset Initial conditions in each basin step
+                t = t0;
+                for (int i = 0; i < dim; i++) {
+                    X[i] = IC[i];
+                }
+                // Reset Variables
+                for (int i = 0; i < dim; i++) {
+                    lambda[i] = 0.0;
+                    s_lambda[i] = 0.0;
+                    LE[i] = 0.0;
+                    xrms[i] = 0.0;
+                    overallxrms[i] = 0.0;
+                    xmin[i] = 0.0;
+                    overallxmin[i] = X[i];
+                    xmax[i] = 0.0;
+                    overallxmax[i] = X[i];
+                }
+                if (ncustomvalues > 0) {
+                    for (int i = 0; i < ncustomvalues; i++) {
+                        customvalues[i] = 0.0;
+                    }
+                }
+                // Vary timestep if varpar = par[0], varying also final time and short initial time
+                h = (2 * PI) / (ndiv * PAR[0]);              // par[0] = OMEGA
+                tf = h*np*ndiv;                              // Final time
+                s_T0 = ((double) trans/ (double) np) * tf;   // Advanced initial time
+                // Assign initial perturbation
+                perturb_wolf(&X, dim, ndim, &cum, &s_cum);
+                // Call Runge-Kutta 4th order integrator N = nP * nDiv times
+                for (int i = 0; i < np; i++) {
+                    for (int j = 0; j < ndiv; j++) {
+                        currenttimestep = ndiv*i +j;
+                        rk4(ndim, X, t, h, PAR, f, edosys);
+                        lyapunov_wolf(&X, t, h, dim, ndim, s_T0, &cum, &s_cum, &lambda, &s_lambda, &znorm, &gsc);
+                        t = t + h;
+                        // Apply poincare map at permanent regime
+                        if (i >= trans) {
+                            // Get max and min values at permanent regime
+                            for (int q = 0; q < dim; q++) {
+                                // Initialize xmax[dim] and xmin[dim] with first values of x[dim] at permanent regime
+                                if (i == trans && j == 0) {
+                                    xmax[q] = X[q];
+                                    xmin[q] = X[q];
+                                }
+                                max_value(X[q], &xmax[q]);
+                                min_value(X[q], &xmin[q]);
+                            }
+                            // Accumulate squared values to RMS computation in permanent regime
+                            if (nrms > 0) {
+                                for (int q = 0; q < nrms; q++) {
+                                    xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], X[rmsindex[q]], N, 0);
+                                }
+                            }
+                            // Perform custom calculations in steady state regime (if there is calculations to be done)
+                            if (ncustomvalues > 0) {
+                                customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 1);
+                            }
+                            // Choose any point in the trajectory for poincare section placement
+                            if (j == 1) {
+                                // Stores poincare values in poinc[np - trans][dim] vector
+                                for (int p = 0; p < dim; p++) {
+                                    poinc[i - trans][p] = X[p];
+                                }
+                            }
+                        }
+                        // Get overall max and min values
+                        for (int q = 0; q < dim; q++) {
+                            max_value(X[q], &overallxmax[q]);
+                            min_value(X[q], &overallxmin[q]);
+                        }
+                        // Accumulate squared values for RMS computation for all time domain
+                        if (nrms > 0) {
+                            for (int q = 0; q < nrms; q++) {
+                                overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], X[rmsindex[q]], N, 0);
+                            }
+                        }
+                        // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
+                        if (ncustomvalues > 0) {
+                            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 2);
+                        }
+                    }
+                }
+                // Compute RMS values of state variables
+                if (nrms > 0) {
+                    for (int q = 0; q < nrms; q++) {
+                        xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], X[rmsindex[q]], N, 1);
+                        overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], X[rmsindex[q]], N, 1);
+                    }
+                }
+                // Perform custom calculations at the end of the time series (if there is calculations to be done)
+                if (ncustomvalues > 0) {
+                    customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 3);
+                }
+                // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
+                store_LE(dim, lambda, s_lambda, LE);
+                // Verify the type of motion of the system
+                attrac = get_attractor_new(poinc, LE, dim, np, trans, maxper, xmin, xmax, numtol);
+                // Write results in matrix
+                store_results_in_matrix_fdyndiag(&results, k, m, icrange, IC, indexY, indexX, attrac, dim, LE, xmax, xmin, overallxmax, overallxmin,
+                                                 nrms, rmsindex, xrms, overallxrms, nprintf, printfindex, customvalues);
+                // Progress Monitor
+                if (ID == 0) {
+                    progress_bar(0, (double)k, 0, (icrange[5]-1)/omp_get_num_threads());
+                    if (k == ((int)icrange[5] - 1)/omp_get_num_threads() ) {
+                        progress_bar(1, (double)k, 0, (icrange[5]-1)/omp_get_num_threads());
+                    }
+                }
+                //printf("results[%d][1] = IC[%d] | %lf = %lf\n", index, indexX, results[index][1], IC[indexX]);
+            }
+        }
+        // Free memory
+        free_mem(f, cum, s_cum, lambda, s_lambda, znorm, gsc, LE, IC, xmax, xmin, overallxmax, overallxmin, xrms,
+                 overallxrms, customvalues, NULL);    
+        free_2D_mem((void **)poinc, np - trans);        
+    } // End of Parallel Block
+    
+    // Write results in file
+    HOS_p_write_fdyndiag_results(output_file, dim, nrms, rmsindex, results, pixels, ncustomvalues, customnames, nprintf, printfindex);
+
+    // Free memory
+    free_2D_mem((void **)results, pixels);
+    free_2D_mem((void **)customnames, ncustomvalues);
+}
+
+
+
+
+
+
+
+
+
+
+// Old solutions for backup
+
+void HOS_full_timeseries_solution_old(FILE *output_ftimeseries_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int *attrac, int maxper, double t, double **x, double h, double *par, 
+                                 int nrms, int *rmsindex, double **xrms, double **overallxrms, double **xmin, double **xmax, double **overallxmin, double **overallxmax,
+                                 void (*edosys)(int, double *, double, double *, double *), 
+                                 int ncustomvalues, char ***customnames, double **customvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex,
+                                 void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode)) {
     // Allocate memory for x` = f(x)
     double *f = malloc(dim * sizeof *f);
     // Allocate memory and store initial conditions
@@ -218,7 +1432,7 @@ void HOS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_po
         // Allocate variable to store the names of the custom values
         (*customnames) = malloc(ncustomvalues * sizeof *customnames);
         for (int i = 0; i < ncustomvalues; i++) {
-            (*customnames)[i] = malloc(nchars * sizeof *customnames);
+            (*customnames)[i] = malloc(MAX_CCALC_NAME_LEN * sizeof *customnames);
         }
     }
     // Mumber of integration steps
@@ -244,12 +1458,12 @@ void HOS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_po
     int currenttimestep = 0;
     // Check if there is any custom names to be inserted on the header of the output file
     if (ncustomvalues > 0) {
-        customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 0);
+        customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 0);
     }
     // Make the header of output files
-    EH_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 1);
+    HOS_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 1);
     write_results(output_poinc_file, dim, t, (*x), 0);
-    // Call Runge-Kutta 4th order integrator N = nP * nDiv times
+    // Call ODE solver N = nP * nDiv times
     for (int i = 0; i < np; i++) {
         for (int j = 0; j < ndiv; j++) {
             currenttimestep = ndiv*i +j;
@@ -284,7 +1498,7 @@ void HOS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_po
                 }
                 // Perform custom calculations in steady state regime (if there is calculations to be done)
                 if (ncustomvalues > 0) {
-                    customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 1);    
+                    customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 1);    
                 }
             }
             // Get overall max and min values
@@ -301,10 +1515,10 @@ void HOS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_po
             }
             // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
             if (ncustomvalues > 0) {
-                customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 2);
+                customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 2);
             }       
             // Write Results in output file
-            EH_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 2);
+            HOS_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 2);
         }
     }
     // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
@@ -324,187 +1538,25 @@ void HOS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_po
     }
     // Perform "end" type custom calculations if there is calculations to be done
     if (ncustomvalues > 0) {
-        customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), nchars, (*customvalues), 3);
+        customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 3);
     }
-    // Free memory    
+    // Free memory 
+    free_mem(f, cum, s_cum, lambda, s_lambda, znorm, gsc, LE, tmp_attrac, IC, NULL);
+    free_2D_mem((void**)poinc, np - trans);   
+    /*
     free(f); free(cum); free(s_cum); free(lambda); free(s_lambda);
     free(znorm); free(gsc); free(LE); free(tmp_attrac); free(IC);
     for (int i = 0; i < np - trans; i++) {
         free(poinc[i]);
     }
-    free(poinc);
+    free(poinc);*/
 }
 
-void HOS_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, double t, double *x, int parindex, 
-                        double *parrange, double *par, int nrms, int *rmsindex, void (*edosys)(int, double *, double, double *, double *), 
-                        int ncustomvalues, int nprintf, int *printfindex,
-                        void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
-                        int mode), int bifmode) {
-    // Maximum length of custom names, if there is custom calculations
-    size_t nchars = 20;
-    // Allocate x` = f(x)
-    double *f = malloc(dim * sizeof *f);
-    // Store Initial Conditions
-    double t0 = t;
-    double *IC = malloc(dim * sizeof *IC);
-    for (int i = 0; i < dim; i++) {
-        IC[i] = x[i];
-    }
-    // Declare memory to store min and max values
-    double *xmax = malloc(dim * sizeof *xmax);
-    double *xmin = malloc(dim * sizeof *xmin);
-    double *overallxmin = malloc(dim * sizeof *overallxmin);
-    double *overallxmax = malloc(dim * sizeof *overallxmax);
-    // Allocate RMS variables
-    double *xrms = malloc(dim * sizeof *xrms);
-    double *overallxrms = malloc(dim * sizeof *overallxrms);
-    // Allocate variable to store custom values
-    double *customvalues = malloc(ncustomvalues * sizeof *customvalues);
-    // Allocate variable to store the names of the custom values
-    char **customnames = malloc(ncustomvalues * sizeof *customnames);
-    for (int i = 0; i < ncustomvalues; i++) {
-        customnames[i] = malloc(nchars * sizeof *customnames);
-    }
-    // Mumber of integration steps
-    int N = np*ndiv;
-    // Percentage of integration steps considered steady state regime 
-    double steadystateperc = 1 - ((double)trans/(double)np);
-    // Declare timestep and pi
-    double h;
-    const double pi = 4 * atan(1);  // Pi number definition
-    // Declare and define increment of control parameters
-    double varstep;        
-    varstep = (parrange[1] - parrange[0])/(parrange[2] - 1); // -1 in the denominator ensures the input resolution
-    // Initialize current time step variable
-    int currenttimestep = 0;
-    // Check if there is any custom names to be inserted on the header of the output file
-    if (ncustomvalues > 0) {
-        customfunc(x, par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 0);
-    }
-    // Make the header of the output file
-    EH_write_bifurc_results(output_poinc_file, dim, par[parindex], x, xmin, xmax, overallxmin, overallxmax, nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 0);    
-    EH_write_bifurc_results(output_file, dim, par[parindex], x, xmin, xmax, overallxmin, overallxmax, nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 2);
-    // Starts sweep the control parameter
-    for (int k = 0; k < (int)parrange[2]; k++) {
-        par[parindex] = parrange[0] + k*varstep; // Increment value
-        // Check the mode of the bifurcation
-        if (bifmode == 1) {
-            // Reset Initial conditions in each bifurcation step
-            for (int i = 0; i < dim; i++) {
-                x[i] = IC[i];
-            }
-        }
-        // Reset Variables
-        t = t0;
-        currenttimestep = 0;
-        for (int i = 0; i < dim; i ++) {
-            xmin[i] = 0.0;
-            overallxmin[i] = x[i];
-            xmax[i] = 0.0;
-            overallxmax[i] = x[i];
-            xrms[i] = 0.0;
-            overallxrms[i] = 0.0;
-        }
-        if (ncustomvalues > 0) {
-            for (int i = 0; i < ncustomvalues; i++) {
-                customvalues[i] = 0.0;
-            }
-        }
-        // Vary timestep if varpar = par[0]
-        h = (2 * pi) / (ndiv * par[0]);         // par[0] = OMEGA
-        // Call Runge-Kutta 4th order integrator n = np * ndiv times
-        for (int i = 0; i < np; i++) {
-            for (int j = 0; j < ndiv; j++) {
-                currenttimestep = ndiv*i +j;
-                rk4(dim, x, t, h, par, f, edosys);
-                t = t + h;
-                // Apply poincare map at permanent regime
-                if (i >= trans) {
-                    // Get max and min values at permanent regime
-                    for (int q = 0; q < dim; q++) {
-                        // Initialize xmax[dim] and xmin[dim] with first values of x[dim] at permanent regime
-                        if (i == trans && j == 0) {
-                            xmax[q] = x[q];
-                            xmin[q] = x[q];
-                        }
-                        max_value(x[q], &xmax[q]);
-                        min_value(x[q], &xmin[q]);
-                    }
-                    // Choose any point in the trajectory for plane placement
-                    if (j == 1) {
-                        // Print the result in output file
-                        EH_write_bifurc_results(output_poinc_file, dim, par[parindex], x, xmin, xmax, overallxmin, overallxmax, nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 1);
-                    }
-                    // Accumulate squared values to RMS computation in permanent regime
-                    if (nrms > 0) {
-                        for (int q = 0; q < nrms; q++) {
-                            xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], x[rmsindex[q]], N, 0);
-                        }
-                    }
-                    // Perform custom calculations in steady state regime (if there is calculations to be done)
-                    if (ncustomvalues > 0) {
-                        customfunc(x, par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 1);    
-                    }
-                }
-                // Get overall max and min values
-                for (int q = 0; q < dim; q++) {
-                    max_value(x[q], &overallxmax[q]);
-                    min_value(x[q], &overallxmin[q]);
-                }
-                // Accumulate squared values to RMS computation for all time domain
-                if (nrms > 0) {
-                    for (int q = 0; q < nrms; q++) {
-                        overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], x[rmsindex[q]], N, 0);
-                    }
-                }
-                // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
-                if (ncustomvalues > 0) {
-                    customfunc(x, par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 2);
-                }
-            }
-        }
-        // Compute RMS values of state variables
-        if (nrms > 0) {
-            for (int q = 0; q < nrms; q++) {
-                xrms[rmsindex[q]] = RMS(&xrms[rmsindex[q]], x[rmsindex[q]], N, 1);
-                overallxrms[rmsindex[q]] = RMS(&overallxrms[rmsindex[q]], x[rmsindex[q]], N, 1);
-            }
-        }
-        // Perform custom calculations at the end of the time series (if there is calculations to be done)
-        if (ncustomvalues > 0) {
-            customfunc(x, par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 3);
-        }
-        // Print results in output file
-        EH_write_bifurc_results(output_file, dim, par[parindex], x, xmin, xmax, overallxmin, overallxmax, nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 3);
-        // Progress Monitor
-        if (parrange[2] > 100) {
-            if (k % 50 == 0) {
-                progress_bar(0, par[parindex], parrange[0], parrange[1]);
-            }
-            if (k == parrange[2] - 1) {
-                progress_bar(9, par[parindex], parrange[0], parrange[1]);
-            }
-        } else {
-            progress_bar(0, par[parindex], parrange[0], parrange[1]);
-        }
-        
-    }
-    // Free Memory
-    free(f); free(IC); free(xmax); free(xmin); free(xrms); free(overallxrms);
-    free(overallxmin); free(overallxmax); free(customvalues);
-    for (int i = 0; i < ncustomvalues; i++) {
-            free(customnames[i]);
-        }
-    free(customnames);
-}
-
-void HOS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int maxper, double t,
+void HOS_full_bifurcation_solution_old(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int maxper, double t,
                                   double **x, int parindex, double *parrange, double *par, int nrms, int *rmsindex, void (*edosys)(int, double *, double, double *, double *), 
                                   int ncustomvalues, int nprintf, int *printfindex,
-                                  void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
+                                  void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue,
                                   int mode), int bifmode) {
-    // Maximum length of custom names, if there is custom calculations
-    size_t nchars = 20;
     // Allocate memory for x` = f(x)
     double *f = malloc(dim * sizeof *f);
     // Allocate memory for vectors necessary for lyapunov exponents calculation
@@ -533,7 +1585,7 @@ void HOS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, i
     // Allocate variable to store the names of the custom values
     char **customnames = malloc(ncustomvalues * sizeof *customnames);
     for (int i = 0; i < ncustomvalues; i++) {
-        customnames[i] = malloc(nchars * sizeof *customnames);
+        customnames[i] = malloc(MAX_CCALC_NAME_LEN * sizeof *customnames);
     }
     // Mumber of integration steps
     int N = np*ndiv;
@@ -566,12 +1618,12 @@ void HOS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, i
     int currenttimestep = 0;
     // Check if there is any custom names to be inserted on the header of the output file
     if (ncustomvalues > 0) {
-        customfunc((*x), par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 0);
+        customfunc((*x), par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 0);
     }
     // Make the header of output files
-    EH_write_fbifurc_results(output_poinc_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, poinc, diffAttrac,
+    HOS_write_fbifurc_results_old(output_poinc_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, poinc, diffAttrac,
                              nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 0);
-    EH_write_fbifurc_results(output_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, poinc, diffAttrac,
+    HOS_write_fbifurc_results_old(output_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, poinc, diffAttrac,
                              nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 2);
     // Starts to increment bifurcation control parameter
     for (int k = 0; k < (int)parrange[2]; k++) {
@@ -634,7 +1686,7 @@ void HOS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, i
                     }
                     // Perform custom calculations in steady state regime (if there is calculations to be done)
                     if (ncustomvalues > 0) {
-                        customfunc((*x), par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 1);    
+                        customfunc((*x), par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 1);    
                     }
                     // Choose any point in the trajectory for poincare section placement
                     if (j == 1) {
@@ -657,7 +1709,7 @@ void HOS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, i
                 }
                 // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
                 if (ncustomvalues > 0) {
-                    customfunc((*x), par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 2);
+                    customfunc((*x), par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 2);
                 }
             }
         }
@@ -668,16 +1720,16 @@ void HOS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, i
         }
         // Perform custom calculations at the end of the time series (if there is calculations to be done)
         if (ncustomvalues > 0) {
-            customfunc((*x), par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 3);
+            customfunc((*x), par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 3);
         }
         // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
         store_LE(dim, lambda, s_lambda, LE);
         // Verify the type of motion of the system
         attrac = get_attractor(poinc, LE, dim, np, trans, tmp_attrac, &diffAttrac, maxper);
         // Write results in file
-        EH_write_fbifurc_results(output_poinc_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, poinc, diffAttrac,
+        HOS_write_fbifurc_results_old(output_poinc_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, poinc, diffAttrac,
                              nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 1);
-        EH_write_fbifurc_results(output_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, poinc, diffAttrac,
+        HOS_write_fbifurc_results_old(output_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, poinc, diffAttrac,
                              nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 3);
         // Progress Monitor
         if (parrange[2] > 100) {
@@ -707,14 +1759,12 @@ void HOS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, i
     free(customnames);
 }
 
-void HOS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
+void HOS_dynamical_diagram_solution_old(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
                                     int indexX, int indexY, double *parrange, double *par, int npar, int nrms, int *rmsindex,
                                     void (*edosys)(int, double *, double, double *, double *),
                                     int ncustomvalues, int nprintf, int *printfindex,
-                                    void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
+                                    void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue,
                                     int mode), int bifmode) {
-    // Maximum length of custom names, if there is custom calculations
-    size_t nchars = 20;
     // Declare matrix do store results
     int pixels = parrange[2]*parrange[5];  // Number of results
     double **results = malloc(pixels * sizeof **results);
@@ -736,10 +1786,10 @@ void HOS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv
     // Allocate variable to store the names of the custom values
     char **customnames = malloc(ncustomvalues * sizeof *customnames);
     for (int i = 0; i < ncustomvalues; i++) {
-        customnames[i] = malloc(nchars * sizeof *customnames);
+        customnames[i] = malloc(MAX_CCALC_NAME_LEN * sizeof *customnames);
     }
     // Start of Parallel Block
-    #pragma omp parallel default(none) shared(dim, bifmode, ndiv, np, trans, maxper, varstep, npar, results, edosys, customfunc, customnames, nchars, pi, rmsindex, nrms, printfindex, nprintf, ncustomvalues) \
+    #pragma omp parallel default(none) shared(dim, bifmode, ndiv, np, trans, maxper, varstep, npar, results, edosys, customfunc, customnames, pi, rmsindex, nrms, printfindex, nprintf, ncustomvalues) \
                                        private(t, h, attrac) \
                                        firstprivate(x, indexX, indexY, parrange, par, diffAttrac)
     {   
@@ -781,7 +1831,7 @@ void HOS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv
         int currenttimestep = 0;
         // Check if there is any custom names to be inserted on the header of the output file
         if (ncustomvalues > 0) {
-            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 0);
+            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 0);
         }
         // Index to identify position to write results
         int index;                                          
@@ -848,7 +1898,7 @@ void HOS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv
                             }
                             // Perform custom calculations in steady state regime (if there is calculations to be done)
                             if (ncustomvalues > 0) {
-                                customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 1);
+                                customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 1);
                             }
                             // Choose any point in the trajectory for poincare section placement
                             if (j == 1) {
@@ -871,7 +1921,7 @@ void HOS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv
                         }
                         // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
                         if (ncustomvalues > 0) {
-                            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 2);
+                            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 2);
                         }
                     }
                 }
@@ -884,7 +1934,7 @@ void HOS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv
                 }
                 // Perform custom calculations at the end of the time series (if there is calculations to be done)
                 if (ncustomvalues > 0) {
-                    customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 3);
+                    customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 3);
                 }
                 // Verify the type of motion of the system
                 attrac = check_periodicity(dim, np, poinc, trans, tmp_attrac, &diffAttrac, maxper);
@@ -938,7 +1988,7 @@ void HOS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv
 
     // Write results in file
     printf("\n\n  Writing Results in Output File...\n");
-    EH_p_write_dyndiag_results(output_file, dim, nrms, rmsindex, results, pixels, ncustomvalues, customnames, nprintf, printfindex);
+    HOS_p_write_dyndiag_results(output_file, dim, nrms, rmsindex, results, pixels, ncustomvalues, customnames, nprintf, printfindex);
     // Free memory
     for (int i = 0; i < pixels; i++) {
         free(results[i]);
@@ -950,15 +2000,12 @@ void HOS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv
     free(customnames);
 }
 
-
-void HOS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
+void HOS_full_dynamical_diagram_solution_old(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
                                         int indexX, int indexY, double *parrange, double *par, int npar, int nrms, int *rmsindex,
                                         void (*edosys)(int, double *, double, double *, double *),
                                         int ncustomvalues, int nprintf, int *printfindex,
-                                        void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
+                                        void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue,
                                         int mode), int bifmode) {
-    // Maximum length of custom names, if there is custom calculations
-    size_t nchars = 20;
     // Declare matrix do store results
     int pixels = parrange[2]*parrange[5];  // Number of results
     double **results = malloc(pixels * sizeof **results);
@@ -984,10 +2031,10 @@ void HOS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
     // Allocate variable to store the names of the custom values
     char **customnames = malloc(ncustomvalues * sizeof *customnames);
     for (int i = 0; i < ncustomvalues; i++) {
-        customnames[i] = malloc(nchars * sizeof *customnames);
+        customnames[i] = malloc(MAX_CCALC_NAME_LEN * sizeof *customnames);
     }
     // Start of Parallel Block
-    #pragma omp parallel default(none) shared(dim, bifmode, ndiv, np, trans, ndim, maxper, varstep, npar, results, edosys, customfunc, customnames, nchars, pi, rmsindex, nrms, printfindex, nprintf, ncustomvalues) \
+    #pragma omp parallel default(none) shared(dim, bifmode, ndiv, np, trans, ndim, maxper, varstep, npar, results, edosys, customfunc, customnames, pi, rmsindex, nrms, printfindex, nprintf, ncustomvalues) \
                                        private(t, h, tf, s_T0, attrac) \
                                        firstprivate(x, indexX, indexY, parrange, par, diffAttrac)
     {   
@@ -1038,7 +2085,7 @@ void HOS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
         int currenttimestep = 0;
         // Check if there is any custom names to be inserted on the header of the output file
         if (ncustomvalues > 0) {
-            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 0);
+            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 0);
         }
         // Index to identify position to write results
         int index;                                          
@@ -1113,7 +2160,7 @@ void HOS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
                             }
                             // Perform custom calculations in steady state regime (if there is calculations to be done)
                             if (ncustomvalues > 0) {
-                                customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 1);
+                                customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 1);
                             }
                             // Choose any point in the trajectory for poincare section placement
                             if (j == 1) {
@@ -1136,7 +2183,7 @@ void HOS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
                         }
                         // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
                         if (ncustomvalues > 0) {
-                            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 2);
+                            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 2);
                         }
                     }
                 }
@@ -1149,7 +2196,7 @@ void HOS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
                 }
                 // Perform custom calculations at the end of the time series (if there is calculations to be done)
                 if (ncustomvalues > 0) {
-                    customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 3);
+                    customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 3);
                 }
                 // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
                 store_LE(dim, lambda, s_lambda, LE);
@@ -1210,7 +2257,7 @@ void HOS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
     
     // Write results in file
     printf("\n\n  Writing Results in Output File...\n");
-    EH_p_write_fdyndiag_results(output_file, dim, nrms, rmsindex, results, pixels, ncustomvalues, customnames, nprintf, printfindex);
+    HOS_p_write_fdyndiag_results(output_file, dim, nrms, rmsindex, results, pixels, ncustomvalues, customnames, nprintf, printfindex);
     // Free memory
     for (int i = 0; i < pixels; i++) {
         free(results[i]);
@@ -1222,14 +2269,12 @@ void HOS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
     free(customnames);
 }
 
-void HOS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
+void HOS_full_forced_basin_of_attraction_2D_solution_old(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
                                                     int indexX, int indexY, double *icrange, double *par, int npar, int nrms, int *rmsindex, 
                                                     void (*edosys)(int, double *, double, double *, double *), 
                                                     int ncustomvalues, int nprintf, int *printfindex,
-                                                    void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, size_t maxstrlen, double *customvalue,
+                                                    void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue,
                                                     int mode)) {
-    // Maximum length of custom names, if there is custom calculations
-    size_t nchars = 20;
     // Declare matrix do store results
     int pixels = icrange[2]*icrange[5];  // Number of results
     double **results = malloc(pixels * sizeof **results);
@@ -1254,10 +2299,10 @@ void HOS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim,
     // Allocate variable to store the names of the custom values
     char **customnames = malloc(ncustomvalues * sizeof *customnames);
     for (int i = 0; i < ncustomvalues; i++) {
-        customnames[i] = malloc(nchars * sizeof *customnames);
+        customnames[i] = malloc(MAX_CCALC_NAME_LEN * sizeof *customnames);
     }
     // Start of Parallel Block
-    #pragma omp parallel default(none) shared(dim, ndiv, np, trans, ndim, maxper, icstep, npar, results, edosys, customfunc, customnames, nchars, pi, rmsindex, nrms, printfindex, nprintf, ncustomvalues) \
+    #pragma omp parallel default(none) shared(dim, ndiv, np, trans, ndim, maxper, icstep, npar, results, edosys, customfunc, customnames, pi, rmsindex, nrms, printfindex, nprintf, ncustomvalues) \
                                        private(t, h, tf, s_T0, attrac) \
                                        firstprivate(x, indexX, indexY, icrange, par, diffAttrac)
     {   
@@ -1309,7 +2354,7 @@ void HOS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim,
         int currenttimestep = 0;
         // Check if there is any custom names to be inserted on the header of the output file
         if (ncustomvalues > 0) {
-            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 0);
+            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 0);
         }
         // Index to identify position to write results
         int index;                                          
@@ -1379,7 +2424,7 @@ void HOS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim,
                             }
                             // Perform custom calculations in steady state regime (if there is calculations to be done)
                             if (ncustomvalues > 0) {
-                                customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 1);
+                                customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 1);
                             }
                             // Choose any point in the trajectory for poincare section placement
                             if (j == 1) {
@@ -1402,7 +2447,7 @@ void HOS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim,
                         }
                         // Perform custom calculations over the entire time series (transient + steady state), if there is calculations to be done
                         if (ncustomvalues > 0) {
-                            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 2);
+                            customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 2);
                         }
                     }
                 }
@@ -1415,7 +2460,7 @@ void HOS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim,
                 }
                 // Perform custom calculations at the end of the time series (if there is calculations to be done)
                 if (ncustomvalues > 0) {
-                    customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, nchars, customvalues, 3);
+                    customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 3);
                 }
                 // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
                 store_LE(dim, lambda, s_lambda, LE);
@@ -1475,7 +2520,7 @@ void HOS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim,
     
     // Write results in file
     printf("\n\n  Writing Results in Output File...\n");
-    EH_p_write_fdyndiag_results(output_file, dim, nrms, rmsindex, results, pixels, ncustomvalues, customnames, nprintf, printfindex);
+    HOS_p_write_fdyndiag_results(output_file, dim, nrms, rmsindex, results, pixels, ncustomvalues, customnames, nprintf, printfindex);
 
     // Free memory
     for (int i = 0; i < pixels; i++) {
@@ -1487,3 +2532,4 @@ void HOS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim,
         }
     free(customnames);
 }
+
