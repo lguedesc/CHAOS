@@ -19,34 +19,34 @@ read plt
 echo "====================================================================="
 if [ $plt -eq 1 ];
 then 
-    python -B -m TimeSeries.out.plot_rk4
+    python plots/plot_timeseries.py
 elif [ $plt -eq 2 ]
 then
-    python -B -m PoincareMap.out.plot_poinc
+    python plots/plot_poinc.py
 elif [ $plt -eq 3 ]
 then
-    python -B -m LyapunovExp.out.plot_lyap
+    python plots/plot_lyap.py
 elif [ $plt -eq 4 ]
 then
-    python -B -m FTimeSeries.out.plot_ftimeseries
+    python plots/plot_ftimeseries.py
 elif [ $plt -eq 5 ]
 then
-    python -B -m Bifurcation.out.plot_bifurc
+    python plots/plot_bifurc.py
 elif [ $plt -eq 6 ]
 then
-    python -B -m FBifurcation.out.plot_fbifurc
+    python plots/plot_fbifurc.py
 elif [ $plt -eq 7 ]
 then
-    python -B -m DynDiagram.out.plot_dyndiag
+    python plots/plot_dyndiag.py
 elif [ $plt -eq 8 ]
 then
-    python -B -m FDynDiagram.out.plot_fdyndiag
+    python plots/plot_fdyndiag.py
 elif [ $plt -eq 9 ]
 then
-    python -B -m EPBasin.out.plot_epbasin
+    python plots/plot_epbasin.py
 elif [ $plt -eq 10 ]
 then
-    python -B -m FForcBasin.out.plot_forcedbasin
+    python plots/plot_forcedbasin.py
 elif [ $plt -eq 11 ]
 then
     python -B -m StabilityAnalysis.Potential_and_EP-only_mechanical

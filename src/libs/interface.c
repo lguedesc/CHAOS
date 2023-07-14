@@ -1014,7 +1014,7 @@ void fprint_customcalc(FILE *output_file, int nprintscr, int *printscrindex, dou
 void print_minmax(double *xmin, double *xmax, double *overallxmin, double *overallxmax, int dim, size_t maxlength, double percname) {
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
-    //partition(2, maxlength);
+    partition(2, maxlength);
     printf("  Minimum and Maximum Values\n");
     partition(2, maxlength);
     // Print min and maximum values
@@ -1035,7 +1035,7 @@ void print_minmax(double *xmin, double *xmax, double *overallxmin, double *overa
 void fprint_minmax(FILE *output_file, double *xmin, double *xmax, double *overallxmin, double *overallxmax, int dim, size_t maxlength, double percname) {
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
-    //fpartition(output_file, 2, maxlength);
+    fpartition(output_file, 2, maxlength);
     fprintf(output_file, "  Minimum and Maximum Values\n");
     fpartition(output_file, 2, maxlength);
     // Print min and maximum values

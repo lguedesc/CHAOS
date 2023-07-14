@@ -19,7 +19,7 @@ static void read_params(int dim, int npar, int *np, int *ndiv, int *trans, int *
 static void print_results(FILE *info, int DIM, double *xmin, double *xmax, double *overallxmin, double *overallxmax, int nRMS, int *rmsindex, double *xRMS, double *overallxRMS,
                           int nCustomValues, int nPrintscr, int *printscrindex, double *customValues, char **customNames);
 
-void HOS_timeseries(char *funcname, unsigned int DIM, unsigned int nPar, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, double *, int)) {
+void HOS_timeseries(char *funcname, unsigned int DIM, unsigned int nPar, ang_info *angles, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, double *, int)) {
     // Declare Program Parameters 
     int nP;                                     // Number of forcing periods analyzed
     int nDiv;                                   // Number of divisions in each forcing period
@@ -60,7 +60,7 @@ void HOS_timeseries(char *funcname, unsigned int DIM, unsigned int nPar, char* o
     clock_t time_i = clock();
     */
     // Call solution
-    HOS_timeseries_solution(output_timeseries, DIM, nP, nDiv, trans, t, x, h, par, nRMS, rmsindex, &xRMS, &overallxRMS, &xmin, &xmax, &overallxmin, &overallxmax, edosys,  
+    HOS_timeseries_solution(output_timeseries, DIM, nP, nDiv, trans, t, x, h, par, angles, nRMS, rmsindex, &xRMS, &overallxRMS, &xmin, &xmax, &overallxmin, &overallxmax, edosys,  
                             nCustomValues, &customNames, &customValues, nPrintf, printfindex, nPrintscr, printscrindex, customfunc);    
     /*
     clock_t time_f = clock();

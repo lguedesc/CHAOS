@@ -20,7 +20,7 @@ def convert_dir(dir):
     return dir
 
 def read_data(filename):
-    df = pd.read_csv(filename, delimiter = " ", dtype="float")
+    df = pd.read_csv(filename, delimiter = " ", dtype="float", index_col=False)
 
     return df
 

@@ -134,8 +134,22 @@ static void store_results_in_matrix_fdyndiag(double ***results, int k, int m, do
     }
 }
 
+// Functions to handle ang_info struct
+ang_info *init_angle_struct(unsigned int nangles) {
+    ang_info *info = malloc(sizeof(ang_info));
+    info->n_angles = nangles;
+    info->index = malloc(nangles * sizeof(*(info->index)));
+
+    return info;
+}
+
+void free_ang_info_struct(ang_info *strct) {
+    free(strct->index);
+    free(strct);
+}
+
 // Solutions
-void HOS_timeseries_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double *x, double h, double *par, int nrms, int *rmsindex, double **xrms, double **overallxrms, 
+void HOS_timeseries_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double *x, double h, double *par, ang_info *angles, int nrms, int *rmsindex, double **xrms, double **overallxrms, 
                              double **xmin, double **xmax, double **overallxmin, double **overallxmax, void (*edosys)(int, double *, double, double *, double *),  
                              int ncustomvalues, char ***customnames, double **customvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex,
                              void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode)) {
@@ -188,7 +202,7 @@ void HOS_timeseries_solution(FILE *output_file, int dim, int np, int ndiv, int t
         customfunc(x, par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 0);
     }
     // Make the header of the output file
-    HOS_write_timeseries_results(output_file, dim, t, x, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 1);
+    HOS_write_timeseries_results(output_file, dim, t, x, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, angles, 1);
     // Call Runge-Kutta 4th order integrator n = np * ndiv times
     for (int i = 0; i < np; i++) {
         for (int j = 0; j < ndiv; j++) {
@@ -237,7 +251,7 @@ void HOS_timeseries_solution(FILE *output_file, int dim, int np, int ndiv, int t
                 customfunc(x, par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 2);
             }
             // Write results in output file
-            HOS_write_timeseries_results(output_file, dim, t, x, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 2);
+            HOS_write_timeseries_results(output_file, dim, t, x, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, angles, 2);
         }
     }
     // Compute RMS values of state variables (if there is RMS calculations to be performed)
@@ -255,8 +269,32 @@ void HOS_timeseries_solution(FILE *output_file, int dim, int np, int ndiv, int t
     free_mem(f, IC, NULL);
 }
 
+void HOS_poincare_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double *x, double h, double *par, ang_info *angles, void (*edosys)(int, double *, double, double *, double *)) {
+    // Allocate x` = f(x)
+    double *f = malloc(dim * sizeof *f);
+    // Make the header of the output file
+    HOS_write_poinc_results(output_file, dim, t, x, angles, 1);
+    // Call Runge-Kutta 4th order integrator n = np * ndiv times
+    for (int i = 0; i < np; i++) {
+        for (int j = 0; j < ndiv; j++) {
+            rk4(dim, x, t, h, par, f, edosys);
+            t = t + h;
+            // Apply poincare map at permanent regime
+            if (i > trans) {
+                // Choose any point in the trajectory for plane placement
+                if (j == 1) {
+                    // Print the result in output file
+                    HOS_write_poinc_results(output_file, dim, t, x, angles, 2);
+                }
+            }
+        }
+    }
+    // Free Memory
+    free(f);
+}
+
 void HOS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int *attrac, int maxper, double t, double **x, double h, double *par, 
-                                 int nrms, int *rmsindex, double **xrms, double **overallxrms, double **xmin, double **xmax, double **overallxmin, double **overallxmax,
+                                 ang_info *angles, int nrms, int *rmsindex, double **xrms, double **overallxrms, double **xmin, double **xmax, double **overallxmin, double **overallxmax,
                                  void (*edosys)(int, double *, double, double *, double *), 
                                  int ncustomvalues, char ***customnames, double **customvalues, int nprintf, int *printfindex, int nprintscr, int *printscrindex,
                                  void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode)) {
@@ -334,8 +372,8 @@ void HOS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_po
         customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 0);
     }
     // Make the header of output files
-    HOS_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 1);
-    write_results(output_poinc_file, dim, t, (*x), 0);
+    HOS_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, angles, 1);
+    HOS_write_poinc_results(output_poinc_file, dim, t, (*x), angles, 1);
     // Call ODE solver N = nP * nDiv times
     for (int i = 0; i < np; i++) {
         for (int j = 0; j < ndiv; j++) {
@@ -351,7 +389,7 @@ void HOS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_po
                     for (int p = 0; p < dim; p++) {
                         poinc[i - trans][p] = (*x)[p];
                     }
-                    write_results(output_poinc_file, dim, t, (*x), 2);
+                    HOS_write_poinc_results(output_poinc_file, dim, t, (*x), angles, 2);
                 }
                 // Get max and min values at permanent regime
                 for (int q = 0; q < dim; q++) {
@@ -391,13 +429,14 @@ void HOS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_po
                 customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 2);
             }       
             // Write Results in output file
-            HOS_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 2);
+            HOS_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, angles, 2);
         }
     }
     // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
     store_LE(dim, lambda, s_lambda, LE);
     // Verify the type of motion of the system
-    (*attrac) = get_attractor_new(poinc, LE, dim, np, trans, maxper, (*xmin), (*xmax), numtol);
+    //(*attrac) = get_attractor_new(poinc, LE, dim, np, trans, maxper, (*xmin), (*xmax), numtol);
+    (*attrac) = get_attractor(poinc, LE, dim, np, trans, maxper, (*xmin), (*xmax), numtol, angles);
     // Compute RMS values of state variables
     if (nrms > 0) {
         for (int q = 0; q < nrms; q++) {
@@ -1163,8 +1202,8 @@ void HOS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim,
                                                     void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue,
                                                     int mode)) {
     // Declare matrix do store results
-    int pixels = icrange[2]*icrange[5];  // Number of results
-    int ncols = (3 + (5*dim) + (2*nrms) + nprintf);         // Number of columns (3: CparX, CparY, attrac) + (5: xmin, xmax, overallxmin, overallxmax, LE)*dim + (2: xrms, overallxrms)*nrms + nprintf
+    int pixels = icrange[2]*icrange[5];              // Number of results
+    int ncols = (3 + (5*dim) + (2*nrms) + nprintf);  // Number of columns (3: CparX, CparY, attrac) + (5: xmin, xmax, overallxmin, overallxmax, LE)*dim + (2: xrms, overallxrms)*nrms + nprintf
     double **results = (double**)alloc_2D_array(pixels, ncols, sizeof(double));
     // Declare rk4 timestep, final time, short initial time and numtol 
     double h, tf, s_T0;
@@ -1373,8 +1412,6 @@ void HOS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim,
 
 
 
-
-
 // Old solutions for backup
 
 void HOS_full_timeseries_solution_old(FILE *output_ftimeseries_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int *attrac, int maxper, double t, double **x, double h, double *par, 
@@ -1461,7 +1498,7 @@ void HOS_full_timeseries_solution_old(FILE *output_ftimeseries_file, FILE *outpu
         customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 0);
     }
     // Make the header of output files
-    HOS_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 1);
+    //HOS_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 1);
     write_results(output_poinc_file, dim, t, (*x), 0);
     // Call ODE solver N = nP * nDiv times
     for (int i = 0; i < np; i++) {
@@ -1518,7 +1555,7 @@ void HOS_full_timeseries_solution_old(FILE *output_ftimeseries_file, FILE *outpu
                 customfunc((*x), par, t, (*xrms), (*xmin), (*xmax), IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, (*customnames), (*customvalues), 2);
             }       
             // Write Results in output file
-            HOS_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 2);
+            //HOS_write_ftimeseries_results(output_ftimeseries_file, dim, t, (*x), lambda, s_lambda, ncustomvalues, (*customnames), (*customvalues), nprintf, printfindex, 2);
         }
     }
     // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
@@ -1528,7 +1565,7 @@ void HOS_full_timeseries_solution_old(FILE *output_ftimeseries_file, FILE *outpu
     // Declare variable to flag if all directions present same periodicity or not (0 = all the same, 1 = not the same)
     int diffAttrac = -1;
     // Verify the type of motion of the system
-    (*attrac) = get_attractor(poinc, LE, dim, np, trans, tmp_attrac, &diffAttrac, maxper);
+    //(*attrac) = get_attractor(poinc, LE, dim, np, trans, tmp_attrac, &diffAttrac, maxper);
     // Compute RMS values of state variables
     if (nrms > 0) {
         for (int q = 0; q < nrms; q++) {
@@ -1725,7 +1762,7 @@ void HOS_full_bifurcation_solution_old(FILE *output_file, FILE *output_poinc_fil
         // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
         store_LE(dim, lambda, s_lambda, LE);
         // Verify the type of motion of the system
-        attrac = get_attractor(poinc, LE, dim, np, trans, tmp_attrac, &diffAttrac, maxper);
+        //attrac = get_attractor(poinc, LE, dim, np, trans, tmp_attrac, &diffAttrac, maxper);
         // Write results in file
         HOS_write_fbifurc_results_old(output_poinc_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, poinc, diffAttrac,
                              nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, 1);
@@ -1937,7 +1974,7 @@ void HOS_dynamical_diagram_solution_old(FILE *output_file, int dim, int np, int 
                     customfunc(X, PAR, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 3);
                 }
                 // Verify the type of motion of the system
-                attrac = check_periodicity(dim, np, poinc, trans, tmp_attrac, &diffAttrac, maxper);
+                //attrac = check_periodicity(dim, np, poinc, trans, tmp_attrac, &diffAttrac, maxper);
                 // Write results in matrix
                 index = (int)parrange[2]*k + m;
                 results[index][0] = PAR[indexY];
@@ -2201,7 +2238,7 @@ void HOS_full_dynamical_diagram_solution_old(FILE *output_file, int dim, int np,
                 // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
                 store_LE(dim, lambda, s_lambda, LE);
                 // Verify the type of motion of the system
-                attrac = get_attractor(poinc, LE, dim, np, trans, tmp_attrac, &diffAttrac, maxper);
+                //attrac = get_attractor(poinc, LE, dim, np, trans, tmp_attrac, &diffAttrac, maxper);
                 // Write results in matrix
                 index = (int)parrange[2]*k + m;
                 results[index][0] = PAR[indexY];
@@ -2465,7 +2502,7 @@ void HOS_full_forced_basin_of_attraction_2D_solution_old(FILE *output_file, int 
                 // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
                 store_LE(dim, lambda, s_lambda, LE);
                 // Verify the type of motion of the system
-                attrac = get_attractor(poinc, LE, dim, np, trans, tmp_attrac, &diffAttrac, maxper);
+                //attrac = get_attractor(poinc, LE, dim, np, trans, tmp_attrac, &diffAttrac, maxper);
                 // Write results in matrix
                 index = (int)icrange[2]*k + m;
                 results[index][0] = IC[indexY];

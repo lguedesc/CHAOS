@@ -1,89 +1,57 @@
 #include <stdio.h>
-#include <math.h>
+#include <stdarg.h>
 #include <stdlib.h>
 
-double getOrder_candidate(double n1, double n2) {
-    double diff = fabs(n1 - n2);
-    double power;
-    if (diff == 0) {
-        power = 0;
-    }
-    else {
-        power = log10(diff);
-    }
-    double order = pow(10, power);
-    return order;
+typedef struct {
+    int n_angles;
+    int *index;
+} ang_info;
+
+ang_info *init_angle_struct(int nangles) {
+    ang_info *info = malloc(sizeof(ang_info));
+    info->n_angles = nangles;
+    info->index = malloc(nangles * sizeof(*(info->index)));
+
+    return info;
 }
 
-double getOrder(double n1, double n2) {
-    double diff = fabs(n1 - n2);
-    double order;
-    if (diff == 0) {
-        order = 1;
-    }
-    else {
-        order = diff;
-    }
-    return order;
+void free_ang_info_struct(ang_info *strct) {
+    free(strct->index);
+    free(strct);
 }
 
-double *get_system_tol_old(int dim, double *xmin, double *xmax) {
-    double diff;
-    double power;
-    double *systol = malloc(dim * sizeof(*systol));
-    for (int i = 0; i < dim; i++) {
-        diff = fabs(xmax[i] - xmin[i]);
-        if (diff == 0) {
-            power = 0;
-        }
-        else {
-            power = log10(diff);            
-        }        
-        systol[i] = pow(10, power);
+void func(int nangles, ...)
+{
+    // Declare and initialize variadic argument list
+    va_list args;
+    va_start(args, nangles);
+    // Create ang_info struct with the appropriate size
+    ang_info *angle = init_angle_struct(nangles);
+    // Assign values to the angle.index array
+    for (int i = 0; i < nangles; i++) {
+        angle->index[i] = va_arg(args, int);
     }
+    va_end(args);
+    // Print the array
+    for (int i = 0; i < nangles; i++) {
+        printf("%d ", angle->index[i]);
+    }
+    printf("\n");
 
-    return systol;
+    // Free dynamically allocated memory
+    free_ang_info_struct(angle);
 }
 
-double *get_system_tol(int dim, double *xmin, double *xmax) {
-    double diff;
-    double *systol = malloc(dim * sizeof(*systol));
-    for (int i = 0; i < dim; i++) {
-        diff = fabs(xmax[i] - xmin[i]);
-        if (diff == 0) {
-            systol[i] = 1;
-        }
-        else {
-            systol[i] = diff;            
-        }        
-    }
-
-    return systol;
-}
-
-int main() {
-    /*
-    double n1, n2;
+int main()
+{
+    func(5, 1, 2, 3, 4, 5);  // Example usage with angles = 5
+    func(3, 6, 7, 8);         // Example usage with angles = 3
     
-    printf("Enter the first number: ");
-    scanf("%lf", &n1);
-    
-    printf("Enter the second number: ");
-    scanf("%lf", &n2);
-    
-    double order = getOrder(n1, n2);
-    printf("%lf - %lf = %lf\n", n1, n2, n1 - n2);
-    printf("The order of the set of numbers is %e = %lf\n", order, order);
-    */
-    int dim = 3;
-    double xmax[] = { 0.1, 0, 100 };
-    double xmin[] = { -0.32, 0, -50};
+    double x = 0.0;
 
-    double *systol = get_system_tol(dim, xmin, xmax);
+    double x_rem = x/6.2342432;
+    printf("x_rem = %lf\n", x_rem);
 
-    for(int i = 0; i < dim; i++) {
-        printf("systol[%d] = %e = %lf\n", i, systol[i], systol[i]);
-    }
 
     return 0;
 }

@@ -5,6 +5,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <math.h>
 #include <sys/stat.h>
 #include "defines.h"
 #include "msg.h"
@@ -563,6 +564,195 @@ void p_write_epbasin_results(FILE *output_file, double **results, int pixels, in
 
 // Write results for Harmonic Oscillator (HOS) Toolbox
 
+void HOS_write_timeseries_results(FILE *output_file, int dim, double t, double *x, int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, ang_info *angles, int mode) {
+    // Check the mode of the function
+    if (mode == 1) {
+        // Add Header
+        fprintf(output_file, "Time ");
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "x[%d] ", i);
+        }
+        // If it has any angle within the set of state variables, add remainder header (remainder of value/2*pi)
+        if (angles->n_angles > 0) {
+            for(int i = 0; i < angles->n_angles; i++) {
+                fprintf(output_file, "x[%d]_remainder ", angles->index[i]);
+            }
+        }
+        // If it has any custom calculations, add custom header
+        if (ncustomvalues > 0) { 
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%s ", customnames[printfindex[i]]);
+            } 
+        }
+        fprintf(output_file, "\n");
+        // Add Initial Conditions
+        fprintf(output_file, "%.10f ", t);
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", x[i]);
+        }
+        // If it has any angle within the set of state variables, add remainder header (remainder of value/2*pi)
+        if (angles->n_angles > 0) {
+            for(int i = 0; i < angles->n_angles; i++) {
+                fprintf(output_file, "%.10lf ", remainder(x[angles->index[i]], 2*PI));
+            }
+        }
+        // If it has any custom calculations, add custom values
+        if (ncustomvalues > 0) { 
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%.10lf ", customvalue[printfindex[i]]);
+            } 
+        }
+        fprintf(output_file, "\n");
+    } 
+    else if (mode == 2) {
+        // Add results
+        fprintf(output_file, "%.10f ", t);
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", x[i]);
+        }
+        // If it has any angle within the set of state variables, add remainder header (remainder of value/2*pi)
+        if (angles->n_angles > 0) {
+            for(int i = 0; i < angles->n_angles; i++) {
+                fprintf(output_file, "%.10lf ", remainder(x[angles->index[i]], 2*PI));
+            }
+        }
+        // If it has any custom calculations, add custom results
+        if (ncustomvalues > 0) { 
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%.10lf ", customvalue[printfindex[i]]);
+            } 
+        }
+        fprintf(output_file, "\n");
+    }
+    else {
+        print_debug("Failed to write results in output file using mode (%d)...\n", mode);
+        return;
+    }
+}
+
+void HOS_write_poinc_results(FILE *output_file, int dim, double t, double *x, ang_info *angles, int mode) {
+    // Check the mode of the function
+    if (mode == 1) {
+        // Add Header
+        fprintf(output_file, "Time ");
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "x[%d] ", i);
+        }
+        // If it has any angle within the set of state variables, add remainder header (remainder of value/2*pi)
+        if (angles->n_angles > 0) {
+            for(int i = 0; i < angles->n_angles; i++) {
+                fprintf(output_file, "x[%d]_remainder ", angles->index[i]);
+            }
+        }
+        fprintf(output_file, "\n");
+    } 
+    else if (mode == 2) {
+        // Add results
+        fprintf(output_file, "%.10f ", t);
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", x[i]);
+        }
+        // If it has any angle within the set of state variables, add remainder header (remainder of value/2*pi)
+        if (angles->n_angles > 0) {
+            for(int i = 0; i < angles->n_angles; i++) {
+                fprintf(output_file, "%.10lf ", remainder(x[angles->index[i]], 2*PI));
+            }
+        }
+        fprintf(output_file, "\n");
+    }
+    else {
+        print_debug("Failed to write results in output file using mode (%d)...\n", mode);
+        return;
+    }
+}
+
+void HOS_write_ftimeseries_results(FILE *output_file, int dim, double t, double *x, double *lambda, double *s_lambda, int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, ang_info *angles, int mode) {
+    // Check the mode of the function
+    if (mode == 1) {
+        // Header
+        fprintf(output_file, "Time ");
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "x[%i] ", i);
+        }
+        // If it has any angle within the set of state variables, add remainder header (remainder of value/2*pi)
+        if (angles->n_angles > 0) {
+            for(int i = 0; i < angles->n_angles; i++) {
+                fprintf(output_file, "x[%d]_remainder ", angles->index[i]);
+            }
+        }
+        // Lyapunov Exponents
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "LE[%i] ", i);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "sLE[%i] ", i);
+        }
+        // If it has any custom calculations, add custom header
+        if (ncustomvalues > 0) { 
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%s ", customnames[printfindex[i]]);
+            } 
+        }
+        fprintf(output_file, "\n");
+        // Initial Conditions
+        fprintf(output_file, "%.10lf ", t);
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", x[i]);
+        }
+        // If it has any angle within the set of state variables, add remainder header (remainder of value/2*pi)
+        if (angles->n_angles > 0) {
+            for(int i = 0; i < angles->n_angles; i++) {
+                fprintf(output_file, "%.10lf ", remainder(x[angles->index[i]], 2*PI));
+            }
+        }
+        // Lyapunov Exponents
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", lambda[i]);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", s_lambda[i]);
+        }
+        // If it has any custom calculations, add custom values
+        if (ncustomvalues > 0) { 
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%.10lf ", customvalue[printfindex[i]]);
+            } 
+        }
+        fprintf(output_file, "\n");
+    }
+    else if (mode == 2) {
+        // Add Results
+        fprintf(output_file, "%.10lf ", t);
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", x[i]);
+        }
+        // If it has any angle within the set of state variables, add remainder header (remainder of value/2*pi)
+        if (angles->n_angles > 0) {
+            for(int i = 0; i < angles->n_angles; i++) {
+                fprintf(output_file, "%.10lf ", remainder(x[angles->index[i]], 2*PI));
+            }
+        }
+        // Lyapunov Exponents
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", lambda[i]);
+        }
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.10lf ", s_lambda[i]);
+        }
+        // If it has any custom calculations, add custom values
+        if (ncustomvalues > 0) { 
+            for (int i = 0; i < nprintf; i++) {
+                fprintf(output_file, "%.10lf ", customvalue[printfindex[i]]);
+            } 
+        }
+        fprintf(output_file, "\n");
+    } 
+    else {
+        print_debug("Failed to write results in output file using mode (%d)...\n", mode);
+        return;
+    }
+}
+
 void HOS_write_bifurc_results(FILE *output_file, int dim, double varpar, double *x, double *xmin, double *xmax, double *overallxmin, double *overallxmax, int nrms, int *rmsindex, double *xrms, double *overallxrms,
                              int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode) {
     // Check the mode of the function
@@ -936,119 +1126,5 @@ void HOS_p_write_dyndiag_results(FILE *output_file, int dim, int nrms, int *rmsi
             }
         }
         fprintf(output_file, "\n");
-    }
-}
-
-void HOS_write_timeseries_results(FILE *output_file, int dim, double t, double *x, int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode) {
-    // Check the mode of the function
-    if (mode == 1) {
-        // Add Header
-        fprintf(output_file, "Time ");
-        for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "x[%i] ", i);
-        }
-        // If it has any custom calculations, add custom header
-        if (ncustomvalues > 0) { 
-            for (int i = 0; i < nprintf; i++) {
-                fprintf(output_file, "%s ", customnames[printfindex[i]]);
-            } 
-        }
-        fprintf(output_file, "\n");
-        // Add Initial Conditions
-        fprintf(output_file, "%.10f ", t);
-        for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "%.10lf ", x[i]);
-        }
-        // If it has any custom calculations, add custom values
-        if (ncustomvalues > 0) { 
-            for (int i = 0; i < nprintf; i++) {
-                fprintf(output_file, "%.10lf ", customvalue[printfindex[i]]);
-            } 
-        }
-        fprintf(output_file, "\n");
-    } 
-    else if (mode == 2) {
-        // Add results
-        fprintf(output_file, "%.10f ", t);
-        for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "%.10lf ", x[i]);
-        }
-        // If it has any custom calculations, add custom results
-        if (ncustomvalues > 0) { 
-            for (int i = 0; i < nprintf; i++) {
-                fprintf(output_file, "%.10lf ", customvalue[printfindex[i]]);
-            } 
-        }
-        fprintf(output_file, "\n");
-    }
-    else {
-        printf("Failed to write results in output file using mode (%d)...\n", mode);
-        return;
-    }
-}
-
-void HOS_write_ftimeseries_results(FILE *output_file, int dim, double t, double *x, double *lambda, double *s_lambda, int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, int mode) {
-    // Check the mode of the function
-    if (mode == 1) {
-        // Header
-        fprintf(output_file, "Time ");
-        for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "x[%i] ", i);
-        }
-        for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "LE[%i] ", i);
-        }
-        for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "sLE[%i] ", i);
-        }
-        // If it has any custom calculations, add custom header
-        if (ncustomvalues > 0) { 
-            for (int i = 0; i < nprintf; i++) {
-                fprintf(output_file, "%s ", customnames[printfindex[i]]);
-            } 
-        }
-        fprintf(output_file, "\n");
-        // Initial Conditions
-        fprintf(output_file, "%.10lf ", t);
-        for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "%.10lf ", x[i]);
-        }
-        for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "%.10lf ", lambda[i]);
-        }
-        for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "%.10lf ", s_lambda[i]);
-        }
-        // If it has any custom calculations, add custom values
-        if (ncustomvalues > 0) { 
-            for (int i = 0; i < nprintf; i++) {
-                fprintf(output_file, "%.10lf ", customvalue[printfindex[i]]);
-            } 
-        }
-        fprintf(output_file, "\n");
-    }
-    else if (mode == 2) {
-        // Add Results
-        fprintf(output_file, "%.10lf ", t);
-        for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "%.10lf ", x[i]);
-        }
-        for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "%.10lf ", lambda[i]);
-        }
-        for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "%.10lf ", s_lambda[i]);
-        }
-        // If it has any custom calculations, add custom values
-        if (ncustomvalues > 0) { 
-            for (int i = 0; i < nprintf; i++) {
-                fprintf(output_file, "%.10lf ", customvalue[printfindex[i]]);
-            } 
-        }
-        fprintf(output_file, "\n");
-    } 
-    else {
-        printf("Failed to write results in output file using mode (%d)...\n", mode);
-        return;
     }
 }

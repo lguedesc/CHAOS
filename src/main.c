@@ -3,14 +3,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdarg.h>
+#include "libs/msg.h"
 #include "libs/interface.h"
 #include "libs/odesystems.h"
 #include "libs/customcalc.h"
+#include "libs/nlosc.h"
 #include "modules/time_series.h"
-#include "modules/poinc_map.h"
 #include "modules/lyap_exp_wolf.h"
 #include "modules/epbasin.h"
 #include "modules/HOS_timeseries.h"
+#include "modules/HOS_poinc_map.h"
 #include "modules/HOS_ftime_series.h"
 #include "modules/HOS_bifurcation.h"
 #include "modules/HOS_fbifurcation.h"
@@ -19,12 +22,6 @@
 #include "modules/HOS_fforcedbasin.h"
 #include "modules/convergence_test.h"
 #include "libs/defines.h"
-
-void execute_HOS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
-                        void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, double *, int),
-                        char* outputname, char *funcname, unsigned int dim, unsigned int npar, bool angles);
-void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname,
-                         char *funcname, unsigned int dim, unsigned int npar);
 
 char *HOSsystemNames[NUM_OF_HOS_SYSTEMS] = {"Duffing Oscillator",
                                             "2 DoF Duffing Oscillator",
@@ -67,7 +64,87 @@ char *GNLmoduleNames[NUM_OF_GNL_MODULES] = { "Convergence Test (In Development)"
                                              "Time Series",
                                              "Lyapunov Exponents (Method from Wolf et al., 1985)"};
 
-void call_GNL_system(unsigned int system, unsigned int module) {
+// Funtions to select simulations
+static void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname,
+                         char *funcname, unsigned int dim, unsigned int npar) {
+    switch (module) {
+        case 1:
+            convergence_test(funcname, dim, npar, outputname, edosys);
+            break;
+        case 2:
+            timeseries(funcname, dim, npar, outputname, edosys);
+            break;
+        case 3:
+            lyapunov_exp_wolf(funcname, dim, npar, outputname, edosys);
+            break;
+        default:
+            printf("Invalid Module\n");
+            exit(0);
+    }
+}
+
+static void execute_HOS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
+                        void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, double *, int),
+                        char* outputname, char *funcname, unsigned int dim, unsigned int npar, unsigned int nangles, ...) {
+    
+    // Handle angles information
+    // Declare and initialize variadic argument list
+    va_list args;
+    va_start(args, nangles);
+    // Create ang_info struct with the appropriate size
+    ang_info *angles = init_angle_struct(nangles);
+    // Assign values to the angle.index array
+    for(int i = 0; i < nangles; i++) {
+        angles->index[i] = va_arg(args, unsigned int);
+        print_warning("angles->index[%d] = %d\n", i, angles->index[i]);
+    }
+    va_end(args);
+    
+    // Choosing Simulation
+    switch (module) {
+        case 1:
+            convergence_test(funcname, dim, npar, outputname, edosys);
+            break;
+        case 2:
+            HOS_timeseries(funcname, dim, npar, angles, outputname, edosys, customfunc);
+            break;
+        case 3:
+            HOS_poincaremap(funcname, dim, npar, angles, outputname, edosys);  
+            break;
+        case 4:
+            lyapunov_exp_wolf(funcname, dim, npar, outputname, edosys);
+            break;
+        case 5:
+            HOS_ftime_series(funcname, dim, npar, angles, outputname, edosys, customfunc);
+            break;
+        case 6:
+            HOS_bifurcation(funcname, dim, npar, outputname, edosys, customfunc);
+            break;
+        case 7:
+            HOS_fbifurcation(funcname, dim, npar, outputname, edosys, customfunc);
+            break;
+        case 8:
+            HOS_dyndiag(funcname, dim, npar, outputname, edosys, customfunc);
+            break;
+        case 9:
+            HOS_fdyndiag(funcname, dim, npar, outputname, edosys, customfunc);
+            break;
+        case 10:
+            epbasin(funcname, dim, npar, outputname, edosys);
+            break;
+        case 11:
+            HOS_fforcedbasin(funcname, dim, npar, outputname, edosys, customfunc);
+            break;    
+        default:
+            printf("Invalid Module\n");
+            exit(0);
+    }
+
+    // Free memory
+    free_ang_info_struct(angles);
+}
+
+static void call_GNL_system(unsigned int system, unsigned int module) {
         switch(system) {
         case 1:
             execute_GNL_modules(module, GNL_FUNC_1, GNL_OUTPUTNAME_1, GNLsystemNames[0], GNL_DIM_1, GNL_NPAR_1);
@@ -88,7 +165,7 @@ void call_GNL_system(unsigned int system, unsigned int module) {
     }
 }
 
-void call_HOS_system(unsigned int system, unsigned int module) {
+static void call_HOS_system(unsigned int system, unsigned int module) {
     switch(system) {
         case 1:
             execute_HOS_modules(module, HOS_FUNC_1, HOS_CUSTOM_1, HOS_OUTPUTNAME_1, HOSsystemNames[0], HOS_DIM_1, HOS_NPAR_1, HOS_ANGLES_1);
@@ -100,7 +177,7 @@ void call_HOS_system(unsigned int system, unsigned int module) {
             execute_HOS_modules(module, HOS_FUNC_3, HOS_CUSTOM_3, HOS_OUTPUTNAME_3, HOSsystemNames[2], HOS_DIM_3, HOS_NPAR_3, HOS_ANGLES_3);
             break;
         case 4:
-            execute_HOS_modules(module, HOS_FUNC_4, HOS_CUSTOM_4, HOS_OUTPUTNAME_4, HOSsystemNames[3], HOS_DIM_4, HOS_NPAR_4, HOS_ANGLES_4);
+            execute_HOS_modules(module, HOS_FUNC_4, HOS_CUSTOM_4, HOS_OUTPUTNAME_4, HOSsystemNames[3], HOS_DIM_4, HOS_NPAR_4, HOS_ANGLES_4, HOS_ANGINDEX0_4);
             break;
         case 5:
             execute_HOS_modules(module, HOS_FUNC_5, HOS_CUSTOM_5, HOS_OUTPUTNAME_5, HOSsystemNames[4], HOS_DIM_5, HOS_NPAR_5, HOS_ANGLES_5);
@@ -118,7 +195,7 @@ void call_HOS_system(unsigned int system, unsigned int module) {
             execute_HOS_modules(module, HOS_FUNC_9, HOS_CUSTOM_9, HOS_OUTPUTNAME_9, HOSsystemNames[8], HOS_DIM_9, HOS_NPAR_9, HOS_ANGLES_9);
             break;
         case 10:
-            execute_HOS_modules(module, HOS_FUNC_10, HOS_CUSTOM_10, HOS_OUTPUTNAME_10, HOSsystemNames[9], HOS_DIM_10, HOS_NPAR_10, HOS_ANGLES_10);
+            execute_HOS_modules(module, HOS_FUNC_10, HOS_CUSTOM_10, HOS_OUTPUTNAME_10, HOSsystemNames[9], HOS_DIM_10, HOS_NPAR_10, HOS_ANGLES_10, HOS_ANGINDEX0_10);
             break;
         case 11:
             execute_HOS_modules(module, HOS_FUNC_11, HOS_CUSTOM_11, HOS_OUTPUTNAME_11, HOSsystemNames[10], HOS_DIM_11, HOS_NPAR_11, HOS_ANGLES_11);
@@ -176,63 +253,5 @@ int main (void) {
     end_of_execution(MAX_NAMELENGTH);
 }
 
-void execute_HOS_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), 
-                        void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, double *, int),
-                        char* outputname, char *funcname, unsigned int dim, unsigned int npar, bool angles) {
-    switch (module) {
-        case 1:
-            convergence_test(funcname, dim, npar, outputname, edosys);
-            break;
-        case 2:
-            HOS_timeseries(funcname, dim, npar, outputname, edosys, customfunc);
-            break;
-        case 3:
-            poincaremap(funcname, dim, npar, outputname, edosys);  
-            break;
-        case 4:
-            lyapunov_exp_wolf(funcname, dim, npar, outputname, edosys);
-            break;
-        case 5:
-            HOS_ftime_series(funcname, dim, npar, outputname, edosys, customfunc);
-            break;
-        case 6:
-            HOS_bifurcation(funcname, dim, npar, outputname, edosys, customfunc);
-            break;
-        case 7:
-            HOS_fbifurcation(funcname, dim, npar, outputname, edosys, customfunc);
-            break;
-        case 8:
-            HOS_dyndiag(funcname, dim, npar, outputname, edosys, customfunc);
-            break;
-        case 9:
-            HOS_fdyndiag(funcname, dim, npar, outputname, edosys, customfunc);
-            break;
-        case 10:
-            epbasin(funcname, dim, npar, outputname, edosys);
-            break;
-        case 11:
-            HOS_fforcedbasin(funcname, dim, npar, outputname, edosys, customfunc);
-            break;    
-        default:
-            printf("Invalid Module\n");
-            exit(0);
-    }
-}
 
-void execute_GNL_modules(unsigned int module, void (*edosys)(int, double *, double, double *, double *), char* outputname,
-                         char *funcname, unsigned int dim, unsigned int npar) {
-    switch (module) {
-        case 1:
-            convergence_test(funcname, dim, npar, outputname, edosys);
-            break;
-        case 2:
-            timeseries(funcname, dim, npar, outputname, edosys);
-            break;
-        case 3:
-            lyapunov_exp_wolf(funcname, dim, npar, outputname, edosys);
-            break;
-        default:
-            printf("Invalid Module\n");
-            exit(0);
-    }
-}
+

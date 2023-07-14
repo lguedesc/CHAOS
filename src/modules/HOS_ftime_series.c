@@ -21,7 +21,7 @@ static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int nd
 static void print_results(FILE *info, int DIM, double *xmin, double *xmax, double *overallxmin, double *overallxmax, int nRMS, int *rmsindex, double *xRMS, double *overallxRMS,
                           double nCustomValues, double nPrintscr, int *printscrindex, double *customValues, char **customNames, int attractor, int maxPer);
 
-void HOS_ftime_series(char *funcname, unsigned int DIM, unsigned int nPar, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, double *, int)) {
+void HOS_ftime_series(char *funcname, unsigned int DIM, unsigned int nPar, ang_info *angles, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, double *, int)) {
    
     // Declare Program Parameters
     int nP;                         // Number of forcing periods analyzed
@@ -56,12 +56,12 @@ void HOS_ftime_series(char *funcname, unsigned int DIM, unsigned int nPar, char*
     const char *module = "ftimeseries";
     FILE *output_ftimeseries = name_and_create_output_files(outputname, directory, module, ".csv");
     FILE *output_poinc = name_and_create_output_files(outputname, directory, "poinc", ".csv");
-    FILE *output_info = name_and_create_output_files(outputname, directory, "info", ".csv");
+    FILE *output_info = name_and_create_output_files(outputname, directory, "info", ".txt");
     // Print information in screen and in info file
     print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, nCustomValues, nPrintf, printfindex, nPrintscr, printscrindex, MAX_PRINT_LEN, PERC_PRINT_NAME, "screen");
     print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, nCustomValues, nPrintf, printfindex, nPrintscr, printscrindex, MAX_PRINT_LEN, PERC_PRINT_NAME, "file");
     // Call solution
-    HOS_full_timeseries_solution(output_ftimeseries, output_poinc, DIM, nP, nDiv, trans, &attractor, maxPer, t, &x, h, par, nRMS, rmsindex, &xRMS, &overallxRMS, &xmin, &xmax, 
+    HOS_full_timeseries_solution(output_ftimeseries, output_poinc, DIM, nP, nDiv, trans, &attractor, maxPer, t, &x, h, par, angles, nRMS, rmsindex, &xRMS, &overallxRMS, &xmin, &xmax, 
                                  &overallxmin, &overallxmax, edosys, nCustomValues, &customNames, &customValues, nPrintf, printfindex, nPrintscr, printscrindex, customfunc);
     // Print some results on the screen and in information file
     print_results(output_info, DIM, xmin, xmax, overallxmin, overallxmax, nRMS, rmsindex, xRMS, overallxRMS, nCustomValues, nPrintscr, printscrindex, customValues, customNames, attractor, maxPer);

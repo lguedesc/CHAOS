@@ -5,17 +5,17 @@
 #include <string.h>
 #include <time.h>
 #include "../libs/odesystems.h"
-#include "../libs/nldyn.h"
+#include "../libs/nlosc.h"
 #include "../libs/iofiles.h"
 #include "../libs/interface.h"
 #include "../libs/defines.h"
 #include "../libs/basic.h"
-#include "poinc_map.h"
+#include "HOS_poinc_map.h"
 
 static void read_params(int dim, int npar, int *np, int *ndiv, int* trans, double *t, double **par, double **x);
 static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, int trans, double h, double t, double *x, double *par, char* funcname, size_t maxlength, double percname, char* mode);
 
-void poincaremap(char *funcname, unsigned int DIM, unsigned int nPar, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
+void HOS_poincaremap(char *funcname, unsigned int DIM, unsigned int nPar, ang_info *angles, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
 
     // Declare and Read Program Parameters
     int nP;                         // Number of forcing periods analyzed
@@ -36,7 +36,7 @@ void poincaremap(char *funcname, unsigned int DIM, unsigned int nPar, char* outp
     print_info(output_info, DIM, nPar, nP, nDiv, trans, h, t, x, par, funcname, MAX_PRINT_LEN, PERC_PRINT_NAME, "screen");
     print_info(output_info, DIM, nPar, nP, nDiv, trans, h, t, x, par, funcname, MAX_PRINT_LEN, PERC_PRINT_NAME, "file");
     // Call solution
-    poincare_solution(output_poinc, DIM, nP, nDiv, trans, t, x, h, par, edosys, write_results);
+    HOS_poincare_solution(output_poinc, DIM, nP, nDiv, trans, t, x, h, par, angles, edosys);
     // Close output file
     close_files(2, output_poinc, output_info);
     // Free allocated memory

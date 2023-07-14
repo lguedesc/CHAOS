@@ -132,52 +132,6 @@ int get_largest_element_in_array(int n, int *array) {
     return tmp_array[0];
 }
 
-int check_periodicity(int dim, int np, double **poinc, int trans, int *tmp_attractor, int *diffattrac, int maxper) {
-    // Add numerical tolerance
-    double tol = 1e-4;                                          // Numerical tolerance
-    // Check Parameters
-    if (poinc == NULL || tmp_attractor == NULL) {
-        printf("Poincare or/and Temporary Attractor vectors is/are NULL, check input parameters or code...\n");
-        return -1;
-    }
-    // Check periodicity in each dimension
-    for (int j = 0; j < dim; j++) {
-        // Check periodicity of a specific j dimension
-        for (int i = 1; i <= maxper; i++) {
-            if ((fabs(poinc[np - trans - 1][j] - poinc[np - trans - 1 - i][j]) <= tol)) { 
-                // If it finds a equal value, flag i
-                tmp_attractor[j] = i;
-                //printf("tmp_attractor[%i] = %i\n", j, i);
-                // If the same occurs at 2*i, break and define periodicity
-                if ((fabs(poinc[np - trans - 1][j] - poinc[np - trans - 1 - 2*i][j]) <= tol)) {
-                    break;
-                }
-            } 
-            // If i reaches the final number, attractor is period = maxper or greater
-            if (i == maxper) {
-                tmp_attractor[j] = i;
-                //printf("tmp_attractor[%i] = %i\n", j, i);
-            }
-        }
-    }
-    // Check if all directions (dimensions) are periodic with the same periodicity
-    for (int i = 0; i < dim - 1; i++) {
-        for (int j = i + 1; j < dim; j++) {
-            if (tmp_attractor[i] != tmp_attractor[j]) {
-                // If not equal, flag it in the value of diffratac and get the largest periodicity
-                tmp_attractor[0] = get_largest_element_in_array(dim, tmp_attractor);
-                //printf("largest tmp_attractor element= %i\n", tmp_attractor[0]);
-                (*diffattrac) = 1;
-            }
-            else {
-                (*diffattrac) = 0;
-            }
-        } 
-    }
-    // return result of the first value of tmp_attractor (i.e.: the periodicity)
-    return tmp_attractor[0];
-}
-
 double *get_system_tol(int dim, double *xmin, double *xmax) {
     double diff;
     double *systol = malloc(dim * sizeof(*systol));
@@ -192,6 +146,55 @@ double *get_system_tol(int dim, double *xmin, double *xmax) {
     }
 
     return systol;
+}
+
+int check_periodicity(int dim, int np, double **poinc, int trans, int maxper, double *xmin, double *xmax, double numtol, ang_info *angles) {
+    // Check Parameters
+    double_ptr_safety_check((void**)poinc, "**poinc in check_periodicity()");
+    ptr_safety_check(xmin, "*xmin in check periodicity()");
+    ptr_safety_check(xmax, "*xmax in check periodicity()");
+    // Declare control variables
+    int attractor = -1;                                 // Returning value of function
+    int tmp_attractor[dim];                             // Variable to hold the attractors found by analyzing each dimension
+    double *systol = get_system_tol(dim, xmin, xmax);   // Tolerance of the system
+    double tol[dim];                                    // Final Tolerance
+    size_t psize = np - trans;                      // Size of the poincare vector
+    // Determine final tolerance
+    for (int i = 0; i < dim; i++) {
+        tol[i] = systol[i]*numtol;
+        //print_warning("systol[%d] = %lf | tol[%d] = %lf\n", i, systol[i], i, tol[i]);
+    }
+    // Normalize state variables that are angles (remainder of value/2*pi)
+    if (angles->n_angles > 0) {
+        for (int j = 0; j < angles->n_angles; j++){
+            for (int i = 0; i < psize; i++) {
+                poinc[i][angles->index[j]] = remainder(poinc[i][angles->index[j]], 2*PI);
+                printf("poinc[%d][angles->index[%d]] = %.10lf\n", i, j, poinc[i][angles->index[j]]);
+            }
+        }
+    }
+    // Check periodicity in each dimension
+    for (int j = 0; j < dim; j++) {
+        // Check periodicity of a specific j dimension
+        for (int i = 1; i <= maxper; i++) {
+            if ((fabs(poinc[psize - 1][j] - poinc[psize - 1 - i][j]) <= tol[j])) { 
+                // If it finds a equal value, flag i
+                tmp_attractor[j] = i;
+                // If the same occurs at 2*i, break and define periodicity
+                if ((fabs(poinc[psize - 1][j] - poinc[psize - 1 - 2*i][j]) <= tol[j])) {
+                    break;
+                }
+            } 
+            // If i reaches the final number, attractor is period = maxper or greater
+            if (i == maxper) {
+                tmp_attractor[j] = i;
+            }
+        }
+    }
+    // Get the attractor
+    attractor = get_largest_element_int_array(tmp_attractor, dim);
+
+    return attractor;
 }
 
 int check_periodicity_new(int dim, int np, double **poinc, int trans, int maxper, double *xmin, double *xmax, double numtol) {
@@ -235,6 +238,59 @@ int check_periodicity_new(int dim, int np, double **poinc, int trans, int maxper
     return attractor;
 }
 
+int get_attractor(double **poinc, double *LE, int dim, int np, int trans, int maxper, double *xmin, double *xmax, double numtol, ang_info *angles) {
+    // Check Pointer
+    ptr_safety_check(LE, "*LE in get_attractor()");
+    ptr_safety_check(xmin, "*xmin in get_attractor()");
+    ptr_safety_check(xmax, "*xmax in get_attractor()");
+    double_ptr_safety_check((void**)poinc, "**poinc in get_attractor()");
+    // Control variables
+    int attractor = 0;                      // Returning value of the function
+    // Check if the system can show hyperchaotic motion or only chaotic
+    if (dim <= 2) {
+        // Check if system is periodic
+        if (LE[0] < 0 ) {
+            attractor = check_periodicity(dim, np, poinc, trans, maxper, xmin, xmax, numtol, angles);
+            //printf("attractor = %i\n", attractor);
+        }
+        // Check if the system is chaotic
+        else if (LE[0] > 0) {
+            attractor = maxper + 1;
+        }
+        // Error
+        else {
+            attractor = 0;          // Escape Point
+            print_warning("Something went wrong trying to determine the type of motion of the system\n");
+        }
+    } 
+    else if (dim > 2) {
+        // Check if system is periodic
+        if (LE[0] < 0 ) {
+            attractor = check_periodicity(dim, np, poinc, trans, maxper, xmin, xmax, numtol, angles);
+            //printf("attractor = %i\n", attractor);
+        }
+        // Check if the system is chaotic
+        else if (LE[0] > 0 && LE[1] <= 0) {
+            attractor = maxper + 1;
+        }
+        // Check if the system is hyperchaotic
+        else if (LE[0] > 0 && LE[1] > 0) {
+            attractor = maxper + 2;
+        }
+        // Error
+        else {
+            attractor = 0;          // Escape Point
+            print_warning("Something went wrong trying to determine the type of motion of the system\n");
+        }
+    }
+    else {
+        print_warning("Invalid dimension of the system...\n");
+        return -1;
+    }
+    // Returns the value of the attractor
+    return attractor;
+}
+
 int get_attractor_new(double **poinc, double *LE, int dim, int np, int trans, int maxper, double *xmin, double *xmax, double numtol) {
     // Check Pointer
     ptr_safety_check(LE, "*LE in get_attractor()");
@@ -248,7 +304,6 @@ int get_attractor_new(double **poinc, double *LE, int dim, int np, int trans, in
         // Check if system is periodic
         if (LE[0] < 0 ) {
             attractor = check_periodicity_new(dim, np, poinc, trans, maxper, xmin, xmax, numtol);
-            //printf("attractor = %i\n", attractor);
         }
         // Check if the system is chaotic
         else if (LE[0] > 0) {
@@ -282,61 +337,6 @@ int get_attractor_new(double **poinc, double *LE, int dim, int np, int trans, in
     }
     else {
         print_warning("Invalid dimension of the system...\n");
-        return -1;
-    }
-    // Returns the value of the attractor
-    return attractor;
-}
-
-
-int get_attractor(double **poinc, double *LE, int dim, int np, int trans, int *tmp_attractor, int *diffattrac, int maxper) {
-    // Initialize variables
-    int attractor;                                              // Returning value of the function
-    int attracDiff;                                             // Variable that stores if periodicity is equal in all dimension (0 = equal, 1 = different)
-    // Check Pointer
-    if (LE == NULL) {
-        printf("LE vectors is NULL, check input parameters or code...\n");
-        return -1;
-    }
-    // Check if the system can show hyperchaotic motion or only chaotic
-    if (dim <= 2) {
-        // Check if system is periodic
-        if (LE[0] < 0 ) {
-            attractor = check_periodicity(dim, np, poinc, trans, tmp_attractor, diffattrac, maxper);
-            //printf("attractor = %i\n", attractor);
-        }
-        // Check if the system is chaotic
-        else if (LE[0] > 0) {
-            attractor = maxper + 1;
-        }
-        // Error
-        else {
-            attractor = 0;          // Escape Point
-            printf("Something went wrong trying to determine the type of motion of the system\n");
-        }
-    } 
-    else if (dim > 2) {
-        // Check if system is periodic
-        if (LE[0] < 0 ) {
-            attractor = check_periodicity(dim, np, poinc, trans, tmp_attractor, diffattrac, maxper);
-            //printf("attractor = %i\n", attractor);
-        }
-        // Check if the system is chaotic
-        else if (LE[0] > 0 && LE[1] <= 0) {
-            attractor = maxper + 1;
-        }
-        // Check if the system is hyperchaotic
-        else if (LE[0] > 0 && LE[1] > 0) {
-            attractor = maxper + 2;
-        }
-        // Error
-        else {
-            attractor = 0;          // Escape Point
-            printf("Something went wrong trying to determine the type of motion of the system\n");
-        }
-    }
-    else {
-        printf("Invalid dimension of the system...\n");
         return -1;
     }
     // Returns the value of the attractor
@@ -478,30 +478,6 @@ void timeseries_solution(FILE *output_file, int dim, int np, int ndiv, double t,
             rk4(dim, x, t, h, par, f, edosys);
             t = t + h;
             write_results(output_file, dim, t, x, 2);
-        }
-    }
-    // Free Memory
-    free(f);
-}
-
-void poincare_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double *x, double h, double *par, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, int dim, double t, double *x, int mode)) {
-    // Allocate x` = f(x)
-    double *f = malloc(dim * sizeof *f);
-    // Make the header of the output file
-    write_results(output_file, dim, t, x, 0);
-    // Call Runge-Kutta 4th order integrator n = np * ndiv times
-    for (int i = 0; i < np; i++) {
-        for (int j = 0; j < ndiv; j++) {
-            rk4(dim, x, t, h, par, f, edosys);
-            t = t + h;
-            // Apply poincare map at permanent regime
-            if (i > trans) {
-                // Choose any point in the trajectory for plane placement
-                if (j == 1) {
-                    // Print the result in output file
-                    write_results(output_file, dim, t, x, 2);
-                }
-            }
         }
     }
     // Free Memory
@@ -746,6 +722,31 @@ void convergence_test_solution(int dim, int N, double t, double tf, double *x, i
 
 // Not in use 
 /*
+void poincare_solution(FILE *output_file, int dim, int np, int ndiv, int trans, double t, double *x, double h, double *par, void (*edosys)(int, double *, double, double *, double *), void (*write_results)(FILE *output_file, int dim, double t, double *x, int mode)) {
+    // Allocate x` = f(x)
+    double *f = malloc(dim * sizeof *f);
+    // Make the header of the output file
+    write_results(output_file, dim, t, x, 0);
+    // Call Runge-Kutta 4th order integrator n = np * ndiv times
+    for (int i = 0; i < np; i++) {
+        for (int j = 0; j < ndiv; j++) {
+            rk4(dim, x, t, h, par, f, edosys);
+            t = t + h;
+            // Apply poincare map at permanent regime
+            if (i > trans) {
+                // Choose any point in the trajectory for plane placement
+                if (j == 1) {
+                    // Print the result in output file
+                    write_results(output_file, dim, t, x, 2);
+                }
+            }
+        }
+    }
+    // Free Memory
+    free(f);
+}
+
+
 void bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, double t, double *x, int parindex, 
                      double *parrange, double *par, void (*edosys)(int, double *, double, double *, double *), 
                      void (*write_results)(FILE *output_file, int dim, double varpar, double *x, double *xmin, double *xmax, int mode), int bifmode) {
