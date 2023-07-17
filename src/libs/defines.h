@@ -1,6 +1,9 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+#include <math.h>
+#include <stdbool.h>
+
 // macros for compilers
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -19,11 +22,94 @@
 // Macro to handle variable names
 #define getName(var) #var
 
-// Define Struct to handle if system has any angles
+// Define struct to handle if system has any angles
 typedef struct {
     unsigned int n_angles;
     unsigned int *index;
 } ang_info;
+
+// Define struct to handle timeseries parameters (still unused)
+typedef struct {
+    unsigned int np;
+    unsigned int ndiv;
+    double tf;
+    double h;
+    int trans;
+} ts;
+
+// Define struct to handle initial conditions (still unused)
+typedef struct {
+    double *x;
+    double t0;
+} IC;
+
+// Define struct to handle lyapunov exponents (still unused)
+typedef struct {
+    unsigned int ndim;
+    double *lambda;
+    double *s_lambda;
+    double s_t0;
+    double *LE;
+    int N;
+    double steadystateperc;
+} lyap;
+
+// Define struct to handle rms values of state variables (still unused)
+typedef struct {
+    double *xrms;
+    double *overallxrms;
+    int *rmsindex;
+} rms;
+
+// Define struct to handle determination of dynamical attractors (still unused)
+typedef struct {
+    int attractor;
+    double **poinc;
+    int numtol;
+} attr;
+
+// Define struct to handle mininum and maximum values (still unused)
+typedef struct {
+    double *xmin;
+    double *xmax;
+    double *overallxmin;
+    double *overallxmax;
+} minmax;
+
+// Define struct to handle 1D diagrams params (still unused)
+typedef struct {
+    int index;
+    double cpar_step;
+    double *cpar_range;
+    int mode;
+} diag1D;
+
+// Define struct to handle 2D diagrams params (still unused)
+typedef struct {
+    int index_X;
+    double cpar_step_X;
+    double *cpar_range_X;
+    int index_Y;
+    double cpar_step_Y;
+    double *cpar_range_Y;
+    int mode;
+} diag2D;
+
+// Define struct to handle custom calculations (still unused)
+typedef struct {
+    double value;
+    char *name;
+    unsigned int index;
+    bool print;
+    int position;
+} cvar;
+
+// Define struct to handle files (still unused)
+typedef struct {
+    FILE *results;
+    FILE *poinc_results;
+    FILE *info;
+} files;
 
 // main program macros 
 #define MAX_NAMELENGTH 120

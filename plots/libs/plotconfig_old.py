@@ -19,18 +19,16 @@ def convert_dir(dir):
             dir.replace('\\', '/')
     return dir
 
-def read_data(filename, cols = []):
-    if cols == []:
-        df = pd.read_csv(filename, delimiter = " ", dtype="float")
-    else:
-        df = pd.read_csv(filename, delimiter = " ", dtype="float", usecols=cols)
+def read_data(filename):
+    df = pd.read_csv(filename, delimiter = " ", dtype="float", index_col=False)
+
     return df
 
 def define_readpath(foldername, simulationname, filenum, system):
     if (filenum > 0):
-        readpath = foldername + "/out/" + system + "_" + simulationname + f"({filenum}).csv"; readpath = convert_dir(readpath)    
+        readpath = f"data/{foldername}/out/{system}_{simulationname}({filenum}).csv"; readpath = convert_dir(readpath)    
     else:
-        readpath = foldername + "/out/" + system + "_" + simulationname + ".csv"; readpath = convert_dir(readpath)
+        readpath = f"data/{foldername}/out/{system}_{simulationname}.csv"; readpath = convert_dir(readpath)
     return readpath
 
 def read_CHAOS_data(system, filenum, simulation):
@@ -59,7 +57,7 @@ def read_CHAOS_data(system, filenum, simulation):
         return df, df_poinc
     elif simulation == 'bifurc':
         readpath = define_readpath('Bifurcation', simulation, filenum, system)
-        readpath_poinc = define_readpath('Bifurcation', 'poinc', filenum, system)
+        readpath_poinc = define_readpath('Bifurcation', 'bifurc_poinc', filenum, system)
         readpath = convert_dir(readpath)
         readpath_poinc = convert_dir(readpath_poinc)
         df = read_data(readpath)
@@ -102,38 +100,42 @@ def process_data(data, y_axis, x_axis, z_axis):
     return x, y, z
 
 def define_savepath(foldername, simulationname, system, ext):
-    savepath = foldername + "/figs/" + system + "_" + simulationname + ext
-    savepath = convert_dir(savepath)    
-    return savepath
+    savepath = f"data/{foldername}/figs/"
+    savepath = convert_dir(savepath)
+    fullpath = f"data/{foldername}/figs/{system}_{simulationname}{ext}"
+    fullpath = convert_dir(fullpath)    
+    
+    return savepath, fullpath
 
 def save_CHAOS_data(fig, system, simulation, ext):
     savepath = ''
+    fullpath = ''
     if simulation == 'timeseries':
-        savepath = define_savepath('TimeSeries', simulation, system, ext)
+        savepath, fullpath = define_savepath('TimeSeries', simulation, system, ext)
     elif simulation == 'poinc':
-        savepath = define_savepath('PoincareMap', simulation, system, ext)
+        savepath, fullpath = define_savepath('PoincareMap', simulation, system, ext)
     elif simulation == 'lyap':
-        savepath = define_savepath('LyapunovExp', simulation, system, ext)
+        savepath, fullpath = define_savepath('LyapunovExp', simulation, system, ext)
     elif simulation == 'ftimeseries':
-        savepath = define_savepath('FTimeSeries', simulation, system, ext)
+        savepath, fullpath = define_savepath('FTimeSeries', simulation, system, ext)
     elif simulation == 'bifurc':
-        savepath = define_savepath('Bifurcation', simulation, system, ext)
+        savepath, fullpath = define_savepath('Bifurcation', simulation, system, ext)
     elif simulation == 'fbifurc':
-        savepath = define_savepath('FBifurcation', simulation, system, ext)
+        savepath, fullpath = define_savepath('FBifurcation', simulation, system, ext)
     elif simulation == 'dyndiag':
-        savepath = define_savepath('DynDiagram', simulation, system, ext)
+        savepath, fullpath = define_savepath('DynDiagram', simulation, system, ext)
     elif simulation == 'fdyndiag':
-        savepath = define_savepath('FDynDiagram', simulation, system, ext)
+        savepath, fullpath = define_savepath('FDynDiagram', simulation, system, ext)
     elif simulation == 'epbasin':
-        savepath = define_savepath('EPBasin', simulation, system, ext)
+        savepath, fullpath = define_savepath('EPBasin', simulation, system, ext)
     elif simulation == 'fforcedbasin':
-        savepath = define_savepath('FForcBasin', simulation, system, ext)
+        savepath, fullpath = define_savepath('FForcBasin', simulation, system, ext)
     # Check if directory exists
     isExist = os.path.exists(savepath)
     if (isExist == False):
         os.makedirs(savepath)
     # Save Figure
-    fig.savefig(savepath)
+    fig.savefig(fullpath)
 
 def handle_comparison_data(raw_data_negative, raw_data_positive, column_nameX, column_nameY, column_nameZ):
     comp_data_name = 'comparison'
@@ -144,16 +146,6 @@ def handle_comparison_data(raw_data_negative, raw_data_positive, column_nameX, c
     comp_data[comp_data_name] = comp_data[comp_data_name].fillna(0)
     
     return comp_data, comp_data_name     
-
-def savefigure(savepath, savename, extension, figure, save = True):
-    if save == True:
-        isExist = os.path.exists(savepath)
-        if (isExist == False):
-            os.makedirs(savepath)
-        
-        name = f"{savepath}{savename}{extension}"; name = convert_dir(name)
-    
-        figure.savefig(name)
 # =========================================================================== #
 #                    Functions to Configure Plot Parameters                   #
 # =========================================================================== #
@@ -185,7 +177,7 @@ def makefig_and_axs(figsize, rows, cols, dpi, hspace = 0, wspace = 0, hpad = 0, 
 def makefig_and_grid(figsize, rows, cols, dpi, hspace = 0, wspace = 0, hpad = 0, wpad = 0):
     fig = plt.figure(figsize = (figsize[0], figsize[1]), dpi = dpi, layout="constrained")
     fig.get_layout_engine().set(w_pad=wpad, h_pad=hpad, hspace=hspace, wspace=wspace)
-    grid = fig.add_gridspec(rows, cols, figure=fig)
+    grid = fig.add_gridspec(rows, cols)
     return fig, grid
     
 def figsize_in_cm(xcm, ycm):
@@ -285,11 +277,10 @@ def configure_new_colormap_motion(z):
     return colormap, cmap_min, cmap_max, ticks
 
 def configure_colormap_motion(z):
-    colors = ['#404040', '#FFEE00', '#00DC00', '#FF8000', '#9900FF', '#007BFF', '#FF0000','#700000', 'magenta', 'cyan', 'gold', 'lightsalmon', 'blue', 'darkgreen', 'black'] 
+    colors = ['#404040', '#FFEE00', '#00DC00', '#FF8000', '#9900FF', '#007BFF', '#FF0000','#700000'] 
     # Copy array without duplicates and sort it 
     ticks = np.sort(z.ravel())
     ticks = np.unique(ticks)
-    print(ticks)
     # Attribute designated colors to each value of tick
     newclrs = []
     for tks in range(len(ticks)):
@@ -301,7 +292,7 @@ def configure_colormap_motion(z):
     return colormap, cmap_min, cmap_max, ticks
 
 def configure_rainbow_colormap():
-    cmap = mpl_col.LinearSegmentedColormap.from_list('Origin', ['darkviolet', 'blue','cyan','limegreen','yellow','darkorange','red','darkred'])
+    cmap = mpl_col.LinearSegmentedColormap.from_list('Origin', ['darkviolet','blue','cyan','limegreen','yellow','darkorange','red','darkred'])
     return cmap
 
 # =========================================================================== #
@@ -337,7 +328,7 @@ def plot_attractor_map(fig, ax, x, y, z, maxper, mode = 'lyap'):
     lsize = 6
     plot = ax.pcolormesh(x, y, z, shading = 'nearest', rasterized = True, cmap = colormap, 
                          vmin = cmapmin - 0.5, vmax=cmapmax + 0.5)    
-    
+    '''
     if mode == 'lyap':
         ticks = np.linspace(1, maxper+2, maxper+2, dtype=int)     
         labels = []
@@ -365,10 +356,10 @@ def plot_attractor_map(fig, ax, x, y, z, maxper, mode = 'lyap'):
             elif (i == maxper):
                 name = f"MP"
                 labels.append(name)
-    
+    '''
     cbar = fig.colorbar(plot, ax=ax, location = 'right', orientation='vertical', aspect = 20, pad = 0.01,
                         ticks = ticks, drawedges = True)
-    cbar.set_ticklabels(labels)
+    #cbar.set_ticklabels(labels)
     cbar.ax.tick_params(size = 0, labelsize = lsize)
     cbar.outline.set_edgecolor('white')
     cbar.outline.set_linewidth(1)
@@ -448,81 +439,26 @@ def plot_rainbow_map_old(ax, x, y, z):
     #cbar.ax.tick_params()
     cbar.ax.yaxis.set_ticks_position('right')
     
-def plot_rainbow_map_2(fig, ax, x, y, z, colormap = 'myrainbow', clr_min = 0, clr_max = 1, cbarmin = 0, cbarmax = 0, aspect = None):
+def plot_rainbow_map(fig, ax, x, y, z, colormap = 'myrainbow', clr_min = 0, clr_max = 1):
     raster = True
-    if aspect == 'equal':
-        ax.set_aspect('equal')
+    #ax.set_aspect('equal')
     pad = 0.025
-    aspct = 20
+    aspect = 20
     lsize = 6
+    delta_z = abs(z.max()) - abs(z.min())
     if colormap == 'myrainbow':
         cmap = configure_rainbow_colormap()
     else:
         N = len(z)
         cmap = remove_some_colors_from_colormap(clr_min, clr_max, N, colormap)
-    if cbarmin == 0:
-        cbarmin = z.min()
-    if cbarmax == 0:
-        cbarmax = z.max()
-    
-    if cbarmin != z.min():
-        extend = 'min'
-    elif cbarmax != z.max():
-        extend = 'max'
-    elif (cbarmax != z.max()) and (cbarmin != z.min()):
-        extend = 'both'
-    else:
-        extend = 'neither'
-    delta_z = abs(cbarmax) - abs(cbarmin)
-    
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes('right', size = '2.5%', pad = 0.05)
-    
-    plot = ax.pcolormesh(x, y, z, shading = 'nearest', rasterized = raster, cmap = cmap, vmin = cbarmin, vmax = cbarmax)
-    cbar = plt.colorbar(plot, ax = ax, cax = cax, orientation='vertical',
-                        extend = extend, format = '${%.2f}$', ticks = [cbarmin, delta_z/2, cbarmax])
+    plot = ax.pcolormesh(x, y, z, shading = 'nearest', rasterized = raster, cmap = cmap, vmin = z.min(), vmax = z.max())
+    cbar = fig.colorbar(plot, ax = ax, location = 'right', orientation='vertical', aspect = aspect, pad = pad,
+                        format = '${%.2f}$', ticks = [z.min(), delta_z/2, z.max()])
     cbar.ax.tick_params(labelsize = lsize)
     #cbar.ax.tick_params()
     cbar.ax.yaxis.set_ticks_position('right')
     
     return plot, cbar
-
-def plot_rainbow_map(fig, ax, x, y, z, colormap = 'myrainbow', clr_min = 0, clr_max = 1, cbarmin = 0, cbarmax = 0, aspect = None):
-    raster = True
-    if aspect == 'equal':
-        ax.set_aspect('equal')
-    pad = 0.025
-    aspct = 20
-    lsize = 6
-    if colormap == 'myrainbow':
-        cmap = configure_rainbow_colormap()
-    else:
-        N = len(z)
-        cmap = remove_some_colors_from_colormap(clr_min, clr_max, N, colormap)
-    if cbarmin == 0:
-        cbarmin = z.min()
-    if cbarmax == 0:
-        cbarmax = z.max()
-    
-    if cbarmin != z.min():
-        extend = 'min'
-    elif cbarmax != z.max():
-        extend = 'max'
-    elif (cbarmax != z.max()) and (cbarmin != z.min()):
-        extend = 'both'
-    else:
-        extend = 'neither'
-    delta_z = abs(cbarmax) + abs(cbarmin)
-    plot = ax.pcolormesh(x, y, z, shading = 'nearest', rasterized = raster, cmap = cmap, vmin = cbarmin, vmax = cbarmax)
-    cbar = fig.colorbar(plot, ax = ax, location = 'right', orientation='vertical', aspect = aspct, pad = pad,
-                        extend = extend, format = '${%.2f}$', ticks = [cbarmin, delta_z/2, cbarmax])
-    cbar.ax.tick_params(labelsize = lsize)
-    #cbar.ax.tick_params()
-    cbar.ax.yaxis.set_ticks_position('right')
-    
-    return plot, cbar
-
-
 
 def plot_neg_pos_map(ax, x, y, z):
     raster = True

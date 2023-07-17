@@ -19,7 +19,7 @@ save = False
 system = "pend_oscillator_EH"
 simulation = "timeseries"
 ext = ".pdf"
-filenum = 1
+filenum = 0
 
 df = pltconf.read_CHAOS_data(system, filenum, simulation)
 #=======================================================================#

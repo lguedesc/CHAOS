@@ -7,7 +7,7 @@ pltconf.plot_params(True, 10, 0.2)
 save = False
 system = "duffing"
 ext = ".pdf"
-filenum = 3
+filenum = 0
 simulation = "lyap"
 
 df = pltconf.read_CHAOS_data(system, filenum, simulation)

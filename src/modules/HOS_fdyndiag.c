@@ -18,7 +18,7 @@ static void read_params(int dim, int npar, int *maxper,  int *np, int *ndiv, int
 static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int indexX, int indexY, int nrms, int *rmsindex, int bifmode,
                         int ncustomvalues, int nprintf, int *printfindex, size_t maxlength, double percname, char* funcname, char* mode);
 
-void HOS_fdyndiag(char *funcname, unsigned int DIM, unsigned int nPar, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, double *, int)) {
+void HOS_fdyndiag(char *funcname, unsigned int DIM, unsigned int nPar, ang_info *angles, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, double *, int)) {
     // Declare Program Parameters
     int nP;                         // Number of forcing periods analyzed
     int nDiv;                       // Number of divisions in each forcing period
@@ -48,7 +48,7 @@ void HOS_fdyndiag(char *funcname, unsigned int DIM, unsigned int nPar, char* out
     print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, indexX, indexY, nRMS, rmsindex, dMode, nCustomValues, nPrintf, printfindex, MAX_PRINT_LEN, PERC_PRINT_NAME, funcname, "screen");
     print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, indexX, indexY, nRMS, rmsindex, dMode, nCustomValues, nPrintf, printfindex, MAX_PRINT_LEN, PERC_PRINT_NAME, funcname, "file");
     // Call solution
-    HOS_full_dynamical_diagram_solution(output_dyndiag, DIM, nP, nDiv, trans, maxPer, t, &x, indexX, indexY, parRange, par, nPar, nRMS, rmsindex, edosys, nCustomValues, nPrintf, printfindex, customfunc, dMode);
+    HOS_full_dynamical_diagram_solution(output_dyndiag, DIM, nP, nDiv, trans, maxPer, t, &x, indexX, indexY, parRange, par, angles, nPar, nRMS, rmsindex, edosys, nCustomValues, nPrintf, printfindex, customfunc, dMode);
     // Close output file
     close_files(2, output_dyndiag, output_info);
     // Free allocated memory

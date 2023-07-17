@@ -8,20 +8,3 @@
 0.025
 -0.5
 1.0
-
-
-/* Variables */
-DIM
-nPar
-
-nP nDiv trans
-
-t0
-IC: x[0] x[1] x[2] ...
-
-par[0] = OMEGA
-par[1] = gamma
-par[2] = zeta
-par[3] = alpha
-par[4] = beta
-0.707106781186547

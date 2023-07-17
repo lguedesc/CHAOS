@@ -9,7 +9,7 @@ save = False
 simulation = "poinc"
 system = "pendulum"
 ext = ".pdf"
-filenum = 4
+filenum = 0
 
 angles = True
 xvar = 'x[0]'

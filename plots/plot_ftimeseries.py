@@ -9,7 +9,7 @@ pltconf.plot_params(True, 10, 0.2)
 
 save = False
 
-filenum = 6
+filenum = 0
 system = "pend_oscillator_EH"
 ext = ".png"
 simulation = "ftimeseries"

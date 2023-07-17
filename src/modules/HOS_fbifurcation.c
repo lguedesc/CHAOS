@@ -18,7 +18,7 @@ static void read_params(int dim, int npar, int *maxper,  int *np, int *ndiv, int
 static void print_info(FILE *info ,int dim, int npar, int maxper, int np, int ndiv, int trans, double t, double *x, double *par, double *parrange, int parindex, int nrms, int *rmsindex, int bifmode, char* funcname,
                        int ncustomvalues, int nprintf, int *printfindex, size_t maxlength, double percname, char* mode);
 
-void HOS_fbifurcation(char *funcname, unsigned int DIM, unsigned int nPar, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, double *, int)) {
+void HOS_fbifurcation(char *funcname, unsigned int DIM, unsigned int nPar, ang_info *angles, char* outputname, void (*edosys)(int, double *, double, double *, double *), void (*customfunc)(double *, double *, double, double *, double *, double *, double *, double, int, int, double, int, char **, double *, int)) {
     // Declare Program Parameters
     int nP;                         // Number of forcing periods analyzed
     int nDiv;                       // Number of divisions in each forcing period
@@ -48,7 +48,7 @@ void HOS_fbifurcation(char *funcname, unsigned int DIM, unsigned int nPar, char*
     print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, parIndex, nRMS, rmsindex, bMode, funcname, nCustomValues, nPrintf, printfindex, MAX_PRINT_LEN, PERC_PRINT_NAME, "screen");
     print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, t, x, par, parRange, parIndex, nRMS, rmsindex, bMode, funcname, nCustomValues, nPrintf, printfindex, MAX_PRINT_LEN, PERC_PRINT_NAME, "file");
     // Call solution
-    HOS_full_bifurcation_solution(output_bifurc, output_bifurc_poinc, DIM, nP, nDiv, trans, maxPer, t, &x, parIndex, parRange, par, nRMS, rmsindex, edosys, nCustomValues, nPrintf, printfindex, customfunc, bMode);    
+    HOS_full_bifurcation_solution(output_bifurc, output_bifurc_poinc, DIM, nP, nDiv, trans, maxPer, t, &x, parIndex, parRange, par, angles, nRMS, rmsindex, edosys, nCustomValues, nPrintf, printfindex, customfunc, bMode);    
     // Close output file
     close_files(3, output_bifurc, output_bifurc_poinc, output_info);
     // Free allocated memory

@@ -96,7 +96,7 @@ static void execute_HOS_modules(unsigned int module, void (*edosys)(int, double 
     // Assign values to the angle.index array
     for(int i = 0; i < nangles; i++) {
         angles->index[i] = va_arg(args, unsigned int);
-        print_warning("angles->index[%d] = %d\n", i, angles->index[i]);
+        //print_warning("angles->index[%d] = %d\n", i, angles->index[i]);
     }
     va_end(args);
     
@@ -118,22 +118,22 @@ static void execute_HOS_modules(unsigned int module, void (*edosys)(int, double 
             HOS_ftime_series(funcname, dim, npar, angles, outputname, edosys, customfunc);
             break;
         case 6:
-            HOS_bifurcation(funcname, dim, npar, outputname, edosys, customfunc);
+            HOS_bifurcation(funcname, dim, npar, angles, outputname, edosys, customfunc);
             break;
         case 7:
-            HOS_fbifurcation(funcname, dim, npar, outputname, edosys, customfunc);
+            HOS_fbifurcation(funcname, dim, npar, angles, outputname, edosys, customfunc);
             break;
         case 8:
-            HOS_dyndiag(funcname, dim, npar, outputname, edosys, customfunc);
+            HOS_dyndiag(funcname, dim, npar, angles, outputname, edosys, customfunc);
             break;
         case 9:
-            HOS_fdyndiag(funcname, dim, npar, outputname, edosys, customfunc);
+            HOS_fdyndiag(funcname, dim, npar, angles, outputname, edosys, customfunc);
             break;
         case 10:
             epbasin(funcname, dim, npar, outputname, edosys);
             break;
         case 11:
-            HOS_fforcedbasin(funcname, dim, npar, outputname, edosys, customfunc);
+            HOS_fforcedbasin(funcname, dim, npar, angles, outputname, edosys, customfunc);
             break;    
         default:
             printf("Invalid Module\n");

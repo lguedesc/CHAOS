@@ -26,33 +26,33 @@ void HOS_full_timeseries_solution(FILE *output_ftimeseries_file, FILE *output_po
                                  void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode));
 
 void HOS_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, double t, double *x, int parindex, 
-                        double *parrange, double *par, int nrms, int *rmsindex, void (*edosys)(int, double *, double, double *, double *), 
+                        double *parrange, double *par, ang_info *angles, int nrms, int *rmsindex, void (*edosys)(int, double *, double, double *, double *), 
                         int ncustomvalues, int nprintf, int *printfindex,
                         void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue,
                         int mode), int bifmode);
 
 void HOS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, int dim, int np, int ndiv, int trans, int maxper, double t,
-                                  double **x, int parindex, double *parrange, double *par, int nrms, int *rmsindex, void (*edosys)(int, double *, double, double *, double *), 
+                                  double **x, int parindex, double *parrange, double *par, ang_info *angles, int nrms, int *rmsindex, void (*edosys)(int, double *, double, double *, double *), 
                                   int ncustomvalues, int nprintf, int *printfindex,
                                   void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue,
                                   int mode), int bifmode);
 
 void HOS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
-                                    int indexX, int indexY, double *parrange, double *par, int npar, int nrms, int *rmsindex,
+                                    int indexX, int indexY, double *parrange, double *par, ang_info *angles, int npar, int nrms, int *rmsindex,
                                     void (*edosys)(int, double *, double, double *, double *),
                                     int ncustomvalues, int nprintf, int *printfindex,
                                     void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue,
                                     int mode), int bifmode);
 
 void HOS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
-                                        int indexX, int indexY, double *parrange, double *par, int npar, int nrms, int *rmsindex,
+                                        int indexX, int indexY, double *parrange, double *par, ang_info *angle, int npar, int nrms, int *rmsindex,
                                         void (*edosys)(int, double *, double, double *, double *),
                                         int ncustomvalues, int nprintf, int *printfindex,
                                         void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue,
                                         int mode), int bifmode);
 
 void HOS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim, int np, int ndiv, int trans, int maxper, double t, double **x,
-                                                    int indexX, int indexY, double *icrange, double *par, int npar, int nrms, int *rmsindex, 
+                                                    int indexX, int indexY, double *icrange, double *par, ang_info *angles, int npar, int nrms, int *rmsindex, 
                                                     void (*edosys)(int, double *, double, double *, double *), 
                                                     int ncustomvalues, int nprintf, int *printfindex,
                                                     void (*customfunc)(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue,

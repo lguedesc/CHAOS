@@ -169,7 +169,7 @@ int check_periodicity(int dim, int np, double **poinc, int trans, int maxper, do
         for (int j = 0; j < angles->n_angles; j++){
             for (int i = 0; i < psize; i++) {
                 poinc[i][angles->index[j]] = remainder(poinc[i][angles->index[j]], 2*PI);
-                printf("poinc[%d][angles->index[%d]] = %.10lf\n", i, j, poinc[i][angles->index[j]]);
+                //printf("poinc[%d][angles->index[%d]] = %.10lf\n", i, j, poinc[i][angles->index[j]]);
             }
         }
     }
