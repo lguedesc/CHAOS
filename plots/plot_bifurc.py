@@ -26,7 +26,7 @@ save = False
 system = "pend_oscillator_EH"
 ext = ".pdf"
 
-filenum = 6
+filenum = 2
 simulation = "bifurc"
 dim = 8
 angles = True

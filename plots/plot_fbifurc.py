@@ -45,7 +45,7 @@ figsize3 = pltconf.figsize_in_cm(15, 0.2*15)
 dpi = pltconf.set_fig_quality(save = save, base_dpi = 100)
 
 gama = 0.1
-size = 1
+size = 5
 
 fig, axs = pltconf.makefig_and_axs(figsize, rows, cols, dpi, hspace = 0.1, wspace = 0.1)
 
@@ -57,7 +57,6 @@ names = [r'$x$', r'$\dot{x}$', r'$z$', r'$\dot{z}$', r'$\phi$', r'$\dot{\phi}$',
 xticks = [df['Cpar'].min(), 1, df['Cpar'].max()]
 
 colormap = pltconf.set_colormap(df['Attractor'])
-
 
 for col in range(cols):
     for row in range(rows):
@@ -80,6 +79,7 @@ for col in range(cols):
         else:
             pass
 
+plt.show(block = False)
 
 fig2, axs2 = pltconf.makefig_and_axs(figsize2, len(angles_indexes), cols, dpi, hspace = 0.1, wspace = 0.1)
 # Check if axs2 is a single subplot
@@ -98,6 +98,8 @@ for ax, i in zip(axs2, angles_indexes):
         ax.set_xticks(xticks)
         ax.xaxis.set_major_formatter(FormatStrFormatter('%.g'))
 
+plt.show(block = False)
+
 fig3, axs3, = pltconf.makefig_and_axs(figsize3, 1, 1, dpi, hspace = 0.1, wspace = 0.1)
 
 for i in range(dim):
@@ -108,8 +110,7 @@ for i in range(dim):
     axs3.set_xlim(df['Cpar'].min(), df['Cpar'].max())
     axs3.legend(loc = "best", prop={'size': 6}, ncols = dim/2, frameon = False, handlelength = 0.7, handletextpad = 0.5)
     
-
-
+plt.show()
 #========================================================================#
 # Show and Save Figure                                                   #
 #========================================================================#
@@ -117,8 +118,13 @@ for i in range(dim):
 if save == True:
     pltconf.save_CHAOS_data(fig, system, simulation, ext)
     #plt.show()
-else:
-    plt.show()
+#else:
+#    fig.show()
+#    plt.show()
+
+    #plt.show(fig)
+    #plt.show(fig2)
+    #plt.show(fig3)
 
 
 # %%

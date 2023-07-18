@@ -35,61 +35,61 @@ def define_readpath(foldername, simulationname, filenum, system):
 
 def read_CHAOS_data(system, filenum, simulation):
     if simulation == 'timeseries':
-        readpath = define_readpath('TimeSeries', simulation, filenum, system)
+        readpath = define_readpath('data/TimeSeries', simulation, filenum, system)
         readpath = convert_dir(readpath)
         df = read_data(readpath)
         return df
     elif simulation == 'poinc':
-        readpath = define_readpath('PoincareMap', simulation, filenum, system)
+        readpath = define_readpath('data/PoincareMap', simulation, filenum, system)
         readpath = convert_dir(readpath)
         df = read_data(readpath)
         return df
     elif simulation == 'lyap':
-        readpath = define_readpath('LyapunovExp', simulation, filenum, system)
+        readpath = define_readpath('data/LyapunovExp', simulation, filenum, system)
         readpath = convert_dir(readpath)
         df = read_data(readpath)
         return df
     elif simulation == 'ftimeseries':
-        readpath = define_readpath('FTimeSeries', simulation, filenum, system)
-        readpath_poinc = define_readpath('FTimeSeries', 'poinc', filenum, system)
+        readpath = define_readpath('data/FTimeSeries', simulation, filenum, system)
+        readpath_poinc = define_readpath('data/FTimeSeries', 'poinc', filenum, system)
         readpath = convert_dir(readpath)
         readpath_poinc = convert_dir(readpath_poinc)
         df = read_data(readpath)
         df_poinc = read_data(readpath_poinc)
         return df, df_poinc
     elif simulation == 'bifurc':
-        readpath = define_readpath('Bifurcation', simulation, filenum, system)
-        readpath_poinc = define_readpath('Bifurcation', 'poinc', filenum, system)
+        readpath = define_readpath('data/Bifurcation', simulation, filenum, system)
+        readpath_poinc = define_readpath('data/Bifurcation', 'bifurc_poinc', filenum, system)
         readpath = convert_dir(readpath)
         readpath_poinc = convert_dir(readpath_poinc)
         df = read_data(readpath)
         df_poinc = read_data(readpath_poinc)
         return df, df_poinc
     elif simulation == 'fbifurc':
-        readpath = define_readpath('FBifurcation', simulation, filenum, system)
-        readpath_poinc = define_readpath('FBifurcation', 'fbifurc_poinc', filenum, system)
+        readpath = define_readpath('data/FBifurcation', simulation, filenum, system)
+        readpath_poinc = define_readpath('data/FBifurcation', 'fbifurc_poinc', filenum, system)
         readpath = convert_dir(readpath)
         readpath_poinc = convert_dir(readpath_poinc)
         df = read_data(readpath)
         df_poinc = read_data(readpath_poinc)
         return df, df_poinc
     elif simulation == 'dyndiag':
-        readpath = define_readpath('DynDiagram', simulation, filenum, system)
+        readpath = define_readpath('data/DynDiagram', simulation, filenum, system)
         readpath = convert_dir(readpath)
         df = read_data(readpath)
         return df
     elif simulation == 'fdyndiag':
-        readpath = define_readpath('FDynDiagram', simulation, filenum, system)
+        readpath = define_readpath('data/FDynDiagram', simulation, filenum, system)
         readpath = convert_dir(readpath)
         df = read_data(readpath)
         return df
     elif simulation == 'epbasin':
-        readpath = define_readpath('EPBasin', simulation, filenum, system)
+        readpath = define_readpath('data/EPBasin', simulation, filenum, system)
         readpath = convert_dir(readpath)
         df = read_data(readpath)
         return df
     elif simulation == 'fforcedbasin':
-        readpath = define_readpath('FForcBasin', simulation, filenum, system)
+        readpath = define_readpath('data/FForcBasin', simulation, filenum, system)
         readpath = convert_dir(readpath)
         df = read_data(readpath)
         return df
@@ -109,25 +109,25 @@ def define_savepath(foldername, simulationname, system, ext):
 def save_CHAOS_data(fig, system, simulation, ext):
     savepath = ''
     if simulation == 'timeseries':
-        savepath = define_savepath('TimeSeries', simulation, system, ext)
+        savepath = define_savepath('data/TimeSeries', simulation, system, ext)
     elif simulation == 'poinc':
-        savepath = define_savepath('PoincareMap', simulation, system, ext)
+        savepath = define_savepath('data/PoincareMap', simulation, system, ext)
     elif simulation == 'lyap':
-        savepath = define_savepath('LyapunovExp', simulation, system, ext)
+        savepath = define_savepath('data/LyapunovExp', simulation, system, ext)
     elif simulation == 'ftimeseries':
-        savepath = define_savepath('FTimeSeries', simulation, system, ext)
+        savepath = define_savepath('data/FTimeSeries', simulation, system, ext)
     elif simulation == 'bifurc':
-        savepath = define_savepath('Bifurcation', simulation, system, ext)
+        savepath = define_savepath('data/Bifurcation', simulation, system, ext)
     elif simulation == 'fbifurc':
-        savepath = define_savepath('FBifurcation', simulation, system, ext)
+        savepath = define_savepath('data/FBifurcation', simulation, system, ext)
     elif simulation == 'dyndiag':
-        savepath = define_savepath('DynDiagram', simulation, system, ext)
+        savepath = define_savepath('data/DynDiagram', simulation, system, ext)
     elif simulation == 'fdyndiag':
-        savepath = define_savepath('FDynDiagram', simulation, system, ext)
+        savepath = define_savepath('data/FDynDiagram', simulation, system, ext)
     elif simulation == 'epbasin':
-        savepath = define_savepath('EPBasin', simulation, system, ext)
+        savepath = define_savepath('data/EPBasin', simulation, system, ext)
     elif simulation == 'fforcedbasin':
-        savepath = define_savepath('FForcBasin', simulation, system, ext)
+        savepath = define_savepath('data/FForcBasin', simulation, system, ext)
     # Check if directory exists
     isExist = os.path.exists(savepath)
     if (isExist == False):
@@ -176,6 +176,7 @@ def plot_params(tex, fontsize, lineweight):
         'axes.xmargin': 0.035,
         'axes.ymargin': 0.035,
     })
+    #plt.switch_backend('Qt5Agg')
 
 def makefig_and_axs(figsize, rows, cols, dpi, hspace = 0, wspace = 0, hpad = 0, wpad = 0):
     fig, axs = plt.subplots(rows, cols, figsize = (figsize[0], figsize[1]), dpi = dpi, layout="constrained")

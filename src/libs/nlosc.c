@@ -35,16 +35,24 @@ double RMS(double *cum, double measure, int N, int mode) {
     }
 }
 
-static void store_angle_results_in_matrix(double *vec, ang_info *angles, int *col_offset, int index, double ***results) {
+static void store_angle_results_in_matrix(double *vecmin, double *vecmax, ang_info *angles, int *col_offset, int index, double ***results) {
+    // vecmax
     for (int r = 0; r < angles->n_angles; r++) {
-        if (vec[angles->index[r]] < PI) {
-            (*results)[index][(*col_offset) + r] = -PI;
-        }
-        else if (vec[angles->index[r]] > PI) {
+        if (fabs(vecmax[angles->index[r]] - vecmin[angles->index[r]]) > TWOPI) {
             (*results)[index][(*col_offset) + r] = PI;
         }
         else {
-            (*results)[index][(*col_offset) + r] = vec[angles->index[r]];
+            (*results)[index][(*col_offset) + r] = remainder(vecmax[angles->index[r]], TWOPI);
+        }
+    }
+    (*col_offset) += angles->n_angles;
+    // vecmin
+    for (int r = 0; r < angles->n_angles; r++) {
+        if (fabs(vecmax[angles->index[r]] - vecmin[angles->index[r]]) > TWOPI) {
+            (*results)[index][(*col_offset) + r] = -PI;
+        }
+        else {
+            (*results)[index][(*col_offset) + r] = remainder(vecmin[angles->index[r]], TWOPI);
         }
     }
     (*col_offset) += angles->n_angles;
@@ -83,14 +91,10 @@ static void store_results_in_matrix_dyndiag(double ***results, int k, int m, dou
     store_results_in_matrix(overallxmax, dim, &col_offset, index, results);
     // Store overallxmin[dim] values
     store_results_in_matrix(overallxmin, dim, &col_offset, index, results);
-    // Store xmax[dim]_remainder values of angles
-    store_angle_results_in_matrix(xmax, angles, &col_offset, index, results);
-    // Store xmin[dim]_remainder values of angles
-    store_angle_results_in_matrix(xmin, angles, &col_offset, index, results);
-    // Store overallxmax[dim]_remainder values of angles
-    store_angle_results_in_matrix(overallxmax, angles, &col_offset, index, results);
-    // Store xmax[dim]_remainder values of angles
-    store_angle_results_in_matrix(overallxmin, angles, &col_offset, index, results);
+    // Store xmax[angles->n_angles]_remainder and xmin[angles->n_angles]_remainder values of angles
+    store_angle_results_in_matrix(xmin, xmax, angles, &col_offset, index, results);
+    // Store overallxmax[angles->n_angles]_remainder and overallxmin[angles->n_angles]_remainder values of angles
+    store_angle_results_in_matrix(overallxmin, overallxmax, angles, &col_offset, index, results);
     // Store xrms[nrms] values 
     store_specific_results_in_matrix(xrms, nrms, rmsindex, &col_offset, index, results);
     // Store overallxrms[nrms] values
@@ -120,14 +124,10 @@ static void store_results_in_matrix_fdyndiag(double ***results, int k, int m, do
     store_results_in_matrix(overallxmax, dim, &col_offset, index, results);
     // Store overallxmin[dim] values
     store_results_in_matrix(overallxmin, dim, &col_offset, index, results);
-    // Store xmax[angles->n_angles]_remainder values of angles
-    store_angle_results_in_matrix(xmax, angles, &col_offset, index, results);
-    // Store xmin[angles->n_angles]_remainder values of angles
-    store_angle_results_in_matrix(xmin, angles, &col_offset, index, results);
-    // Store overallxmax[angles->n_angles]_remainder values of angles
-    store_angle_results_in_matrix(overallxmax, angles, &col_offset, index, results);
-    // Store overallxmin[angles->n_angles]_remainder values of angles
-    store_angle_results_in_matrix(overallxmin, angles, &col_offset, index, results);
+    // Store xmax[angles->n_angles]_remainder and xmin[angles->n_angles]_remainder values of angles
+    store_angle_results_in_matrix(xmin, xmax, angles, &col_offset, index, results);
+    // Store overallxmax[angles->n_angles]_remainder and overallxmin[angles->n_angles]_remainder values of angles
+    store_angle_results_in_matrix(overallxmin, overallxmax, angles, &col_offset, index, results);
     // Store xrms[nrms] values 
     store_specific_results_in_matrix(xrms, nrms, rmsindex, &col_offset, index, results);
     // Store overallxrms[nrms] values
@@ -871,7 +871,7 @@ void HOS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, i
         // Define which lyapunov will be taken: lambda[dim] or s_lambda[dim]
         store_LE(dim, lambda, s_lambda, LE);
         // Verify the type of motion of the system
-        attrac = get_attractor_new(poinc, LE, dim, np, trans, maxper, xmin, xmax, numtol);
+        attrac = get_attractor(poinc, LE, dim, np, trans, maxper, xmin, xmax, numtol, angles);
         // Write results in file
         HOS_write_fbifurc_results(output_poinc_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, npoinc, poinc,
                                   nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, angles, 1);

@@ -152,61 +152,40 @@ int check_periodicity(int dim, int np, double **poinc, int trans, int maxper, do
     // Check Parameters
     double_ptr_safety_check((void**)poinc, "**poinc in check_periodicity()");
     ptr_safety_check(xmin, "*xmin in check periodicity()");
-    ptr_safety_check(xmax, "*xmax in check periodicity()");
+    ptr_safety_check(xmax, "*xmax in check periodicity()");        
     // Declare control variables
     int attractor = -1;                                 // Returning value of function
     int tmp_attractor[dim];                             // Variable to hold the attractors found by analyzing each dimension
-    double *systol = get_system_tol(dim, xmin, xmax);   // Tolerance of the system
     double tol[dim];                                    // Final Tolerance
-    size_t psize = np - trans;                      // Size of the poincare vector
-    // Determine final tolerance
-    for (int i = 0; i < dim; i++) {
-        tol[i] = systol[i]*numtol;
-        //print_warning("systol[%d] = %lf | tol[%d] = %lf\n", i, systol[i], i, tol[i]);
+    size_t psize = np - trans;                          // Size of the poincare vector
+    // Make copies of the pointer to don't mess with its values outside the function
+    double *xmin_cpy = copy_pointer((const void *)xmin, dim, sizeof(*xmin_cpy));
+    double *xmax_cpy = copy_pointer((const void *)xmax, dim, sizeof(*xmax_cpy));
+    double **poinc_cpy = (double **)copy_2D_pointer((const void **)poinc, psize, dim, sizeof(**poinc_cpy));
+     // Normalize max and min values of state variables that are angles (remainder of value/2*pi)
+    if (angles->n_angles > 0) {
+        for (int j = 0; j < angles->n_angles; j++) {
+            if (fabs(xmax_cpy[angles->index[j]] - xmin_cpy[angles->index[j]]) > TWOPI) {
+                xmin_cpy[angles->index[j]] = -PI;
+                xmax_cpy[angles->index[j]] = PI;
+            } 
+            else {
+                xmin_cpy[angles->index[j]] = remainder(xmin_cpy[angles->index[j]], TWOPI);
+                xmax_cpy[angles->index[j]] = remainder(xmax_cpy[angles->index[j]], TWOPI);
+            }
+        }
     }
-    // Normalize state variables that are angles (remainder of value/2*pi)
+    // Normalize poinc_cpy vector values that are angles (remainder of value/2*pi)
     if (angles->n_angles > 0) {
         for (int j = 0; j < angles->n_angles; j++){
             for (int i = 0; i < psize; i++) {
-                poinc[i][angles->index[j]] = remainder(poinc[i][angles->index[j]], 2*PI);
-                //printf("poinc[%d][angles->index[%d]] = %.10lf\n", i, j, poinc[i][angles->index[j]]);
+                poinc_cpy[i][angles->index[j]] = remainder(poinc_cpy[i][angles->index[j]], TWOPI);
+                //printf("poinc_cpy[%d][angles->index[%d]] = %.10lf\n", i, j, poinc_cpy[i][angles->index[j]]);
             }
         }
     }
-    // Check periodicity in each dimension
-    for (int j = 0; j < dim; j++) {
-        // Check periodicity of a specific j dimension
-        for (int i = 1; i <= maxper; i++) {
-            if ((fabs(poinc[psize - 1][j] - poinc[psize - 1 - i][j]) <= tol[j])) { 
-                // If it finds a equal value, flag i
-                tmp_attractor[j] = i;
-                // If the same occurs at 2*i, break and define periodicity
-                if ((fabs(poinc[psize - 1][j] - poinc[psize - 1 - 2*i][j]) <= tol[j])) {
-                    break;
-                }
-            } 
-            // If i reaches the final number, attractor is period = maxper or greater
-            if (i == maxper) {
-                tmp_attractor[j] = i;
-            }
-        }
-    }
-    // Get the attractor
-    attractor = get_largest_element_int_array(tmp_attractor, dim);
-
-    return attractor;
-}
-
-int check_periodicity_new(int dim, int np, double **poinc, int trans, int maxper, double *xmin, double *xmax, double numtol) {
-    // Check Parameters
-    double_ptr_safety_check((void**)poinc, "**poinc in check_periodicity()");
-    ptr_safety_check(xmin, "*xmin in check periodicity()");
-    ptr_safety_check(xmax, "*xmax in check periodicity()");
-    // Declare control variables
-    int attractor = -1;                                 // Returning value of function
-    int tmp_attractor[dim];                             // Variable to hold the attractors found by analyzing each dimension
-    double *systol = get_system_tol(dim, xmin, xmax);   // Tolerance of the system
-    double tol[dim];                                    // Final Tolerance
+    // Determine system tolerance for each state variable.
+    double *systol = get_system_tol(dim, xmin_cpy, xmax_cpy);          
     // Determine final tolerance
     for (int i = 0; i < dim; i++) {
         tol[i] = systol[i]*numtol;
@@ -216,25 +195,26 @@ int check_periodicity_new(int dim, int np, double **poinc, int trans, int maxper
     for (int j = 0; j < dim; j++) {
         // Check periodicity of a specific j dimension
         for (int i = 1; i <= maxper; i++) {
-            if ((fabs(poinc[np - trans - 1][j] - poinc[np - trans - 1 - i][j]) <= tol[j])) { 
+            if ((fabs(poinc_cpy[psize - 1][j] - poinc_cpy[psize - 1 - i][j]) <= tol[j])) { 
                 // If it finds a equal value, flag i
                 tmp_attractor[j] = i;
-                //printf("tmp_attractor[%i] = %i\n", j, i);
                 // If the same occurs at 2*i, break and define periodicity
-                if ((fabs(poinc[np - trans - 1][j] - poinc[np - trans - 1 - 2*i][j]) <= tol[j])) {
+                if ((fabs(poinc_cpy[psize - 1][j] - poinc_cpy[psize - 1 - 2*i][j]) <= tol[j])) {
                     break;
                 }
             } 
             // If i reaches the final number, attractor is period = maxper or greater
             if (i == maxper) {
                 tmp_attractor[j] = i;
-                //printf("tmp_attractor[%i] = %i\n", j, i);
             }
         }
     }
     // Get the attractor
     attractor = get_largest_element_int_array(tmp_attractor, dim);
-
+    // Free memory from copies
+    free_mem(xmin_cpy, xmax_cpy, NULL);
+    free_2D_mem((void **)poinc_cpy, psize);
+    
     return attractor;
 }
 
@@ -267,58 +247,6 @@ int get_attractor(double **poinc, double *LE, int dim, int np, int trans, int ma
         // Check if system is periodic
         if (LE[0] < 0 ) {
             attractor = check_periodicity(dim, np, poinc, trans, maxper, xmin, xmax, numtol, angles);
-            //printf("attractor = %i\n", attractor);
-        }
-        // Check if the system is chaotic
-        else if (LE[0] > 0 && LE[1] <= 0) {
-            attractor = maxper + 1;
-        }
-        // Check if the system is hyperchaotic
-        else if (LE[0] > 0 && LE[1] > 0) {
-            attractor = maxper + 2;
-        }
-        // Error
-        else {
-            attractor = 0;          // Escape Point
-            print_warning("Something went wrong trying to determine the type of motion of the system\n");
-        }
-    }
-    else {
-        print_warning("Invalid dimension of the system...\n");
-        return -1;
-    }
-    // Returns the value of the attractor
-    return attractor;
-}
-
-int get_attractor_new(double **poinc, double *LE, int dim, int np, int trans, int maxper, double *xmin, double *xmax, double numtol) {
-    // Check Pointer
-    ptr_safety_check(LE, "*LE in get_attractor()");
-    ptr_safety_check(xmin, "*xmin in get_attractor()");
-    ptr_safety_check(xmax, "*xmax in get_attractor()");
-    double_ptr_safety_check((void**)poinc, "**poinc in get_attractor()");
-    // Control variables
-    int attractor = 0;                      // Returning value of the function
-    // Check if the system can show hyperchaotic motion or only chaotic
-    if (dim <= 2) {
-        // Check if system is periodic
-        if (LE[0] < 0 ) {
-            attractor = check_periodicity_new(dim, np, poinc, trans, maxper, xmin, xmax, numtol);
-        }
-        // Check if the system is chaotic
-        else if (LE[0] > 0) {
-            attractor = maxper + 1;
-        }
-        // Error
-        else {
-            attractor = 0;          // Escape Point
-            print_warning("Something went wrong trying to determine the type of motion of the system\n");
-        }
-    } 
-    else if (dim > 2) {
-        // Check if system is periodic
-        if (LE[0] < 0 ) {
-            attractor = check_periodicity_new(dim, np, poinc, trans, maxper, xmin, xmax, numtol);
             //printf("attractor = %i\n", attractor);
         }
         // Check if the system is chaotic

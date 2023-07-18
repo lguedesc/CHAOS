@@ -232,7 +232,7 @@ static void write_state_vars(FILE *output_file, int dim, double *x, int mode) {
     // Write header
     if (mode == 1) {
         for (int i = 0; i < dim; i++) {
-            fprintf(output_file, "x[%i] ", i);
+            fprintf(output_file, "x[%d] ", i);
         }
     }
     // Write results
@@ -287,7 +287,7 @@ static void write_state_vars_angles(FILE *output_file, double *x, ang_info *angl
         // Write results
         else if (mode == 2) {
             for(int i = 0; i < angles->n_angles; i++) {
-                fprintf(output_file, "%.10lf ", remainder(x[angles->index[i]], 2*PI));
+                fprintf(output_file, "%.10lf ", remainder(x[angles->index[i]], TWOPI));
             }
         }
         else {
@@ -347,24 +347,24 @@ static void write_min_max_angles(FILE *output_file, ang_info *angles, double *xm
         else if (mode == 2) {
             // xmin and xmax
             for (int i = 0; i < angles->n_angles; i++) {
-                if ((xmin[angles->index[i]] < -PI) || (xmax[angles->index[i]] > PI)) {
+                if (fabs(xmax[angles->index[i]] - xmin[angles->index[i]]) > TWOPI) {
                     fprintf(output_file, "%.10lf ", -PI);
                     fprintf(output_file, "%.10lf ", PI);
                 }
                 else {
-                    fprintf(output_file, "%.10lf ", xmin[angles->index[i]]);
-                    fprintf(output_file, "%.10lf ", xmax[angles->index[i]]);
+                    fprintf(output_file, "%.10lf ", remainder(xmin[angles->index[i]], TWOPI));
+                    fprintf(output_file, "%.10lf ", remainder(xmax[angles->index[i]], TWOPI));
                 }
             }
             // Overallxmin and Overallxmax
             for (int i = 0; i < angles->n_angles; i++) {
-                if ((overallxmin[angles->index[i]] < -PI) || (overallxmax[angles->index[i]] > PI)) {
+                if (fabs(overallxmax[angles->index[i]] - overallxmin[angles->index[i]]) > TWOPI) {
                     fprintf(output_file, "%.10lf ", -PI);
                     fprintf(output_file, "%.10lf ", PI);
                 }
                 else {
-                    fprintf(output_file, "%.10lf ", overallxmin[angles->index[i]]);
-                    fprintf(output_file, "%.10lf ", overallxmax[angles->index[i]]);
+                    fprintf(output_file, "%.10lf ", remainder(overallxmin[angles->index[i]], TWOPI));
+                    fprintf(output_file, "%.10lf ", remainder(overallxmax[angles->index[i]], TWOPI));
                 }
             }
         }
@@ -1188,7 +1188,7 @@ void HOS_write_fbifurc_results(FILE *output_file, int dim, int np, int trans, do
     }
     // Write Results for lyapunov, min, max values, customvalues
     else if (mode == 3) {
-                write_bifurc_control_parameter(output_file, varpar, 2);
+        write_bifurc_control_parameter(output_file, varpar, 2);
         write_min_max(output_file, dim, xmin, xmax, overallxmin, overallxmax, 2);
         write_min_max_angles(output_file, angles, xmin, xmax, overallxmin, overallxmax, 2);
         write_rms_state_vars(output_file, nrms, xrms, overallxrms, rmsindex, 2);

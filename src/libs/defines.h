@@ -18,6 +18,7 @@
 
 // Math constants
 #define PI (4 * atan(1))
+#define TWOPI 2*PI
 
 // Macro to handle variable names
 #define getName(var) #var

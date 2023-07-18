@@ -11,6 +11,7 @@ void perturb_wolf(double **x, int dim, int ndim, double **cum, double **s_cum);
 void lyapunov_wolf(double **x, double t, double h, int dim, int ndim, double s_t0, double **cum, double **s_cum, double **lambda, double **s_lambda, double **znorm, double **gsc);
 void store_LE(int dim, double *lambda, double *s_lambda, double *le);
 int get_largest_element_in_array(int n, int *array);
+double *get_system_tol(int dim, double *xmin, double *xmax);
 int check_periodicity(int dim, int np, double **poinc, int trans, int maxper, double *xmin, double *xmax, double numtol, ang_info *angles);
 int get_attractor(double **poinc, double *LE, int dim, int np, int trans, int maxper, double *xmin, double *xmax, double numtol, ang_info *angles);
 double *convert_argument_to_private(double *arg, int nsize);
@@ -19,10 +20,6 @@ bool check_if_array_is_all_one(int arr[], int dim);
 void store_equilibrium_point(size_t *rows, size_t cols, double ***attrac, double *X, int dim, double tol);
 void max_value(double newvalue, double *oldvalue);
 void min_value(double newvalue, double *oldvalue);
-
-double *get_system_tol(int dim, double *xmin, double *xmax);
-int check_periodicity_new(int dim, int np, double **poinc, int trans, int maxper, double *xmin, double *xmax, double numtol);
-int get_attractor_new(double **poinc, double *LE, int dim, int np, int trans, int maxper, double *xmin, double *xmax, double numtol);
 
 // Misc
 void print_equilibrium_points(FILE* info, double **attrac, size_t rows, size_t cols, int dim);

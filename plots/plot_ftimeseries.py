@@ -22,9 +22,9 @@ nDiv = 6000
 trans = 650
 plot_i = nDiv*trans
 
-angles = True
+angles = False
 xvar = 'x[4]'
-yvar = 'x[5]'
+yvar = 'x[7]'
 
 #=======================================================================#
 # Figure Parameters                                                     #

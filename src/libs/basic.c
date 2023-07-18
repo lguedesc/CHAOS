@@ -24,7 +24,7 @@ int count_int_digits(int number) {
     return count;
 }
 
-void **alloc_2D_array(int rows, int columns, size_t elementSize) {
+void **alloc_2D_array(int rows, int columns, size_t element_size) {
     void** array = malloc(rows * sizeof(void*));
     if (array == NULL) {
         print_debug("Memory allocation failed for rows in 'allocate_2D_array()' function.\n");
@@ -32,7 +32,7 @@ void **alloc_2D_array(int rows, int columns, size_t elementSize) {
     }
     
     for (int i = 0; i < rows; i++) {
-        array[i] = malloc(columns * elementSize);
+        array[i] = malloc(columns * element_size);
         if (array[i] == NULL) {
             print_debug("Memory allocation failed for columns in 'allocate_2D_array()' function.\n");
             // Free the memory allocated for rows before returning NULL
@@ -72,6 +72,44 @@ char **alloc_string_array(int nstrings, size_t maxlen) {
         memset(str_array[i], '\0', (maxlen + 1));
     }
     return str_array;
+}
+
+void *copy_pointer(const void* src, int size, size_t element_size) {
+    // Allocate memory for it
+    void* dest = malloc(size * element_size);
+    if (dest == NULL) {
+        print_debug("Memory allocation failed in 'copy_pointer()' function.\n");
+        return NULL;
+    }
+    // Copy memory from source to destination
+    memcpy(dest, src, size * element_size);
+    // Return destination pointer
+    return dest;
+}
+
+void **copy_2D_pointer(const void** src, int rows, int cols, size_t element_size) {
+    // Allocate memory for it
+    void** dest = malloc(rows * sizeof(void*));
+    if (dest == NULL) {
+        print_debug("Memory allocation for rows in 'copy_2D_pointer' failed.\n");
+        return NULL;
+    }
+    for (int i = 0; i < rows; i++) {
+        dest[i] = malloc(cols * element_size);
+        if (dest[i] == NULL) {
+            print_debug("Memory allocation for cols in 'copy_2D_pointer' failed.\n");
+            // Free previously allocated memory
+            for (int j = 0; j < i; j++) {
+                free(dest[j]);
+            }
+            free(dest);
+            return NULL;
+        }
+        // Copy memory from source row to destination row
+        memcpy(dest[i], src[i], cols * element_size);
+    }
+    // Return destination pointer
+    return dest;
 }
 
 void free_mem(void* first, ...)
