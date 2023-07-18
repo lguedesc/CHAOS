@@ -578,15 +578,15 @@ static void write_min_max_result_matrix_in_file(FILE *output_file, int dim, int 
     }
 }
 
-static void write_rms_result_matrix_in_file(FILE *output_file, int nrms, int *col_offset, double *results, int mode) {
+static void write_rms_result_matrix_in_file(FILE *output_file, int nrms, int *rmsindex, int *col_offset, double *results, int mode) {
     if (nrms > 0) {
         // Header
         if (mode == 1) {
             for (int i = 0; i < nrms; i++) {
-                fprintf(output_file, "xRMS[%d] ", i);
+                fprintf(output_file, "xRMS[%d] ", rmsindex[i]);
             }
             for (int i = 0; i < nrms; i++) {
-                fprintf(output_file, "OverallxRMS[%d] ", i);
+                fprintf(output_file, "OverallxRMS[%d] ", rmsindex[i]);
             }
         }
         // Results
@@ -625,7 +625,7 @@ static void write_customcalc_result_matrix_in_file(FILE *output_file, int ncusto
             for (int j = 0; j < nprintf; j++) {
                 fprintf(output_file, "%.10lf ", results[(*col_offset) + j]);
             }
-            col_offset += nprintf;
+            (*col_offset) += nprintf;
         }
         else {
             print_debug("Failed to write results in output file with function 'write_customcalc_result_matrix_in_file()' using mode (%d)...\n", mode);
@@ -642,16 +642,16 @@ static void write_min_max_angles_result_matrix_in_file(FILE *output_file, ang_in
     if (angles->n_angles > 0)  {
         if (mode == 1) {
                 for (int i = 0; i < angles->n_angles; i++) {
-                    fprintf(output_file, "xMAX[%d]_remainder ", i);
+                    fprintf(output_file, "xMAX[%d]_remainder ", angles->index[i]);
                 }
                 for (int i = 0; i < angles->n_angles; i++) {
-                    fprintf(output_file, "xMIN[%d]_remainder ", i);
+                    fprintf(output_file, "xMIN[%d]_remainder ", angles->index[i]);
                 }
                 for (int i = 0; i < angles->n_angles; i++) {
-                    fprintf(output_file, "OverallxMAX[%d]_remainder ", i);
+                    fprintf(output_file, "OverallxMAX[%d]_remainder ", angles->index[i]);
                 }
                 for (int i = 0; i < angles->n_angles; i++) {
-                    fprintf(output_file, "OverallxMIN[%d]_remainder ", i);
+                    fprintf(output_file, "OverallxMIN[%d]_remainder ", angles->index[i]);
                 }
             }
             // Results
@@ -1211,7 +1211,7 @@ void HOS_p_write_dyndiag_results(FILE *output_file, int dim, int nrms, int *rmsi
     write_attractor_results_matrix_in_file(output_file, NULL, NULL, 1);
     write_min_max_result_matrix_in_file(output_file, dim, NULL, NULL, 1);
     write_min_max_angles_result_matrix_in_file(output_file, angles, NULL, NULL, 1);
-    write_rms_result_matrix_in_file(output_file, nrms, NULL, NULL, 1);
+    write_rms_result_matrix_in_file(output_file, nrms, rmsindex, NULL, NULL, 1);
     write_customcalc_result_matrix_in_file(output_file, ncustomvalues, nprintf, printfindex, customnames, NULL, NULL, 1);
     fprintf(output_file, "\n");
     // Write Results
@@ -1221,7 +1221,7 @@ void HOS_p_write_dyndiag_results(FILE *output_file, int dim, int nrms, int *rmsi
         write_attractor_results_matrix_in_file(output_file, &col_offset, results[i], 2);    
         write_min_max_result_matrix_in_file(output_file, dim, &col_offset, results[i], 2);
         write_min_max_angles_result_matrix_in_file(output_file, angles, &col_offset, results[i], 2);
-        write_rms_result_matrix_in_file(output_file, nrms, &col_offset, results[i], 2);
+        write_rms_result_matrix_in_file(output_file, nrms, rmsindex, &col_offset, results[i], 2);
         write_customcalc_result_matrix_in_file(output_file, ncustomvalues, nprintf, printfindex, NULL, &col_offset, results[i], 2);
         fprintf(output_file, "\n");
     }
@@ -1235,7 +1235,7 @@ void HOS_p_write_fdyndiag_results(FILE *output_file, int dim, int nrms, int *rms
     write_LE_result_matrix_in_file(output_file, dim, NULL, NULL, 1);
     write_min_max_result_matrix_in_file(output_file, dim, NULL, NULL, 1);
     write_min_max_angles_result_matrix_in_file(output_file, angles, NULL, NULL, 1);
-    write_rms_result_matrix_in_file(output_file, nrms, NULL, NULL, 1);
+    write_rms_result_matrix_in_file(output_file, nrms, rmsindex, NULL, NULL, 1);
     write_customcalc_result_matrix_in_file(output_file, ncustomvalues, nprintf, printfindex, customnames, NULL, NULL, 1);
     fprintf(output_file, "\n");
     // Write Results
@@ -1246,7 +1246,7 @@ void HOS_p_write_fdyndiag_results(FILE *output_file, int dim, int nrms, int *rms
         write_LE_result_matrix_in_file(output_file, dim, &col_offset, results[i], 2);
         write_min_max_result_matrix_in_file(output_file, dim, &col_offset, results[i], 2);
         write_min_max_angles_result_matrix_in_file(output_file, angles, &col_offset, results[i], 2);
-        write_rms_result_matrix_in_file(output_file, nrms, &col_offset, results[i], 2);
+        write_rms_result_matrix_in_file(output_file, nrms, rmsindex, &col_offset, results[i], 2);
         write_customcalc_result_matrix_in_file(output_file, ncustomvalues, nprintf, printfindex, NULL, &col_offset, results[i], 2);
         fprintf(output_file, "\n");
     }

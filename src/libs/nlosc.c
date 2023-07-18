@@ -44,7 +44,7 @@ static void store_angle_results_in_matrix(double *vec, ang_info *angles, int *co
             (*results)[index][(*col_offset) + r] = PI;
         }
         else {
-            (*results)[index][(*col_offset) + r] = remainder(vec[angles->index[r]], 2*PI);
+            (*results)[index][(*col_offset) + r] = vec[angles->index[r]];
         }
     }
     (*col_offset) += angles->n_angles;
@@ -120,13 +120,13 @@ static void store_results_in_matrix_fdyndiag(double ***results, int k, int m, do
     store_results_in_matrix(overallxmax, dim, &col_offset, index, results);
     // Store overallxmin[dim] values
     store_results_in_matrix(overallxmin, dim, &col_offset, index, results);
-    // Store xmax[dim]_remainder values of angles
+    // Store xmax[angles->n_angles]_remainder values of angles
     store_angle_results_in_matrix(xmax, angles, &col_offset, index, results);
-    // Store xmin[dim]_remainder values of angles
+    // Store xmin[angles->n_angles]_remainder values of angles
     store_angle_results_in_matrix(xmin, angles, &col_offset, index, results);
-    // Store overallxmax[dim]_remainder values of angles
+    // Store overallxmax[angles->n_angles]_remainder values of angles
     store_angle_results_in_matrix(overallxmax, angles, &col_offset, index, results);
-    // Store xmax[dim]_remainder values of angles
+    // Store overallxmin[angles->n_angles]_remainder values of angles
     store_angle_results_in_matrix(overallxmin, angles, &col_offset, index, results);
     // Store xrms[nrms] values 
     store_specific_results_in_matrix(xrms, nrms, rmsindex, &col_offset, index, results);
@@ -1093,7 +1093,7 @@ void HOS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
                                         int mode), int bifmode) {
     // Declare matrix do store results
     int pixels = parrange[2]*parrange[5];  // Number of results
-    int ncols = (3 + (5*dim) + (2*nrms) + nprintf);         // Number of columns (3: CparX, CparY, attrac) + (5: xmin, xmax, overallxmin, overallxmax, LE)*dim + (2: xrms, overallxrms)*nrms + nprintf
+    int ncols = (3 + (5*dim) + (4*angles->n_angles) + (2*nrms) + nprintf);         // Number of columns (3: CparX, CparY, attrac) + (5: xmin, xmax, overallxmin, overallxmax, LE)*dim + (2: xrms, overallxrms)*nrms + nprintf
     double **results = (double**)alloc_2D_array(pixels, ncols, sizeof(double));
     // Declare rk4 timestep, final time, short initial time and numtol
     double h, tf, s_T0;
@@ -1308,7 +1308,7 @@ void HOS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim,
                                                     int mode)) {
     // Declare matrix do store results
     int pixels = icrange[2]*icrange[5];              // Number of results
-    int ncols = (3 + (5*dim) + (2*nrms) + nprintf);  // Number of columns (3: CparX, CparY, attrac) + (5: xmin, xmax, overallxmin, overallxmax, LE)*dim + (2: xrms, overallxrms)*nrms + nprintf
+    int ncols = (3 + (5*dim) + (4*angles->n_angles) + (2*nrms) + nprintf);  // Number of columns (3: CparX, CparY, attrac) + (5: xmin, xmax, overallxmin, overallxmax, LE)*dim + (2: xrms, overallxrms)*nrms + nprintf
     double **results = (double**)alloc_2D_array(pixels, ncols, sizeof(double));
     // Declare rk4 timestep, final time, short initial time and numtol 
     double h, tf, s_T0;
