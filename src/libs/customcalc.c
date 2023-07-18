@@ -13,7 +13,7 @@ static void assign_names(char **strings, const int nvalues, char **names) {
     // Get every row of strings and copy to names
     for (int i = 0; i < nvalues; i++) {
         if (strlen(strings[i]) + 1 >= MAX_CCALC_NAME_LEN) {
-            printf("  CUSTOM CALCULATIONS FUNCTION WARNING: One or more given names of the custom values are too big, please assign smaller names of maximum length of %zu before trying to run the program.\n", MAX_CCALC_NAME_LEN);
+            printf("  CUSTOM CALCULATIONS FUNCTION WARNING: One or more given names of the custom values are too big, please assign smaller names of maximum length of %d before trying to run the program.\n", MAX_CCALC_NAME_LEN);
             printf("  Exiting Program...\n");
             exit(1);
         }
