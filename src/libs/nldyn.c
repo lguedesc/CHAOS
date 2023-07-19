@@ -189,7 +189,7 @@ int check_periodicity(int dim, int np, double **poinc, int trans, int maxper, do
     // Determine final tolerance
     for (int i = 0; i < dim; i++) {
         tol[i] = systol[i]*numtol;
-        //print_warning("systol[%d] = %lf | tol[%d] = %lf\n", i, systol[i], i, tol[i]);
+        print_warning("systol[%d] = %lf | tol[%d] = %lf\n", i, systol[i], i, tol[i]);
     }
     // Check periodicity in each dimension
     for (int j = 0; j < dim; j++) {
@@ -264,7 +264,7 @@ int get_attractor(double **poinc, double *LE, int dim, int np, int trans, int ma
         }
     }
     else {
-        print_warning("Invalid dimension of the system...\n");
+        print_debug("Invalid dimension of the system...\n");
         return -1;
     }
     // Returns the value of the attractor

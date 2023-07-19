@@ -47,7 +47,7 @@ def customize_labels(ax, title1, custom = False):
 # =========================================================================== #
 maxper = 6
 save = False
-system = "bistable_EH"
+system = "duffing"
 ext = ".pdf"
 
 readpath = "data/DynDiagram/out/" + system + "_dyndiag.csv"; readpath = pltconf.convert_dir(readpath)

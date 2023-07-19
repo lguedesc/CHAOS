@@ -9,7 +9,7 @@ pltconf.plot_params(True, 10, 0.2)
 
 save = False
 
-filenum = 0
+filenum = 6
 system = "pend_oscillator_EH"
 ext = ".png"
 simulation = "ftimeseries"
@@ -17,9 +17,9 @@ simulation = "ftimeseries"
 df, df_poinc = pltconf.read_CHAOS_data(system, filenum, simulation)
         
 dim = 8
-nP = 800
+nP = 1000
 nDiv = 6000
-trans = 650
+trans = 750
 plot_i = nDiv*trans
 
 angles = False

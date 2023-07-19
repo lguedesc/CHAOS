@@ -285,8 +285,9 @@ def configure_new_colormap_motion(z):
     cmap_max = z.max()
     return colormap, cmap_min, cmap_max, ticks
 
-def configure_colormap_motion(z):
+def configure_colormap_motion_old(z):
     colors = ['#404040', '#FFEE00', '#00DC00', '#FF8000', '#9900FF', '#007BFF', '#FF0000','#700000', 'magenta', 'cyan', 'gold', 'lightsalmon', 'blue', 'darkgreen', 'black'] 
+    #colors = ['#404040', '#FFEE00', '#00DC00', '#FF8000', '#9900FF', '#007BFF', '#FF0000','#700000']
     # Copy array without duplicates and sort it 
     ticks = np.sort(z.ravel())
     ticks = np.unique(ticks)
@@ -300,6 +301,39 @@ def configure_colormap_motion(z):
     cmap_min = z.min()
     cmap_max = z.max()
     return colormap, cmap_min, cmap_max, ticks
+
+def configure_colormap_motion(z, maxper, mode = 'lyap'):
+    #colors = ['#404040', '#FFEE00', '#00DC00', '#FF8000', '#9900FF', '#007BFF', '#FF0000','#700000', 'magenta', 'cyan', 'gold', 'lightsalmon', 'blue', 'darkgreen', 'black'] 
+    colors = ['#404040', '#FFEE00', '#00DC00', '#FF8000', '#9900FF', '#007BFF', '#FF0000','#700000']
+    # Copy array without duplicates and sort it 
+    numbers = np.sort(z.ravel())
+    numbers = np.unique(numbers)
+    ticks = np.arange(1, numbers.max() + 1)    
+    print(ticks)
+    # Attribute designated colors to each value of tick
+    newclrs = []
+    hold_tick = 0
+    if mode == 'lyap':
+        for tks in range(len(ticks)):
+            newclrs.append(colors[tks])
+    else:
+        for tks in range(len(ticks)):
+            if tks < maxper:
+                newclrs.append(colors[tks])
+                print(f"periodic: {tks}")
+                hold_tick += 1
+            elif ((tks >= maxper) and (tks < len(ticks) - 1)):
+                newclrs.append(colors[hold_tick-1])
+                print(f"many periods: {tks}")
+            else:
+                newclrs.append(colors[hold_tick])
+                print(f"possibly aperiodic: {tks}")
+    # Make colormap
+    colormap = ListedColormap([*newclrs])
+    cmap_min = z.min()
+    cmap_max = z.max()
+    return colormap, cmap_min, cmap_max, ticks
+
 
 def configure_rainbow_colormap():
     cmap = mpl_col.LinearSegmentedColormap.from_list('Origin', ['darkviolet', 'blue','cyan','limegreen','yellow','darkorange','red','darkred'])
@@ -331,7 +365,7 @@ def plot_lyap_map(fig, ax, x, y, z):
     
     return plot, cbar
     
-def plot_attractor_map(fig, ax, x, y, z, maxper, mode = 'lyap'):
+def plot_attractor_map_old(fig, ax, x, y, z, maxper, mode = 'lyap'):
     colormap, cmapmin, cmapmax, ticks = configure_colormap_motion(z)   
     #ax.set_aspect('equal')
     #ax.set_box_aspect(1)
@@ -376,6 +410,68 @@ def plot_attractor_map(fig, ax, x, y, z, maxper, mode = 'lyap'):
     cbar.dividers.set_color('white')
     cbar.dividers.set_linewidth(1)
     cbar.ax.yaxis.set_ticks_position('right')
+
+def plot_attractor_map(fig, ax, x, y, z, maxper, mode = 'lyap'):
+    if mode == 'lyap':
+        colormap, cmapmin, cmapmax, ticks = configure_colormap_motion(z, maxper)   
+    else:
+        colormap, cmapmin, cmapmax, ticks = configure_colormap_motion(z, maxper, mode = mode)
+    #ax.set_aspect('equal')
+    #ax.set_box_aspect(1)
+    lsize = 6
+    plot = ax.pcolormesh(x, y, z, shading = 'nearest', rasterized = True, cmap = colormap, 
+                         vmin = cmapmin - 0.5, vmax=cmapmax + 0.5)    
+    
+    if mode == 'lyap':    
+        labels = []
+        for i in ticks:
+            if (i < maxper):
+                name = f"{i}T"
+                labels.append(name)
+            elif (i == maxper):
+                name = f"MP"
+                labels.append(name)
+            elif (i == maxper + 1):
+                name = f"CH"
+                labels.append(name)
+            elif (i == maxper + 2):
+                name = f"HC"
+                labels.append(name)    
+        #print(labels)
+        cbar = fig.colorbar(plot, ax=ax, location = 'right', orientation='vertical', aspect = 20, pad = 0.01,
+                        ticks = ticks, drawedges = True)
+    else:
+        labels = []
+        ticks = np.arange(1, maxper + 2)
+        for i in ticks:
+            if (i < maxper):
+                name = f"{i}T"
+                labels.append(name)
+            elif (i >= maxper and i < ticks.max()):
+                name = f"MP"
+                labels.append(name)
+            elif (i == ticks.max()):
+                name = f"PA"
+                labels.append(name)
+        #print(labels)
+        #print(ticks)        
+        
+        # Remove duplicates from colormap
+        unique_colors = [x for i, x in enumerate(colormap.colors) if x not in colormap.colors[:i]]
+        colormap = ListedColormap(unique_colors)
+        norm = mpl_col.Normalize(vmin = ticks.min() - 0.5, vmax = ticks.max() + 0.5)
+        sm = plt.cm.ScalarMappable(cmap = colormap, norm = norm)
+        
+        cbar = fig.colorbar(sm, ax=ax, location = 'right', orientation='vertical', aspect = 20, pad = 0.01,
+                            ticks = ticks, drawedges = True)
+    cbar.set_ticklabels(labels)
+    cbar.ax.tick_params(size = 0, labelsize = lsize)
+    cbar.outline.set_edgecolor('white')
+    cbar.outline.set_linewidth(1)
+    cbar.dividers.set_color('white')
+    cbar.dividers.set_linewidth(1)
+    cbar.ax.yaxis.set_ticks_position('right')
+
 
 def plot_new_attractor_map(fig, ax, x, y, z, maxper, mode = 'lyap'):
     colormap, cmapmin, cmapmax, ticks = configure_new_colormap_motion(z)   
@@ -513,7 +609,7 @@ def plot_rainbow_map(fig, ax, x, y, z, colormap = 'myrainbow', clr_min = 0, clr_
         extend = 'both'
     else:
         extend = 'neither'
-    delta_z = abs(cbarmax) + abs(cbarmin)
+    delta_z = cbarmax + cbarmin
     plot = ax.pcolormesh(x, y, z, shading = 'nearest', rasterized = raster, cmap = cmap, vmin = cbarmin, vmax = cbarmax)
     cbar = fig.colorbar(plot, ax = ax, location = 'right', orientation='vertical', aspect = aspct, pad = pad,
                         extend = extend, format = '${%.2f}$', ticks = [cbarmin, delta_z/2, cbarmax])

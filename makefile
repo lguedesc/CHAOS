@@ -2,7 +2,7 @@
 # To use Intel compiler (icx) in windows, insert at terminal before call make:
 # call "C:\Program Files (x86)\Intel\oneAPI\setvars.bat" intel64
 
-CC=icc
+CC=icx
 CSTD=c17
 NAME=CHAOS
 CFORGENAME = CHAOSForge
@@ -118,7 +118,7 @@ test:
 ifeq ($(OSFLAG), win)
 	@if not exist "tests\" mkdir "tests\"
 	$(CC) $(CFLAGS) -o tests\tests tests\test.c
-	@test\tests.exe
+	@tests\tests.exe
 else
 	@mkdir -p tests
 	$(CC) $(CFLAGS) -o tests/tests tests/test.c

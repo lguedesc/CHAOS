@@ -1,3 +1,4 @@
 *.csv
 *_info.txt
-*_info(*).txt
+*_info*.txt
+!*O=1.75*

@@ -1019,7 +1019,7 @@ void print_minmax(double *xmin, double *xmax, double *overallxmin, double *overa
     partition(2, maxlength);
     // Print min and maximum values
     for (int q = 0; q < dim; q++) {
-        printf("%s%d%-*s %-*g\n", "  xmix[", q, spcname - 7 - int_length(q), "]:", spcvalue, xmin[q]);
+        printf("%s%d%-*s %-*g\n", "  xmin[", q, spcname - 7 - int_length(q), "]:", spcvalue, xmin[q]);
     }
     for (int q = 0; q < dim; q++) {
         printf("%s%d%-*s %-*g\n", "  xmax[", q, spcname - 7 - int_length(q), "]:", spcvalue, xmax[q]);
