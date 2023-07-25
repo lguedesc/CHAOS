@@ -5,21 +5,24 @@ import pandas as pd
 import os
 from libs import plotconfig as pltconf
 
-pltconf.plot_params(True, 10, 0.2)
+pltconf.plot_params(True, 10, 0.2, fast = True)
 
 save = False
 
-filenum = 6
-system = "pend_oscillator_EH"
+filenum = 12
+#system = "pendulum_EMEH"
+#system = "lin_oscillator_gravity"
+#system = "pend_oscillator_EH"
+system = "multidirect_hybrid_EH"
 ext = ".png"
 simulation = "ftimeseries"
 
 df, df_poinc = pltconf.read_CHAOS_data(system, filenum, simulation)
         
 dim = 8
-nP = 1000
+nP = 800
 nDiv = 6000
-trans = 750
+trans = 650
 plot_i = nDiv*trans
 
 angles = False

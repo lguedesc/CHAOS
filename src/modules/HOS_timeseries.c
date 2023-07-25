@@ -54,11 +54,13 @@ void HOS_timeseries(char *funcname, unsigned int DIM, unsigned int nPar, ang_inf
     // Print information in screen and info output file
     print_info(output_info, DIM, nPar, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, nCustomValues, nPrintf, printfindex, nPrintscr, printscrindex, MAX_PRINT_LEN, PERC_PRINT_NAME, "screen");
     print_info(output_info, DIM, nPar, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, nCustomValues, nPrintf, printfindex, nPrintscr, printscrindex, MAX_PRINT_LEN, PERC_PRINT_NAME,"file");
+    
     /*
     // Time variables
     double time_spent = 0.0;
     clock_t time_i = clock();
     */
+    
     // Call solution
     HOS_timeseries_solution(output_timeseries, DIM, nP, nDiv, trans, t, x, h, par, angles, nRMS, rmsindex, &xRMS, &overallxRMS, &xmin, &xmax, &overallxmin, &overallxmax, edosys,  
                             nCustomValues, &customNames, &customValues, nPrintf, printfindex, nPrintscr, printscrindex, customfunc);    

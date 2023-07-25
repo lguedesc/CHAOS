@@ -6,6 +6,8 @@ import os
 from matplotlib.colors import BoundaryNorm, ListedColormap
 import matplotlib.colors as mpl_col
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import matplotlib.style as mplstyle
+
 
 # =========================================================================== #
 #                    Functions to Handle Data                                 #
@@ -157,7 +159,7 @@ def savefigure(savepath, savename, extension, figure, save = True):
 # =========================================================================== #
 #                    Functions to Configure Plot Parameters                   #
 # =========================================================================== #
-def plot_params(tex, fontsize, lineweight):
+def plot_params(tex, fontsize, lineweight, fast = False):
     mpl.rcParams['agg.path.chunksize'] = 10000
     plt.rcParams.update({
         'font.family': 'serif',  # use serif/main font for text elements
@@ -176,6 +178,8 @@ def plot_params(tex, fontsize, lineweight):
         'axes.xmargin': 0.035,
         'axes.ymargin': 0.035,
     })
+    if fast == True:
+        mplstyle.use('fast')
     #plt.switch_backend('Qt5Agg')
 
 def makefig_and_axs(figsize, rows, cols, dpi, hspace = 0, wspace = 0, hpad = 0, wpad = 0):

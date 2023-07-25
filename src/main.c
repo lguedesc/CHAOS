@@ -38,7 +38,10 @@ char *HOSsystemNames[NUM_OF_HOS_SYSTEMS] = {"Duffing Oscillator",
                                             "2 DoF Linear Oscillator",
                                             "2 DoF Linear Energy Harvester",
                                             "Adeodato SMA Oscillator (In Development)",
-                                            "Linear Electromagnetic Energy Harvester" };
+                                            "Linear Electromagnetic Energy Harvester",
+                                            "Pendulum Electromagnetic Energy Harvester",
+                                            "Linear Oscillator Considering Gravity",
+                                            "Multidirectional Hybrid Energy Harvester" };
  
 char *GNLsystemNames[NUM_OF_GNL_SYSTEMS] = {"Lorenz System",
                                             "Lotka-Volterra Predator-Prey Model",
@@ -214,6 +217,15 @@ static void call_HOS_system(unsigned int system, unsigned int module) {
             break;
         case 16:
             execute_HOS_modules(module, HOS_FUNC_16, HOS_CUSTOM_16, HOS_OUTPUTNAME_16, HOSsystemNames[15], HOS_DIM_16, HOS_NPAR_16, HOS_ANGLES_16);
+            break;
+        case 17:
+            execute_HOS_modules(module, HOS_FUNC_17, HOS_CUSTOM_17, HOS_OUTPUTNAME_17, HOSsystemNames[16], HOS_DIM_17, HOS_NPAR_17, HOS_ANGLES_17, HOS_ANGINDEX0_17);
+            break;
+        case 18:
+            execute_HOS_modules(module, HOS_FUNC_18, HOS_CUSTOM_18, HOS_OUTPUTNAME_18, HOSsystemNames[17], HOS_DIM_18, HOS_NPAR_18, HOS_ANGLES_18);
+            break;
+        case 19:
+            execute_HOS_modules(module, HOS_FUNC_19, HOS_CUSTOM_19, HOS_OUTPUTNAME_19, HOSsystemNames[18], HOS_DIM_19, HOS_NPAR_19, HOS_ANGLES_19, HOS_ANGINDEX0_19);
             break;
         default:
             printf("Invalid...\n");

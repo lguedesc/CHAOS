@@ -4,6 +4,7 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include "msg.h"
 
 // Main Interface 
 void clear_screen() {

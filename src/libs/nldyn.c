@@ -189,7 +189,7 @@ int check_periodicity(int dim, int np, double **poinc, int trans, int maxper, do
     // Determine final tolerance
     for (int i = 0; i < dim; i++) {
         tol[i] = systol[i]*numtol;
-        print_warning("systol[%d] = %lf | tol[%d] = %lf\n", i, systol[i], i, tol[i]);
+        print_warning("systol[%d] = %e | tol[%d] = %e\n", i, systol[i], i, tol[i]);
     }
     // Check periodicity in each dimension
     for (int j = 0; j < dim; j++) {

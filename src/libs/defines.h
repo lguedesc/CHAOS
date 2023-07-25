@@ -115,7 +115,7 @@ typedef struct {
 // main program macros 
 #define MAX_NAMELENGTH 120
 #define NUM_OF_GNL_SYSTEMS 4
-#define NUM_OF_HOS_SYSTEMS 16
+#define NUM_OF_HOS_SYSTEMS 19
 #define NUM_OF_TOOLBOXES 2
 #define NUM_OF_HOS_MODULES 11
 #define NUM_OF_GNL_MODULES 3
@@ -259,5 +259,28 @@ typedef struct {
 #define HOS_DIM_16 3
 #define HOS_NPAR_16 9
 #define HOS_ANGLES_16 0
+
+#define HOS_FUNC_17 pendulum_EMEH
+#define HOS_CUSTOM_17 customcalc_pendulum_EMEH
+#define HOS_OUTPUTNAME_17 "pendulum_EMEH"
+#define HOS_DIM_17 3
+#define HOS_NPAR_17 7
+#define HOS_ANGLES_17 1
+#define HOS_ANGINDEX0_17 0
+
+#define HOS_FUNC_18 linear_oscillator_gravity
+#define HOS_CUSTOM_18 customcalc_linear_oscillator_gravity
+#define HOS_OUTPUTNAME_18 "lin_oscillator_gravity"
+#define HOS_DIM_18 2
+#define HOS_NPAR_18 6
+#define HOS_ANGLES_18 0
+
+#define HOS_FUNC_19 multidirectional_hybrid_EH
+#define HOS_CUSTOM_19 customcalc_multidirectional_hybrid_EH                 
+#define HOS_OUTPUTNAME_19 "multidirect_hybrid_EH"
+#define HOS_DIM_19 8
+#define HOS_NPAR_19 16
+#define HOS_ANGLES_19 1
+#define HOS_ANGINDEX0_19 4
 
 #endif

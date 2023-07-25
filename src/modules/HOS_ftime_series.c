@@ -11,6 +11,7 @@
 #include "../libs/interface.h"
 #include "../libs/defines.h"
 #include "../libs/basic.h"
+#include "../libs/msg.h"
 #include "HOS_ftime_series.h"
 
 static void read_params(int dim, int npar, int *maxper, int *np, int *ndiv, int* trans, int *nrms, double *t, double **par, double **x, int **rmsindex,
@@ -61,8 +62,14 @@ void HOS_ftime_series(char *funcname, unsigned int DIM, unsigned int nPar, ang_i
     print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, nCustomValues, nPrintf, printfindex, nPrintscr, printscrindex, MAX_PRINT_LEN, PERC_PRINT_NAME, "screen");
     print_info(output_info, DIM, nPar, maxPer, nP, nDiv, trans, nRMS, h, t, x, par, rmsindex, funcname, nCustomValues, nPrintf, printfindex, nPrintscr, printscrindex, MAX_PRINT_LEN, PERC_PRINT_NAME, "file");
     // Call solution
+    clock_t start_time, end_time;
+    double elapsed_time = 0.0;
+    start_time = clock();
+    //start_time = omp_get_wtime();
     HOS_full_timeseries_solution(output_ftimeseries, output_poinc, DIM, nP, nDiv, trans, &attractor, maxPer, t, &x, h, par, angles, nRMS, rmsindex, &xRMS, &overallxRMS, &xmin, &xmax, 
                                  &overallxmin, &overallxmax, edosys, nCustomValues, &customNames, &customValues, nPrintf, printfindex, nPrintscr, printscrindex, customfunc);
+    end_time = clock();
+    elapsed_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
     // Print some results on the screen and in information file
     print_results(output_info, DIM, xmin, xmax, overallxmin, overallxmax, nRMS, rmsindex, xRMS, overallxRMS, nCustomValues, nPrintscr, printscrindex, customValues, customNames, attractor, maxPer);
     // Close output file
@@ -73,6 +80,7 @@ void HOS_ftime_series(char *funcname, unsigned int DIM, unsigned int nPar, ang_i
         free_mem(customValues, printfindex, printscrindex, NULL);
         free_2D_mem((void **) customNames, nCustomValues);
     }
+    print_warning("Elapsed time: %.6lf seconds\n", elapsed_time);
 }
 
 static void read_params(int dim, int npar, int *maxper, int *np, int *ndiv, int* trans, int *nrms, double *t, double **par, double **x, int **rmsindex,

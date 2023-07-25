@@ -7,25 +7,25 @@
 #include "nldyn.h"
 #include "odesystems.h"
 #include "defines.h"
+#include "msg.h"
 
 // Methods
 static void assign_names(char **strings, const int nvalues, char **names) {
     // Get every row of strings and copy to names
     for (int i = 0; i < nvalues; i++) {
         if (strlen(strings[i]) + 1 >= MAX_CCALC_NAME_LEN) {
-            printf("  CUSTOM CALCULATIONS FUNCTION WARNING: One or more given names of the custom values are too big, please assign smaller names of maximum length of %d before trying to run the program.\n", MAX_CCALC_NAME_LEN);
-            printf("  Exiting Program...\n");
-            exit(1);
+            print_error("CUSTOM CALCULATIONS FUNCTION ERROR: One or more given names of the custom values are too big, please assign smaller names of maximum length of %d before trying to run the program.\n", MAX_CCALC_NAME_LEN);
+            print_exit_prog();
+            exit(EXIT_FAILURE);
         }
         strcpy(names[i], strings[i]);
     }
 }
 
 static void error(int mode) {
-    printf("DEBUG ERROR: Custom Function using mode = %d, please use 0, 1, 2 or 3", mode);
-    printf("Check Implementation: Custom Function using mode = %d, please use 0, 1, 2 or 3", mode);
-    printf("Exiting Program...\n");
-    exit(1);
+    print_debug("Custom Function using mode = %d, please use 0, 1, 2 or 3", mode);
+    print_exit_prog();
+    exit(EXIT_FAILURE);
 }
 
 static void spins(double initial_angle, double *previous_angle, double *current_angle, double angle, double *positive_spin, double *negative_spin, int index) {
@@ -865,8 +865,24 @@ void customcalc_adeodato_sma_oscillator(double *x, double *par, double t, double
         return;
     }
     else {
-        printf("DEBUG WARNING: Custom Function using mode = %d, please use 0, 1, 2 or 3", mode);
+        print_debug("Custom Function using mode = %d, please use 0, 1, 2 or 3", mode);
     }
+}
+
+void customcalc_pendulum_EMEH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
+	return;
+}
+
+void customcalc_linear_oscillator_gravity(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
+	return;
+}
+
+void customcalc_chuas_circuit(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
+	return;
+}
+
+void customcalc_multidirectional_hybrid_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
+	return;
 }
 
 /* Model for customcalc functions: 
@@ -899,7 +915,6 @@ void customcalc_name(double *x, double *par, double t, double *xrms, double *xmi
     else {
         error(mode);
     }
-*/
-void customcalc_chuas_circuit(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
-	return;
 }
+*/
+

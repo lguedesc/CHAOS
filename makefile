@@ -2,7 +2,7 @@
 # To use Intel compiler (icx) in windows, insert at terminal before call make:
 # call "C:\Program Files (x86)\Intel\oneAPI\setvars.bat" intel64
 
-CC=icx
+CC=icc
 CSTD=c17
 NAME=CHAOS
 CFORGENAME = CHAOSForge
@@ -64,15 +64,15 @@ all:
 	@echo $(OS)
 ifeq ($(OSFLAG), win)
 	@if not exist "bin\" mkdir "bin\"
-	$(CC) $(CFLAGS) -o bin\$(NAME) $(FILES)
+	@$(CC) $(CFLAGS) -o bin\$(NAME) $(FILES)
 #	@scripts\assign_icon_win.bat $(NAME)
 else ifeq ($(OSFLAG), macos)
 	@mkdir -p bin
-	$(CC) $(CFLAGS) -o bin/$(NAME) $(FILES)
+	@$(CC) $(CFLAGS) -o bin/$(NAME) $(FILES)
 #	@bash scripts/assign_icon_macos.sh
 else
 	@mkdir -p bin
-	$(CC) $(CFLAGS) -o bin/$(NAME) $(FILES)
+	@$(CC) $(CFLAGS) -o bin/$(NAME) $(FILES)
 endif
 
 run: 
@@ -93,15 +93,15 @@ cforge:
 	@echo $(OS)
 ifeq ($(OSFLAG), win)
 	@if not exist "bin\" mkdir "bin\"
-	$(CC) $(CFORGEFLAGS) -o bin\$(CFORGENAME) $(CFORGEFILES)
+	@$(CC) $(CFORGEFLAGS) -o bin\$(CFORGENAME) $(CFORGEFILES)
 #	@scripts\assign_icon_win.bat $(NAME)
 else ifeq ($(OSFLAG), macos)
 	@mkdir -p bin
-	$(CC) $(CFORGEFLAGS) -o bin/$(CFORGENAME) $(CFORGEFILES)
+	@$(CC) $(CFORGEFLAGS) -o bin/$(CFORGENAME) $(CFORGEFILES)
 #	@bash scripts/assign_icon_macos.sh
 else
 	@mkdir -p bin
-	$(CC) $(CFORGEFLAGS) -o bin/$(CFORGENAME) $(CFORGEFILES)
+	@$(CC) $(CFORGEFLAGS) -o bin/$(CFORGENAME) $(CFORGEFILES)
 endif
 
 run_cforge:

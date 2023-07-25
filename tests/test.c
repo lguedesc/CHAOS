@@ -9,15 +9,15 @@
 int main()
 {
     
-    double xmin = PI*1.1;
-    double xmax = 2*PI;
+    double L = 0.005; 
+    double g = 9.81;
 
-    double xmin_remainder = remainder(xmin, TWOPI);
-    double xmax_remainder = remainder(xmax, TWOPI);
+    double wphi = sqrt(g/L);
+    printf("wn = %lf Hz\n", wphi);
 
-    printf("xmin_remainder = %lf\n", xmin_remainder);
-    printf("xmax_remainder = %lf\n", xmax_remainder);
+    double wz = 39;
 
+    printf("Omega_phi = %lf\n", wphi/wz);
     
     return 0;
 }
