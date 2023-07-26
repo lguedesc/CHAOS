@@ -4,7 +4,7 @@
 
 CC=clang
 CSTD=c17
-NAME=CHAOS
+NAME=CHAOSForge
 
 # Indentify Operating System
 OSFLAG 				:=
@@ -24,16 +24,16 @@ endif
 CFLAGS   :=
 ifeq ($(CC),icx)
 ifeq ($(OSFLAG), win)
-	CFLAGS+=/Qstd:$(CSTD) /Qopenmp /O3 /Qipo /Wall /Werror
+	CFLAGS+=/Qstd:$(CSTD) /O3 /Qipo /Wall /Werror
 else
-	CFLAGS+=-std=$(CSTD) -qopenmp -O3 -ipo -Wall -Werror
+	CFLAGS+=-std=$(CSTD) -O3 -ipo -Wall -Werror
 endif
 else ifeq ($(CC),gcc)
-	CFLAGS+=-std=$(CSTD) -fopenmp -O3 -Wall -Werror -Wpedantic
+	CFLAGS+=-std=$(CSTD) -O3 -Wall -Werror -Wpedantic
 else ifeq ($(CC),clang)
-	CFLAGS+=-std=$(CSTD) -fopenmp -O3 -Wall -Werror -Wpedantic
+	CFLAGS+=-std=$(CSTD) -O3 -Wall -Werror -Wpedantic
 else ifeq ($(CC),icc)
-	CFLAGS+=-std=$(CSTD) -qopenmp -O3 -Wall -Werror -no-multibyte-chars -diag-disable=10441
+	CFLAGS+=-std=$(CSTD) -O3 -Wall -Werror -no-multibyte-chars -diag-disable=10441
 endif
 
 # Define Separator, binary extension and execution command based on Operating System
@@ -49,17 +49,12 @@ endif
 
 # Define Important Directories
 SRCDIR=src$(SEP)
-MODDIR=$(SRCDIR)modules$(SEP)
-LIBDIR=$(SRCDIR)libs$(SEP)
 BINDIR=bin$(SEP)
 OBJDIR=$(BINDIR)obj$(SEP)
 OLIBDIR=$(OBJDIR)libs$(SEP)
-OMODDIR=$(OBJDIR)modules$(SEP)
 
 # List of .c source files
-LIBS=$(wildcard $(LIBDIR)*.c)
-MODULES=$(wildcard $(MODDIR)*.c)
-SRCS=$(SRCDIR)main.c $(LIBS) $(MODULES) 
+SRCS=src/libs/msg.c src/libs/iofiles.c src/libs/basic.c src/cforge.c
 
 # Generate a list of object files from the source files
 OBJS=$(patsubst $(SRCDIR)%.c,$(OBJDIR)%.o,$(SRCS))
@@ -73,21 +68,19 @@ ifeq ($(OSFLAG),win)
 	@if not exist "$(BINDIR)" mkdir "$(BINDIR)"
 	@if not exist "$(OBJDIR)" mkdir "$(OBJDIR)"
 	@if not exist "$(OLIBDIR)" mkdir "$(OLIBDIR)"
-	@if not exist "$(OMODDIR)" mkdir "$(OMODDIR)"
 else
 	@mkdir -p $(BINDIR)
 	@mkdir -p $(OBJDIR)
 	@mkdir -p $(OLIBDIR)
-	@mkdir -p $(OMODDIR)
 endif
 
 # Rule that produce the final binary that depends on the object files
 $(BINDIR)$(NAME)$(EXT): $(OBJS)
-	@$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^
 
 # Rule that produce the object files. Each object file depends on its corresponding source file and the header file
 $(OBJDIR)%.o: $(SRCDIR)%.c $(wildcard $(SRCDIR)*.h)
-	@$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 run: $(BINDIR)$(NAME)$(EXT)
 	@$(EXEC)$^
