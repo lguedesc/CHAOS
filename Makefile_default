@@ -2,7 +2,7 @@
 # To use Intel compiler (icx) in windows, insert at terminal before call make:
 # call "C:\Program Files (x86)\Intel\oneAPI\setvars.bat" intel64
 
-CC=clang
+CC=icc
 CSTD=c17
 NAME=CHAOS
 CFORGENAME = CHAOSForge
@@ -19,20 +19,20 @@ else
 		OSFLAG+=macos
 	endif
 endif
-# Identify flags based on Compiler (icx): 
+# Identify flags based on Compiler (icx): /Wall /Werror     (gcc): -Wall -Werror -Wpedantic
 CFLAGS   :=
-ifeq ($(CC),icx)
+ifeq ($(CC),icx) 
 ifeq ($(OSFLAG), win)
-	CFLAGS+=/Qstd:$(CSTD) /Qopenmp /O3 /Qipo /Wall /Werror
+	CFLAGS+=/Qstd:$(CSTD) /Qopenmp /O3 /Qipo 
 else
-	CFLAGS+=-std=$(CSTD) -qopenmp -O3 -ipo -Wall -Werror
+	CFLAGS+=-std=$(CSTD) -qopenmp -O3 -ipo 
 endif
 else ifeq ($(CC),gcc)
-	CFLAGS+=-std=$(CSTD) -fopenmp -O3 -Wall -Werror -Wpedantic
+	CFLAGS+=-std=$(CSTD) -fopenmp -O3 
 else ifeq ($(CC),clang)
-	CFLAGS+=-std=$(CSTD) -fopenmp -O3 -Wall -Werror -Wpedantic
+	CFLAGS+=-std=$(CSTD) -fopenmp -O3
 else ifeq ($(CC),icc)
-	CFLAGS+=-std=$(CSTD) -qopenmp -O3 -Wall -Werror -no-multibyte-chars -diag-disable=10441
+	CFLAGS+=-std=$(CSTD) -qopenmp -no-multibyte-chars -O3 -ipo -diag-disable=10441
 endif
 
 # -Wall -Werror -Wpedantic

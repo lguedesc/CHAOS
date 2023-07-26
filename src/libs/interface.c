@@ -7,7 +7,7 @@
 #include "msg.h"
 
 // Main Interface 
-void clear_screen() {
+void clear_screen(void) {
     #ifdef _WIN32
         system("cls");
     #else

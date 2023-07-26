@@ -449,22 +449,6 @@ static void write_bifurc_control_parameter(FILE *output_file, double varpar, int
     }
 }
 
-static void write_2D_diagram_control_params(FILE *output_file, double **results, int pixels, int mode) {
-    // Header
-    if (mode == 1) {
-        fprintf(output_file, "%s %s ", "CparY", "CparX");
-    } 
-    else if (mode == 2) {
-        for (int i = 0; i < pixels; i++) {
-            fprintf(output_file, "%.10lf %.10lf ", results[i][0], results[i][1]);
-        }
-    }
-    else {
-        print_debug("Failed to write results in output file with function 'write_2D_diagram_control_params()' using mode (%d)...\n", mode);
-        return;
-    }
-}
-
 static void write_attractor(FILE *output_file, int attractor, int mode) {
     // Header
     if (mode == 1) {
@@ -475,30 +459,6 @@ static void write_attractor(FILE *output_file, int attractor, int mode) {
     }
     else {
         print_debug("Failed to write results in output file with function 'write_attractor()' using mode (%d)...\n", mode);
-        return;
-    }
-}
-
-static void write_fbifurc_poinc(FILE *output_file, int dim, double varpar, int npoinc, double **poinc, int attractor, ang_info *angles, int mode) {
-    // Header
-    if (mode == 1) {
-        for (int i = 0; i < dim; i++) {
-            write_bifurc_control_parameter(output_file, varpar, 1);
-            write_state_vars(output_file, dim, NULL, 1);
-            write_state_vars_angles(output_file, NULL, angles, 1);
-            write_attractor(output_file, attractor, 1);
-        }
-    } 
-    else if (mode == 2) {
-        for(int q = 0; q < npoinc; q ++) {
-            write_bifurc_control_parameter(output_file, varpar, 2);
-            write_state_vars(output_file, dim, poinc[q], 2);
-            write_state_vars_angles(output_file, poinc[q], angles, 2);
-            write_attractor(output_file, attractor, 2);
-        }
-    }
-    else {
-        print_debug("Failed to write results in output file with function 'func()' using mode (%d)...\n", mode);
         return;
     }
 }

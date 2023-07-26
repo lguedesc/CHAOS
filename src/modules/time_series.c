@@ -75,7 +75,6 @@ static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, double h
     //Get time and date
     time_t tm;
     time(&tm);
-    size_t maxlen = 100;
 
     if (strcmp(mode, "screen") == 0) {   
         printf("\n  Program Parameters\n");

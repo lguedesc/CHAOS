@@ -106,7 +106,7 @@ static void read_params(int dim, int npar, int *np, int *ndiv, int *trans, int *
     }
     // Assign number of state variables that will be submitted to RMS calculation
     fscanf(input, "%d", nrms);
-    if (nrms > 0) {
+    if ((*nrms) > 0) {
         // Allocate memory for rmsindex[nrms]
         *rmsindex = malloc((*nrms) * sizeof **rmsindex);
         // Assign indexes to rmsindex[nrms] vector
@@ -116,7 +116,7 @@ static void read_params(int dim, int npar, int *np, int *ndiv, int *trans, int *
     }
     // Assign the number of custom variables to be calculated
     fscanf(input, "%d\n", ncustomvalues);
-    if (ncustomvalues > 0) {
+    if ((*ncustomvalues) > 0) {
         // Assign the number of custom variables that will be printed in output file
         fscanf(input, "%d\n", nprintf);
         // Allocate memory for printfindex[nprintf]

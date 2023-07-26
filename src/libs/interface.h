@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 // Main Interface
-void clear_screen();
+void clear_screen(void);
 void partition(int mode, size_t maxlength);
 void welcome_header(size_t maxlength);
 void option_header(char *tbnames, size_t maxlength);

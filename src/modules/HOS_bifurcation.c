@@ -104,7 +104,7 @@ static void read_params(int dim, int npar, int *np, int *ndiv, int *trans, doubl
     }
     // Assign the number of custom variables to be calculated
     fscanf(input, "%d\n", ncustomvalues);
-    if (ncustomvalues > 0) {
+    if ((*ncustomvalues) > 0) {
         // Assign the number of custom variables that will be printed in output file
         fscanf(input, "%d\n", nprintf);
         // Allocate memory for printfindex[nprintf]
