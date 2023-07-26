@@ -2,10 +2,10 @@
 # To use Intel compiler (icx) in windows, insert at terminal before call make:
 # call "C:\Program Files (x86)\Intel\oneAPI\setvars.bat" intel64
 
-CC=icx
+CC=clang
 CSTD=c17
 NAME=CHAOS
-CFORGENAME = CHAOSForge
+
 # Indentify Operating System
 OSFLAG 				:=
 ifeq ($(OS),Windows_NT)
@@ -19,68 +19,78 @@ else
 		OSFLAG+=macos
 	endif
 endif
-# Identify flags based on Compiler (icx): /Wall /Werror     (gcc): -Wall -Werror -Wpedantic
+
+# Identify flags based on Compiler (icx): 
 CFLAGS   :=
-ifeq ($(CC),icx) 
+ifeq ($(CC),icx)
 ifeq ($(OSFLAG), win)
-	CFLAGS+=/Qstd:$(CSTD) /Qopenmp /O3 /Qipo 
+	CFLAGS+=/Qstd:$(CSTD) /Qopenmp /O3 /Qipo /Wall /Werror
 else
-	CFLAGS+=-std=$(CSTD) -qopenmp -O3 -ipo 
+	CFLAGS+=-std=$(CSTD) -qopenmp -O3 -ipo -Wall -Werror
 endif
 else ifeq ($(CC),gcc)
-	CFLAGS+=-std=$(CSTD) -fopenmp -O3 
+	CFLAGS+=-std=$(CSTD) -fopenmp -O3 -Wall -Werror -Wpedantic
 else ifeq ($(CC),clang)
-	CFLAGS+=-std=$(CSTD) -fopenmp -O3
+	CFLAGS+=-std=$(CSTD) -fopenmp -O3 -Wall -Werror -Wpedantic
 else ifeq ($(CC),icc)
-	CFLAGS+=-std=$(CSTD) -qopenmp -no-multibyte-chars -O3 -ipo -diag-disable=10441
+	CFLAGS+=-std=$(CSTD) -qopenmp -O3 -Wall -Werror -no-multibyte-chars -diag-disable=10441
 endif
 
-# -Wall -Werror -Wpedantic
-
-#define .c files to be compiled
-LIBS=src/libs/odesystems.c src/libs/interface.c src/libs/iofiles.c src/libs/nldyn.c src/libs/nlosc.c src/libs/customcalc.c src/libs/basic.c src/libs/odesolvers.c src/libs/msg.c
-MODULES=src/modules/convergence_test.c src/modules/time_series.c src/modules/poinc_map.c src/modules/lyap_exp_wolf.c src/modules/ftime_series.c src/modules/bifurcation.c src/modules/fbifurcation.c src/modules/dyndiag.c src/modules/fdyndiag.c src/modules/epbasin.c src/modules/forcedbasin.c 
-HOSMODULES=src/modules/HOS_time_series.c src/modules/HOS_ftime_series.c src/modules/HOS_bifurcation.c src/modules/HOS_fbifurcation.c src/modules/HOS_dyndiag.c src/modules/HOS_fdyndiag.c src/modules/HOS_fforcedbasin.c
-FILES=src/main.c $(LIBS) $(MODULES) $(HOSMODULES) 
-
-CFORGEFILES = src/libs/msg.c src/libs/iofiles.c src/libs/basic.c src/cforge.c
-# Identify CFORGE flags based on Compiler /Wall /Werror
-CFORGEFLAGS   :=
-ifeq ($(CC),icx) 
-ifeq ($(OSFLAG), win)
-	CFORGEFLAGS+=/Qstd:$(CSTD) 
+# Define Separator, binary extension and execution command based on Operating System
+ifeq ($(OSFLAG),win)
+	SEP=\\
+	EXT=.exe
+	EXEC=
 else
-	CFORGEFLAGS+=-std=$(CSTD) 
-endif
-else ifeq ($(CC),gcc)
-	CFORGEFLAGS+=-std=$(CSTD)
-else ifeq ($(CC),clang)
-	CFORGEFLAGS+=-std=$(CSTD)
-else ifeq ($(CC),icc)
-	CFORGEFLAGS+=-std=$(CSTD) -no-multibyte-chars -diag-disable=10441
+	SEP=/
+	EXT=
+	EXEC=./
 endif
 
-all:
-	@echo $(OS)
-ifeq ($(OSFLAG), win)
-	@if not exist "bin\" mkdir "bin\"
-	$(CC) $(CFLAGS) -o bin\$(NAME) $(FILES)
-#	@scripts\assign_icon_win.bat $(NAME)
-else ifeq ($(OSFLAG), macos)
-	@mkdir -p bin
-	$(CC) $(CFLAGS) -o bin/$(NAME) $(FILES)
-#	@bash scripts/assign_icon_macos.sh
+# Define Important Directories
+SRCDIR=src$(SEP)
+MODDIR=$(SRCDIR)modules$(SEP)
+LIBDIR=$(SRCDIR)libs$(SEP)
+BINDIR=bin$(SEP)
+OBJDIR=$(BINDIR)obj$(SEP)
+OLIBDIR=$(OBJDIR)libs$(SEP)
+OMODDIR=$(OBJDIR)modules$(SEP)
+
+# List of .c source files
+LIBS=$(wildcard $(LIBDIR)*.c)
+MODULES=$(wildcard $(MODDIR)*.c)
+SRCS=$(SRCDIR)main.c $(LIBS) $(MODULES) 
+
+# Generate a list of object files from the source files
+OBJS=$(patsubst $(SRCDIR)%.c,$(OBJDIR)%.o,$(SRCS))
+
+# The main call of make
+all: create_dir $(BINDIR)$(NAME)$(EXT)
+
+# Rule that creates directories based on the Operating System
+create_dir:
+ifeq ($(OSFLAG),win)
+	@if not exist "$(BINDIR)" mkdir "$(BINDIR)"
+	@if not exist "$(OBJDIR)" mkdir "$(OBJDIR)"
+	@if not exist "$(OLIBDIR)" mkdir "$(OLIBDIR)"
+	@if not exist "$(OMODDIR)" mkdir "$(OMODDIR)"
 else
-	@mkdir -p bin
-	$(CC) $(CFLAGS) -o bin/$(NAME) $(FILES)
+	@mkdir -p $(BINDIR)
+	@mkdir -p $(OBJDIR)
+	@mkdir -p $(OLIBDIR)
+	@mkdir -p $(OMODDIR)
 endif
 
-run: 
-ifeq ($(OSFLAG), win)
-	@bin\$(NAME).exe
-else
-	@./bin/$(NAME)
-endif
+# Rule that produce the final binary that depends on the object files
+$(BINDIR)$(NAME)$(EXT): $(OBJS)
+	@$(CC) $(CFLAGS) -o $@ $^
+
+# Rule that produce the object files. Each object file depends on its corresponding source file and the header file
+$(OBJDIR)%.o: $(SRCDIR)%.c $(wildcard $(SRCDIR)*.h)
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+run: $(BINDIR)$(NAME)$(EXT)
+	@$(EXEC)$^
 
 plot:
 ifeq ($(OSFLAG), win)
@@ -89,40 +99,15 @@ else
 	@bash scripts/plot.sh
 endif
 
-cforge:
-	@echo $(OS)
-ifeq ($(OSFLAG), win)
-	@if not exist "bin\" mkdir "bin\"
-	$(CC) $(CFORGEFLAGS) -o bin\$(CFORGENAME) $(CFORGEFILES)
-#	@scripts\assign_icon_win.bat $(NAME)
-else ifeq ($(OSFLAG), macos)
-	@mkdir -p bin
-	$(CC) $(CFORGEFLAGS) -o bin/$(CFORGENAME) $(CFORGEFILES)
-#	@bash scripts/assign_icon_macos.sh
-else
-	@mkdir -p bin
-	$(CC) $(CFORGEFLAGS) -o bin/$(CFORGENAME) $(CFORGEFILES)
-endif
-
-run_cforge:
-ifeq ($(OSFLAG), win)
-	@bin\$(CFORGENAME).exe
-else
-	@./bin/$(CFORGENAME)
-endif
-
-test_cforge: cforge run_cforge
-
-clean_bin:
-ifeq ($(OSFLAG), win)
-	@del /Q bin
-else
-	@rm -r bin
-endif
-
 clean: 
 ifeq ($(OSFLAG), win)
-	@del /Q bin
+	@del $(OBJDIR)*.o
+	@del $(OLIBDIR)*.o
+	@del $(OMODDIR)*.o
+	@del $(BINDIR)$(NAME)$(EXT)
 else
-	@rm -r bin
+	@rm -rf $(OBJDIR)*.o
+	@rm -rf $(OLIBDIR)*.o
+	@rm -rf $(OMODDIR)*.o
+	@rm -f $(BINDIR)$(NAME)$(EXT)
 endif

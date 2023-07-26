@@ -12,7 +12,6 @@
 #include "libs/basic.h"
 #include "libs/iofiles.h"
 
-
 #define MAX_LINE_LENGTH 10000       // 10 Kb
 
 typedef struct {
@@ -114,7 +113,7 @@ size_t get_size_of_longest_line(FILE *file) {
 }
 
 /* Check information */
-bool continue_program() {
+bool continue_program(void) {
     char choice;
     bool proceed;
     do {
@@ -189,10 +188,10 @@ bool check_if_string_is_number(const char* str) {
 }
 
 void check_group(char *str) {
-    if((strcmp(str, "GNL") != 0) && (strcmp(str, "OS") != 0)) {
+    if((strcmp(str, "GNL") != 0) && (strcmp(str, "HOS") != 0)) {
         print_error("'%s' is a invalid group! Please choose between the options below:\n", str);
         print_error("   1. General Nonlinear Systems by entering 'group = GNL' in the input file;\n");
-        print_error("   2. Harmonic Oscillators by entering 'group = OS' in the input file.\n");
+        print_error("   2. Harmonic Oscillators by entering 'group = HOS' in the input file.\n");
         print_exit_prog();
         exit(EXIT_FAILURE);
     }
@@ -757,7 +756,7 @@ void add_customcalc(sys system) {
 }
 
 void add_number_of_systems(char* group) {
-    char *filepath = "src/main.c";
+    char *filepath = "src/defines.h";
     // Open main file to read and write the information
     FILE *file = open_file(filepath, "rb+", true);
     // Allocate memory for the buffer and for the keyword that will be searched for within main file
@@ -873,7 +872,7 @@ char *split_and_add_text(FILE *file, long split_pos, char *str_add) {
 }
 
 void add_system_information(sys system) {
-    char *filepath = "src/main.c";
+    char *filepath = "src/defines.h";
     // Open main file to read and write the information
     FILE *file = open_file(filepath, "rb+", true);
     size_t maxlinesize = get_size_of_longest_line(file);
@@ -1129,14 +1128,14 @@ void add_system_call(sys system) {
 }
 
 /* Welcome and Tutorial */
-void file_tutorial() {
+void file_tutorial(void) {
     printf("\nBelow there is an example of how a input file must be formatted and organized:\n\n");
     print_purple("# INFO:\n");
     print_purple("dim = 2\n");
     print_purple("name = Test Oscillator\n");
     print_purple("abrev = TOsc\n");
     print_purple("outfile = test_oscillator\n");
-    print_purple("group = OS\n");
+    print_purple("group = HOS\n");
     print_purple("\n# COMMENTS:\n");
     print_purple("par[0] = Forcing frequency\n");
     print_purple("par[1] = Forcing amplitude\n");
@@ -1165,7 +1164,7 @@ void file_tutorial() {
     printf("\t- group:   The group the custom dynamical system belongs.\n");
     printf("\t           Currently, the CHAOS package supports two types of\n");
     printf("\t           dynamical systems: General Nonlinear Systems (GNL)\n");
-    printf("\t           and Harmonic Oscillators (OS). This field is very\n");
+    printf("\t           and Harmonic Oscillators (HOS). This field is very\n");
     printf("\t           important as each group have its own unique available\n");
     printf("\t           set of features within the CHAOS package. Also, some\n");
     printf("\t           features as bifurcation diagrams and Poincare maps\n");
@@ -1201,7 +1200,7 @@ void file_tutorial() {
 
 }
 
-bool asks_for_tutorial() {
+bool asks_for_tutorial(void) {
     char choice;
     bool proceed;
     printf("To begin, CHAOS Forge requires an input file with the some key information.\n");
@@ -1223,7 +1222,7 @@ bool asks_for_tutorial() {
     return proceed;
 }
 
-void welcome() {
+void welcome(void) {
     print_blue("\nWelcome to CHAOS Forge! v.1.0\n\n");
     print_blue("This tool allows you to expand the capabilities of the CHAOS package by adding\n");
     print_blue("your own custom dynamical systems, allowing CHAOS to meet your specific needs.\n\n");                
@@ -1235,7 +1234,7 @@ void welcome() {
 }
 
 /* Backup */
-bool asks_for_backup() {
+bool asks_for_backup(void) {
     char choice;
     bool proceed;
     print_warning("It is highly recommended to make a backup before continuing.\n");
@@ -1317,7 +1316,7 @@ void get_current_date_time(int *day, char month[4], int *year, int *hour, int *m
     }
 }
 
-char *create_bkp_dir() {
+char *create_bkp_dir(void) {
     char *rawdir = "backup/";
     char *dir = convert_dir(rawdir);
     // Get time and date
@@ -1332,7 +1331,7 @@ char *create_bkp_dir() {
     return fulldir;
 }
 
-void backup() {
+void backup(void) {
     // Asks for backup
     bool proceed = asks_for_backup();
     if (proceed != true) {

@@ -4,7 +4,7 @@ from libs import plotconfig as pltconf
 
 pltconf.plot_params(True, 10, 0.2)
 
-save = True
+save = False
 system = "duffing"
 ext = ".pdf"
 filenum = 0

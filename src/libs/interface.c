@@ -4,8 +4,10 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include "msg.h"
 
-void clear_screen() {
+// Main Interface 
+void clear_screen(void) {
     #ifdef _WIN32
         system("cls");
     #else
@@ -13,7 +15,6 @@ void clear_screen() {
     #endif
 }
 
-// Main Interface 
 void partition(int mode, size_t maxlength) {
     if (mode == 1) {
         printf(" ");
@@ -82,7 +83,7 @@ void invalid_option(unsigned int option, char* category, size_t maxlength) {
 void end_of_execution(size_t maxlength) {
     printf("%s", "\n\n  Execution ended successfully! Press any key to exit program...\n");
     partition(1, maxlength);
-    while(getchar()!='\n'){}
+    //while(getchar()!='\n'){}
     getchar(); // wait for ENTER
 }
 
@@ -136,6 +137,32 @@ int int_length(int value) {
     else {
         return (floor(log10(abs(value))) + 1);
     }
+}
+
+void progress_bar(int mode, double var, double var_i, double var_f) {
+    double perc;
+    // Actual percentage
+    if (mode == 1) {
+        perc = 100;
+    }
+    else {
+        perc = (var/(var_f - var_i))*100;
+    }
+    // Filled Part of the progress bar
+    int fill = (perc * 50) / 100;  // 50 is the bar length
+    printf("\r  Progress: |");
+    for(int i = 0; i < fill; i++) {
+        printf("#");
+    }
+    // Unfilled part of the progress bar
+    for (int i = 0; i < 50 - fill; i++) {
+        printf(".");
+    }
+    if (perc > 100) {
+        perc = 100;
+    }
+    printf("| %.1lf %% ", perc);
+    fflush(stdout);
 }
 
 // Simulation Prints
@@ -353,7 +380,9 @@ void write_RMS_calculations_info(int n, int *index, size_t maxlength, double per
     partition(2, maxlength);
     printf("%-*s %-*d\n", spcname, "  Number of RMS Calculations:", spcvalue, n);
     print_list_of_indexes(n, index, spcvalue, spcname, "  State Variables Indexes:");
-    printf("\n");
+    if (n > 0) {
+        printf("\n");
+    }
 }
 
 void fwrite_RMS_calculations_info(FILE *output_file, int n, int *index, size_t maxlength, double percname) {
@@ -364,7 +393,9 @@ void fwrite_RMS_calculations_info(FILE *output_file, int n, int *index, size_t m
     fpartition(output_file, 2, maxlength);
     fprintf(output_file, "%-*s %-*d\n", spcname, "  Number of RMS Calculations:", spcvalue, n);
     fprint_list_of_indexes(output_file, n, index, spcvalue, spcname, "  State Variables Indexes:");
-    fprintf(output_file, "\n");
+    if (n > 0) {
+        fprintf(output_file, "\n");
+    }
 }
 
 void write_custom_info_calculations(int n, int nf, int *findex, int nscr, int *scrindex, size_t maxlength, double percname) {
@@ -872,7 +903,6 @@ void fwrite_basin_info(char* type, FILE *output_file, double *icrange, int index
 void print_attractor(int attrac, int maxper, size_t maxlength, double percname) {
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
-    printf("  Attractor\n");
     partition(2, maxlength);
     // Get the attractor and convert into a string
     char number[5];
@@ -896,12 +926,12 @@ void print_attractor(int attrac, int maxper, size_t maxlength, double percname) 
     else {
         printf("%-*s %-*s\n", spcname, "  Type of Motion:", spcvalue, "Undefined (Escape)");
     } 
+    partition(2, maxlength);
 }
 
 void fprint_attractor(FILE *output_file, int attrac, int maxper, size_t maxlength, double percname) {
     int spcname = maxlength - (1 - percname)*maxlength; // Space for name of printer variable
     int spcvalue = maxlength - percname*maxlength;      // Space for value of variable
-    fprintf(output_file, "  Attractor\n");
     fpartition(output_file, 2, maxlength);
     // Get the attractor and convert into a string
     char number[5];
@@ -925,6 +955,7 @@ void fprint_attractor(FILE *output_file, int attrac, int maxper, size_t maxlengt
     else {
         fprintf(output_file, "%-*s %-*s\n", spcname, "  Type of Motion:", spcvalue, "Undefined (Escape)");
     } 
+    fpartition(output_file, 2, maxlength);
 }
 
 void print_RMS(int nRMS, int *rmsindex, double *xRMS, double *overallxRMS, size_t maxlength, double percname) {
@@ -989,7 +1020,7 @@ void print_minmax(double *xmin, double *xmax, double *overallxmin, double *overa
     partition(2, maxlength);
     // Print min and maximum values
     for (int q = 0; q < dim; q++) {
-        printf("%s%d%-*s %-*g\n", "  xmix[", q, spcname - 7 - int_length(q), "]:", spcvalue, xmin[q]);
+        printf("%s%d%-*s %-*g\n", "  xmin[", q, spcname - 7 - int_length(q), "]:", spcvalue, xmin[q]);
     }
     for (int q = 0; q < dim; q++) {
         printf("%s%d%-*s %-*g\n", "  xmax[", q, spcname - 7 - int_length(q), "]:", spcvalue, xmax[q]);

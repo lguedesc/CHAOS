@@ -7,7 +7,7 @@ from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib.ticker import FormatStrFormatter
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import os
-from src.libs import plotconfig as pltconf
+from libs import plotconfig as pltconf
 
 pltconf.plot_params(True, 10, 0.5)
 
@@ -134,19 +134,18 @@ save = False
 system = "bistable_EH"
 ext = ".pdf"
 
-readpath = "FForcBasin/out/" + system + "_fforcedbasin.csv"; readpath = pltconf.convert_dir(readpath)
-savepath = "FForcBasin/figs"; savepath = pltconf.convert_dir(savepath)
+readpath = "data/FForcBasin/out/" + system + "_fforcedbasin.csv"; readpath = pltconf.convert_dir(readpath)
+savepath = "data/FForcBasin/figs"; savepath = pltconf.convert_dir(savepath)
 
 raw_data = pd.read_csv(readpath, delimiter = " ")
 
 x1, y1, z1 = process_data(raw_data, 'CparY', 'CparX', 'Attractor')
 x2, y2, z2 = process_data(raw_data, 'CparY', 'CparX', 'LE[0]')
 x3, y3, z3 = process_data(raw_data, 'CparY', 'CparX', 'LE[1]')
-x4, y4, z4 = process_data(raw_data, 'CparY', 'CparX', 'ddx[0]RMS')
-x5, y5, z5 = process_data(raw_data, 'CparY', 'CparX', 'xRMS[2]')
-x6, y6, z6 = process_data(raw_data, 'CparY', 'CparX', 'PoutAvg')
-x7, y7, z7 = process_data(raw_data, 'CparY', 'CparX', 'xMAX[0]')
-x8, y8, z8 = process_data(raw_data, 'CparY', 'CparX', 'xMIN[0]')
+x4, y4, z4 = process_data(raw_data, 'CparY', 'CparX', 'xRMS[0]')
+x5, y5, z5 = process_data(raw_data, 'CparY', 'CparX', 'xRMS[1]')
+x6, y6, z6 = process_data(raw_data, 'CparY', 'CparX', 'xMAX[0]')
+x7, y7, z7 = process_data(raw_data, 'CparY', 'CparX', 'xMIN[0]')
 # =========================================================================== #
 #                Create custom colormaps and define colormap parameters       #
 # =========================================================================== #
@@ -200,18 +199,16 @@ plot_maps(ax4, x4, y4, z4, colormap1, norm2)
 plot_maps(ax5, x5, y5, z5, colormap1, norm2)
 plot_maps(ax6, x6, y6, z6, colormap1, norm2)
 plot_maps(ax7, x7, y7, z7, colormap1, norm2)
-plot_maps(ax8, x8, y8, z8, colormap1, norm2)
 # =========================================================================== #
 #                          Customize titles and labels                        #
 # =========================================================================== #
 customize_labels(ax1, r'(a) Dynamical Attractors', custom = '(a)')
 customize_labels(ax2, r'(b) Largest Lyapunov Exponent ($\lambda_1$)', custom = '(b)')
 customize_labels(ax3, r'(d) 2nd Lyapunov Exponent ($\lambda_2$)',  custom = '(d)')
-customize_labels(ax4, r'(c) 3rd Lyapunov Exponent ($\lambda_2$)', custom = '(c)')
-customize_labels(ax5, r'(e) xRMS[2]', custom = '(c)')
-customize_labels(ax6, r'(f) Overall xRMS[2]', custom = '(c)')
-customize_labels(ax7, r'(f) xmax[0]', custom = '(c)')
-customize_labels(ax8, r'(f) xmin[0]', custom = '(c)')
+customize_labels(ax4, r'(e) xRMS[0]', custom = '(c)')
+customize_labels(ax5, r'(f) xRMS[1]', custom = '(c)')
+customize_labels(ax6, r'(f) xmax[0]', custom = '(c)')
+customize_labels(ax7, r'(f) xmin[0]', custom = '(c)')
 # =========================================================================== #
 #                                Save Figure                                  #
 # =========================================================================== #

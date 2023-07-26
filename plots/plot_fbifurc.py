@@ -1,117 +1,130 @@
-# -*- coding: utf-8 -*-
-import numpy as np
+#%% -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
-import matplotlib as mpl
-from matplotlib.colors import BoundaryNorm, ListedColormap
-import pandas as pd
 import os
-from src.libs import plotconfig as pltconf
+from matplotlib.ticker import FormatStrFormatter
+from libs import plotconfig as pltconf
+from matplotlib.axes import Axes
 
-pltconf.plot_params(True, 10, 0.5)
+pltconf.plot_params(True, 10, 0.2)
+
+def remainder_dataframe(dataframe, divisor):
+    # Find the exact values
+    exactvalue = dataframe/divisor
+    # Round the exact values to the closest integer
+    n = round(exactvalue)
+    # Find the remainder
+    remainder = dataframe - n*divisor
+    return remainder
 
 save = False
-system = "bistable_EH"
-ext = ".pdf"
-num = 0
 
-if num > 0:
-    readpath = "FBifurcation/out/" + system + f"_fbifurc({num}).csv"; readpath = pltconf.convert_dir(readpath)
-    readpathpoinc = "FBifurcation/out/" + system + f"_fbifurc_poinc({num}).csv"; readpathpoinc = pltconf.convert_dir(readpathpoinc)
-    savepath = "FBifurcation/figs"; savepath = pltconf.convert_dir(savepath)
-else:
-    readpath = "FBifurcation/out/" + system + "_fbifurc.csv"; readpath = pltconf.convert_dir(readpath)
-    readpathpoinc = "FBifurcation/out/" + system + "_fbifurc_poinc.csv"; readpathpoinc = pltconf.convert_dir(readpathpoinc)
-    savepath = "FBifurcation/figs"; savepath = pltconf.convert_dir(savepath)
-    
-df = pd.read_csv(readpath, delimiter = " ")
-dfpoinc = pd.read_csv(readpathpoinc, delimiter = " ")
+#system = "lin_oscillator_2DoF"
+#system = "lin_2DoF_EH"
+#system = "duffing_2DoF_EH"
+#system = "bistable_EH"
+#system = "duffing"
+system = "pend_oscillator_EH"
+ext = ".pdf"
+
+filenum = 0
+simulation = "fbifurc"
+dim = 8
+angles = True
+angles_indexes = { 4 }
+
+df, dfpoinc = pltconf.read_CHAOS_data(system, filenum, simulation)
 #=======================================================================#
 # Figure Parameters                                                     #
 #=======================================================================#
-x_inches2 = 150*(1/25.4)     # [mm]*constant
-y_inches2 = x_inches2*(0.6)
+cols = 1
+rows = dim
 
-if save == True:
-    dpi = 300
-else:
-    dpi = 200
+figsize = pltconf.figsize_in_cm(15, 0.2*rows*15)
+figsize2 = pltconf.figsize_in_cm(15, 0.2*len(angles_indexes)*15)
+figsize3 = pltconf.figsize_in_cm(15, 0.2*15)
+dpi = pltconf.set_fig_quality(save = save, base_dpi = 100)
 
-fig = plt.figure(1, figsize = (x_inches2,y_inches2), dpi = dpi, constrained_layout = True)
-fig.set_constrained_layout_pads(hspace=0, wspace=0.1)
-grid = fig.add_gridspec(4, 4)
+gama = 0.1
+size = 5
 
-ax1 = fig.add_subplot(grid[0,:-2])
-ax2 = fig.add_subplot(grid[1,:-2])
-ax3 = fig.add_subplot(grid[2,:-2])
-ax4 = fig.add_subplot(grid[3,:-2])
-ax5 = fig.add_subplot(grid[0,2:4])
-ax6 = fig.add_subplot(grid[1,2:4])
-ax7 = fig.add_subplot(grid[2,2:4])
-ax8 = fig.add_subplot(grid[3,2:4])
+fig, axs = pltconf.makefig_and_axs(figsize, rows, cols, dpi, hspace = 0.1, wspace = 0.1)
 
-size = 0.5
+n = [0, 1, 2, 3, 4, 5, 6, 7]
+i = 0
+color = 'lightgray'
+rmscolor = 'red'
+names = [r'$x$', r'$\dot{x}$', r'$z$', r'$\dot{z}$', r'$\phi$', r'$\dot{\phi}$', r'$v$', r'$I$']
+xticks = [df['Cpar'].min(), 1, df['Cpar'].max()]
 
 colormap = pltconf.set_colormap(df['Attractor'])
-fillcolor = 'lightgray'
-ax1.scatter(dfpoinc['Cpar'], dfpoinc['x[0]'], c = dfpoinc['Attractor'], cmap = colormap, rasterized = True, s = size, linewidths = 0, marker = 'o', zorder = 2)
-ax1.plot(df['Cpar'], df['xMAX[0]'], rasterized = True, color = 'red', zorder = 1)
-ax1.plot(df['Cpar'], df['xMIN[0]'], rasterized = True, color = 'blue', zorder = 1)
-ax1.fill_between(df['Cpar'], df['xMAX[0]'], df['xMIN[0]'], color = fillcolor, zorder = 0)
-ax1.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
-ax1.set_ylabel(r'$x$')
 
-ax2.scatter(dfpoinc['Cpar'], dfpoinc['x[1]'], c = dfpoinc['Attractor'], cmap = colormap, rasterized = True, s = size, linewidths = 0, marker = 'o', zorder = 2)
-ax2.plot(df['Cpar'], df['xMAX[1]'], rasterized = True, color = 'red', zorder = 1)
-ax2.plot(df['Cpar'], df['xMIN[1]'], rasterized = True, color = 'blue', zorder = 1)
-ax2.fill_between(df['Cpar'], df['xMAX[1]'], df['xMIN[1]'], color = fillcolor, zorder = 0)
-ax2.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
-ax2.set_ylabel(r'$\dot{x}$')
+for col in range(cols):
+    for row in range(rows):
+        if i < dim:
+            if cols == 1:
+                ax = axs[row]
+            else:
+                ax = axs[row, col]
+            ax.scatter(dfpoinc['Cpar'], dfpoinc[f'x[{n[i]}]'], c = dfpoinc['Attractor'], cmap = colormap, rasterized = True, s = size, linewidths = 0, marker = '.', zorder = 2)
+            ax.plot(df['Cpar'], df[f'xMAX[{n[i]}]'], rasterized = True, color = color, lw = 0.5, zorder = 1)
+            ax.plot(df['Cpar'], df[f'xMIN[{n[i]}]'], rasterized = True, color = color, lw = 0.5, zorder = 1)
+            #ax.plot(df['Cpar'], df[f'xRMS[{n[i]}]'], rasterized = True, color = rmscolor, lw = 0.5, zorder = 3)
+            ax.fill_between(df['Cpar'], df[f'xMAX[{n[i]}]'], df[f'xMIN[{n[i]}]'], color = color, zorder = 0)
+            ax.set_ylabel(names[i])
+            ax.set_xlabel(r'$\Omega$')
+            ax.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
+            ax.set_xticks(xticks)
+            ax.xaxis.set_major_formatter(FormatStrFormatter('%.g'))
+            i = i + 1
+        else:
+            pass
 
-ax3.scatter(df['Cpar'], df['LE[0]'], c = df['Attractor'], cmap = colormap, rasterized = True, s = size, linewidths = 0, marker = 'o', zorder = 1)
-ax3.set_xlim(df['Cpar'].min(), df['Cpar'].max())
-ax3.axhline(0, df['Cpar'].min(), df['Cpar'].max(), color = 'black', linewidth = 0.5, zorder = 0)
-ax3.set_ylabel(r'$\lambda_1$')
+plt.show(block = False)
 
-ax4.scatter(df['Cpar'], df['LE[1]'], c = df['Attractor'], cmap = colormap, rasterized = True, s = size, linewidths = 0, marker = 'o', zorder = 1)
-ax4.set_ylabel(r'$\lambda_2$')
-ax4.set_xlabel(r'$\Omega$')
-ax4.set_xlim(df['Cpar'].min(), df['Cpar'].max())
+fig2, axs2 = pltconf.makefig_and_axs(figsize2, len(angles_indexes), cols, dpi, hspace = 0.1, wspace = 0.1)
+# Check if axs2 is a single subplot
+if isinstance(axs2, Axes):
+    axs2 = [axs2]  # Convert single subplot to a list with one element
+    
+for ax, i in zip(axs2, angles_indexes):
+        ax.scatter(dfpoinc['Cpar'], dfpoinc[f'x[{i}]_remainder'], rasterized = True, c = dfpoinc['Attractor'], cmap = colormap, s = size, linewidths = 0, marker = '.', zorder = 2)
+        ax.plot(df['Cpar'], df[f'xMAX[{i}]_remainder'], rasterized = True, color = color, lw = 0.5, zorder = 1)
+        ax.plot(df['Cpar'], df[f'xMIN[{i}]_remainder'], rasterized = True, color = color, lw = 0.5, zorder = 1)
+        #ax.plot(df['Cpar'], df[f'xRMS[{i}]'], rasterized = True, color = rmscolors[i], lw = 0.5, zorder = 3)
+        ax.fill_between(df['Cpar'], df[f'xMAX[{i}]_remainder'], df[f'xMIN[{i}]_remainder'], color = color, zorder = 0)
+        ax.set_ylabel(names[i])
+        ax.set_xlabel(r'$\Omega$')
+        ax.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
+        ax.set_xticks(xticks)
+        ax.xaxis.set_major_formatter(FormatStrFormatter('%.g'))
 
-ax5.scatter(dfpoinc['Cpar'], dfpoinc['x[2]'], c = dfpoinc['Attractor'], cmap = colormap, rasterized = True, s = size, linewidths = 0, marker = 'o', zorder = 2)
-ax5.plot(df['Cpar'], df['xMAX[2]'], rasterized = True, color = 'red', zorder = 1)
-ax5.plot(df['Cpar'], df['xMIN[2]'], rasterized = True, color = 'blue', zorder = 1)
-ax5.fill_between(df['Cpar'], df['xMAX[2]'], df['xMIN[2]'], color = fillcolor, zorder = 0)
-ax5.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
-ax5.set_ylabel(r'$\nu$')
+plt.show(block = False)
 
-ax6.plot(df['Cpar'], df['PoutAvg'], rasterized = True, color = 'red', zorder = 1)
-#ax6.plot(df['Cpar'], df['OverallxRMS[2]'], rasterized = True, color = 'blue', zorder = 1)
-ax6.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
-ax6.set_ylabel(r'$P_{\mathrm{out}}^{\mathrm{avg}}$')
+fig3, axs3, = pltconf.makefig_and_axs(figsize3, 1, 1, dpi, hspace = 0.1, wspace = 0.1)
 
-ax7.plot(df['Cpar'], df['ddx[0]RMS'], rasterized = True, color = 'red', zorder = 1)
-#ax7.plot(df['Cpar'], df['OverallxRMS[2]'], rasterized = True, color = 'blue', zorder = 1)
-ax7.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
-ax7.set_ylabel(r'$P_{\mathrm{in}}^{\mathrm{avg}}$')
-
-ax8.plot(df['Cpar'], df['OVRLLddx[0]RMS'], rasterized = True, color = 'red', zorder = 1)
-#ax8.plot(df['Cpar'], df['OverallxRMS[2]'], rasterized = True, color = 'blue', zorder = 1)
-ax8.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
-ax8.set_ylabel(r'$\eta^{\mathrm{avg}}$')
-
-
-
+for i in range(dim):
+    axs3.plot(df['Cpar'], df[f'LE[{i}]'], rasterized = True, linewidth = 1, zorder = 1+i, label = fr"$\lambda_{i}$")
+    axs3.hlines(0, df['Cpar'].min(), df['Cpar'].max(), color = "black", linewidth = 0.5, zorder = 3)
+    axs3.set_ylabel(r'$\lambda$')
+    axs3.set_xlabel(r'$\tau$')
+    axs3.set_xlim(df['Cpar'].min(), df['Cpar'].max())
+    axs3.legend(loc = "best", prop={'size': 6}, ncols = dim/2, frameon = False, handlelength = 0.7, handletextpad = 0.5)
+    
+plt.show()
 #========================================================================#
 # Show and Save Figure                                                   #
 #========================================================================#
 
 if save == True:
-    isExist = os.path.exists(savepath)
-    if (isExist == False):
-        os.makedirs(savepath)
-    
-    name = "/sample_" + system + "_fbifurc" + ext; name = pltconf.convert_dir(name)
-    fig.savefig(savepath + name)
-    plt.show()
-else:
-    plt.show()
+    pltconf.save_CHAOS_data(fig, system, simulation, ext)
+    #plt.show()
+#else:
+#    fig.show()
+#    plt.show()
+
+    #plt.show(fig)
+    #plt.show(fig2)
+    #plt.show(fig3)
+
+
+# %%

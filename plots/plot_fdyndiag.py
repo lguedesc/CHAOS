@@ -6,7 +6,7 @@ import matplotlib.colors as mpl_col
 from matplotlib.ticker import FormatStrFormatter
 
 import os
-from src.libs import plotconfig as pltconf
+from libs import plotconfig as pltconf
 
 pltconf.plot_params(False, 10, 0.5)
 
@@ -45,13 +45,13 @@ def customize_labels(ax, title1, custom = False):
 # =========================================================================== #
 #                                    Read Data                                #
 # =========================================================================== #
-maxper = 7
+maxper = 6
 save = False
-system = "duffing_2DoF_EH"
+system = "duffing"
 ext = ".pdf"
 
-readpath = "FDynDiagram/out/" + system + "_fdyndiag(5).csv"; readpath = pltconf.convert_dir(readpath)
-savepath = "FDynDiagram/figs"; savepath = pltconf.convert_dir(savepath)
+readpath = "data/FDynDiagram/out/" + system + "_fdyndiag.csv"; readpath = pltconf.convert_dir(readpath)
+savepath = "data/FDynDiagram/figs"; savepath = pltconf.convert_dir(savepath)
 
 raw_data = pd.read_csv(readpath, delimiter = " ")
 
@@ -59,9 +59,9 @@ x1, y1, z1 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'Attractor')
 x2, y2, z2 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'xMAX[0]')
 x3, y3, z3 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'xMIN[0]')
 #x4, y4, z4 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'ddxbRMS')
-x5, y5, z5 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'TotalPout')
-x6, y6, z6 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'xRMS[4]')
-x7, y7, z7 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'xRMS[5]')
+#x5, y5, z5 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'TotalPout')
+#x6, y6, z6 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'xRMS[4]')
+#x7, y7, z7 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'xRMS[5]')
 #x8, y8, z8 = pltconf.process_data(raw_data, 'CparY', 'CparX', 'xRMS[2]')
 # =========================================================================== #
 #                           Define figure parameters                          #
@@ -102,13 +102,13 @@ ax8 = fig.add_subplot(lin,col,8)
 # =========================================================================== #
 #                               Plot Data  
 # =========================================================================== #
-pltconf.plot_attractor_map(ax1, x1, y1, z1, maxper)
+pltconf.plot_attractor_map(fig, ax1, x1, y1, z1, maxper)
 pltconf.plot_neg_pos_map(ax2, x2, y2, z2)
 pltconf.plot_neg_pos_map(ax3, x3, y3, z3)
 #pltconf.plot_rainbow_map(ax4, x4, y4, z4)
-pltconf.plot_rainbow_map(ax5, x5, y5, z5)
-pltconf.plot_rainbow_map(ax6, x6, y6, z6)
-pltconf.plot_rainbow_map(ax7, x7, y7, z7)
+#pltconf.plot_rainbow_map(fig, ax5, x5, y5, z5)
+#pltconf.plot_rainbow_map(ax6, x6, y6, z6)
+#pltconf.plot_rainbow_map(ax7, x7, y7, z7)
 #pltconf.plot_rainbow_map(ax8, x8, y8, z8)
 # =========================================================================== #
 #                          Customize titles and labels                        #

@@ -1,0 +1,85 @@
+  Date/Time:  Tue Jul 18 22:56:31 2023
+ ===================================================================== 
+  Dynamical Response Diagram: Pendulum-Oscillator Energy Harvester
+ ===================================================================== 
+
+  Program Parameters
+ --------------------------------------------------------------------- 
+  Dimension:                               8                           
+  Number of Parameters:                    17                          
+  Forcing Periods:                         800                         
+  Timesteps per Period:                    6000                        
+  Total Number of Timesteps:               4800000                     
+  Transient Considered:                    650                         
+  Timestep Value:                          (2*pi)/(nDiv*par[0])        
+ --------------------------------------------------------------------- 
+  Initial Conditions
+ --------------------------------------------------------------------- 
+  Initial Time (t):                        0                           
+  x[0]:                                    0                           
+  x[1]:                                    0                           
+  x[2]:                                    0                           
+  x[3]:                                    0                           
+  x[4]:                                    0                           
+  x[5]:                                    0                           
+  x[6]:                                    0                           
+  x[7]:                                    0                           
+ --------------------------------------------------------------------- 
+  System Parameters
+ --------------------------------------------------------------------- 
+  par[0]:                                  1.75                        
+  par[1]:                                  0.1                         
+  par[2]:                                  45                          
+  par[3]:                                  0.5                         
+  par[4]:                                  0.025                       
+  par[5]:                                  0.025                       
+  par[6]:                                  0.0025                      
+  par[7]:                                  0                           
+  par[8]:                                  0                           
+  par[9]:                                  0                           
+  par[10]:                                 1                           
+  par[11]:                                 0.05                        
+  par[12]:                                 0.5                         
+  par[13]:                                 0.05                        
+  par[14]:                                 0.1                         
+  par[15]:                                 0.05                        
+  par[16]:                                 0.01                        
+ --------------------------------------------------------------------- 
+  Dynamical Diagram Parameters
+ --------------------------------------------------------------------- 
+  Diagram Mode:                            Reseting Initial Conditions 
+  Resolution:                              31 x 31                     
+
+  Control Parameter Index (x):             7                           
+  Initial Control Parameter (x):           0.01                        
+  Final Control Parameter (x):             2                           
+  Control Parameter Step (x):              0.0663333                   
+  Total Number of Steps (x):               31                          
+
+  Control Parameter Index (y):             8                           
+  Initial Control Parameter (y):           0.01                        
+  Final Control Parameter (y):             2                           
+  Control Parameter Step (y):              0.0663333                   
+  Total Number of Steps (y):               31                          
+ --------------------------------------------------------------------- 
+  RMS Calculation Parameters
+ --------------------------------------------------------------------- 
+  Number of RMS Calculations:              8                           
+  State Variables Indexes:                 0, 1, 2, 3, 4, 5, 6, 7      
+ --------------------------------------------------------------------- 
+  Custom Calculation Parameters
+ --------------------------------------------------------------------- 
+  Number of Custom Calculations:           119                         
+  Custom Values Printed on File:           67                          
+  Printed on File Indexes:                 9, 10, 11, 12, 13, 14, 15,  
+                                           16, 17, 18, 19, 20, 21, 22, 
+                                           23, 24, 25, 26, 51, 52, 53, 
+                                           54, 55, 56, 57, 58, 59, 60, 
+                                           61, 62, 63, 64, 65, 66, 67, 
+                                           68, 84, 85, 86, 87, 88, 89, 
+                                           90, 91, 92, 93, 94, 95, 96, 
+                                           97, 98, 99, 100, 101, 102,  
+                                           103, 104, 105, 106, 107,    
+                                           108, 109, 112, 113, 116,    
+                                           117, 118                    
+ --------------------------------------------------------------------- 

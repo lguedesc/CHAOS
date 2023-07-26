@@ -7,7 +7,7 @@ from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib.ticker import FormatStrFormatter
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import os
-from src.libs import plotconfig as pltconf
+from libs import plotconfig as pltconf
 
 pltconf.plot_params(True, 10, 0.5)
 
@@ -70,14 +70,17 @@ def plot_maps(ax, x, y, z, colormap):
 #                                    Read Data                                #
 # =========================================================================== #
 save = False
-system = "duffing_2DoF"
+system = "duffing"
 ext = ".pdf"
 
-filenum = 4
+filenum = 1
 
-readpath = "EPBasin/out/" + system + f"_epbasin({filenum}).csv"; readpath = pltconf.convert_dir(readpath)
-savepath = "EPBasin/figs"; savepath = pltconf.convert_dir(savepath)
+if filenum == 0:
+    readpath = "data/EPBasin/out/" + system + f"_epbasin.csv"; readpath = pltconf.convert_dir(readpath)
+else:
+    readpath = "data/EPBasin/out/" + system + f"_epbasin({filenum}).csv"; readpath = pltconf.convert_dir(readpath)
 
+savepath = "data/EPBasin/figs"; savepath = pltconf.convert_dir(savepath)
 raw_data = pd.read_csv(readpath, delimiter = " ")
 
 x1, y1, z1 = process_data(raw_data, 'CparY', 'CparX', 'Attractor')

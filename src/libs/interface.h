@@ -1,8 +1,11 @@
+#ifndef INTERFACE_H
+#define INTERFACE_H
+
 #include <stdio.h>
 #include <stdlib.h>
 
 // Main Interface
-void clear_screen();
+void clear_screen(void);
 void partition(int mode, size_t maxlength);
 void welcome_header(size_t maxlength);
 void option_header(char *tbnames, size_t maxlength);
@@ -12,6 +15,7 @@ void invalid_option(unsigned int option, char* category, size_t maxlength);
 void end_of_execution(size_t maxlength);
 void identify_simulation(unsigned int toolbox, unsigned int *system, unsigned int *module, char **toolboxesNames, char **systemNames, char** moduleNames, size_t numofsystems, size_t maxlength, size_t numofmodules);
 int int_length(int value);
+void progress_bar(int mode, double var, double var_i, double var_f);
 
 // Simulation Prints
 void fpartition(FILE *output_file, int mode, size_t maxlength);
@@ -82,3 +86,5 @@ void fprint_minmax(FILE *output_file, double *xmin, double *xmax, double *overal
 
 void print_attractor(int attrac, int maxper, size_t maxlength, double percname);
 void fprint_attractor(FILE *output_file, int attrac, int maxper, size_t maxlength, double percname);
+
+#endif

@@ -1,26 +1,97 @@
-*** CHAOS - FUTURE FEATURES (TO BE IMPLEMENTED) ***
-0. Implement linearized equations by entering the jacobian instead of the full system
-1. Better input files: The user can put the variables in any order, just by declaring it by name. Example dim=3, nRMS=2; Maybe declaring the system in the input file removing the "choose dynamical system" menu
-2. Insert a customcalc before integrator to contemplate customvalues initial conditions
-3. Finish the general dynamical systems toolbox (Lorenz, Lotk-Volterra, Halvorsen, Rossler, etc) - Add missing modules and change timestep to be defined by the user, not by number of divisions
-4. Make a Simplified Version of the Forced Basin of Attraction based only on poincare map, without lyapunov.
-5. Implement different integrators like Runge-Kutta-Fehlberg (RKF45, RKF78 - nearly symplectic) Method for nonsmooth systems, Symplectic integrators for hamiltonian systems, Variational integrators for euler-lagrangian systems, etc.. to be attached with the existing modules, letting the users decide which integrator they want to use in the input file.
-6. Adapt the Stroboscopic Poincaré map already implemented to be compatible with variable step-size of the integrators.
-7. Implement the determination of the periodicity of the system by analysing the local maxima or minima of the system for systems which dont have harmonic external forcing terms.
-8. Implement Geometric Poincaré Map for systems that don't have harmonic external forcing terms.
-9. Let the user decide in the input file to use stroboscopic poincare or local maxima to determine periodicity in the Harmonically excited systems toolbox; and choose to use geometric poincaré or local maxima to determine the periodicity in the general systems toolbox.
-10. Implement Lyapunov Exponents Cloned Dynamics method and integrate with the existing modules, letting the user decide which method he/she wants to use.
-11. Implement 0-1 Test for Chaos method and integrate with existing modules, letting the user decide which method he/she wants to use.
-12. Implement Lyapunov Dimension (Kaplan-Yorke Dimension) and Kolmogorov-Sinai Entropy
-13. Implement Harmonic Balance Method to find all solution branches of a parameter domain. (See if it is possible)
+==================================================================================================================================
+CHAOS PACKAGE
+==================================================================================================================================
+*** KNOWN ISSUES AND POSSIBLE BUGS ***
+    1. Bug in progress bar in dyndiag (showing two %%) and bifurcation (when starting from a advance number, it bugs at 
+       100% always).
 
+*** FUTURE MAJOR FEATURES (TO BE IMPLEMENTED) ***
+    1. Better input files: The user can put the variables in any order, just by declaring it by name. 
+       Example dim=3, nRMS=2; Maybe declaring the system in the input file removing the "choose dynamical system" menu.
 
-*** CHAOS - KNOWN ISSUES AND POSSIBLE BUGS ***
-1. Bug in progress bar in dyndiag (showing two %%) and bifurcation (when starting from a advance number, it bugs in 100% always)
+    2. Insert a customcalc before integrator to contemplate customvalues initial conditions
 
+    3. Finish the general dynamical systems toolbox (Lorenz, Lotk-Volterra, Halvorsen, Rossler, etc).
+       Add missing modules and change timestep to be defined by the user, not by number of divisions
 
-*** CHAOS Forge - FUTURE FEATURES (TO BE IMPLEMENTED) ***
-1. Check for duplicate fields in equations and lin equatinos (f[0], f[1], etc)
-2. If CHAOS #0 field is implemented, CHAOS Forge needs to change as well.
-3. Add the option to overwrite system if it already exists
-4. Option to run makefile for CHAOS compilation or compile automatically
+    4. Make a Simplified Version of the Forced Basin of Attraction based only on poincare map, without lyapunov.
+
+    5. Implement different integrators like Runge-Kutta-Fehlberg (RKF45, RKF78 - nearly symplectic). Methods for nonsmooth systems.
+       Symplectic integrators for hamiltonian systems. Variational integrators for euler-lagrangian systems, etc.. 
+       Existing modules will support these new solvers, letting the users decide which integrator they want to use in the input file.
+ 
+    6. Adapt the Stroboscopic Poincaré map already implemented to be compatible with variable step-size of the integrators.
+
+    7. Implement the determination of the periodicity of the system by analysing the local maxima or minima of the system 
+       for systems which dont have harmonic external forcing terms.
+
+    8. Implement Geometric Poincaré Map for systems that don't have harmonic external forcing terms.
+
+    9. Let the user decide in the input file to use stroboscopic poincare or local maxima to determine periodicity of the 
+       harmonically excited systems toolbox; and choose to use geometric poincaré or local maxima to determine the periodicity 
+       in the general systems toolbox.
+
+    10. Implement Lyapunov Exponents Cloned Dynamics method and integrate with the existing modules, letting the user decide 
+        which method he/she wants to use.
+
+    11. Implement 0-1 Test for Chaos method and integrate with existing modules, letting the user decide which 
+        method he/she wants to use.
+
+    12. Implement Lyapunov Dimension (Kaplan-Yorke Dimension) and Kolmogorov-Sinai Entropy.
+    
+    13. Implement Harmonic Balance Method to find all solution branches of a parameter domain. (See if it is possible).
+
+    14. Add an option to the user to choose to save the full length of the timeseries or just the steady state.
+
+    15. Add a feature to identify if the system is autonomous or non-autonomous. Modify the way dynamical attractors
+        are identified based on that:
+        - For non-autonomous systems: Check lambda[0] and lambda[1] as the first lyapunov exponent(lambda[0]) can be greater than 0
+        - For autonomous systems: Check lambda[1] and lambda[2], as the first lyapunov exponent(lambda[0]) is 0 because of time.
+
+*** FEATURES TO BE REVAMPED ***
+    1. Custom Calculations by the user:
+        -> Substitute the customcalc vector to a struct that will hold the value, the name and the index of the custom calculation: 
+            typedef struct {
+                double value;
+                char *name;
+                unsigned int index;
+            } cvar;
+
+        -> Create a customcalc function just to initialize the struct properly:
+            - In this function, the user have the freedom to use any name of variables,
+              and then, for each variable, it must be called the definition getName(), for instance:
+                 double Pout, Pin, t_flip;
+                 getName(Pout); getName(Pin); getName(t_flip);
+              each name will be associated with a place in memory in the new struct pointer, for instance:
+
+                  cvar *ccalc;
+                  strcpy(ccalc[0].name, getName(Pout)); ccalc[0].index = 0; ccalc[0].value = Pout;
+
+        -> Then, the customcalc function will be called in four positions of the code:
+            - Before odesolver loop to contemplate initial variables or variables that need a reset;
+            - In the steady state regime inside the odesolver loop;
+            - In the overall timeseries (the last thing that will be called inside the odesolver loop);
+            - After the odesolver loop to calculate values that were accumulated throughout the odesolver loop.
+
+        -> The reading of these functions will be done dynamically through a dynamical library (windows: .dll, linux: .os files)
+           so the user dont need to mess with the source code;
+
+        -> The creation of the dynamical libraries will be done automatically. The user writes the calculations inside a 
+           input file and a program will handle the creation of the dynamical libraries files. 
+
+        -> These files will be stored in a separate folder called user_input_calculations (or somerhing like that);
+
+        -> CHAOS will identify the OS and handle the call of these libraries automatically. 
+
+==================================================================================================================================
+CHAOS FORGE PACKAGE
+==================================================================================================================================
+*** FUTURE FEATURES (TO BE IMPLEMENTED) ***
+    
+    1. Check for duplicate fields in equations and lin equatinos (f[0], f[1], etc)
+    
+    2. If CHAOS #0 field is implemented, CHAOS Forge needs to change as well.
+    
+    3. Add the option to overwrite system if it already exists
+    
+    4. Option to run makefile for CHAOS compilation or compile automatically

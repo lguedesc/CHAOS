@@ -8,92 +8,64 @@
 #include "../libs/nldyn.h"
 #include "../libs/iofiles.h"
 #include "../libs/interface.h"
+#include "../libs/defines.h"
+#include "../libs/basic.h"
 #include "epbasin.h"
 
-static void read_params_and_IC(char *name, int *dim, int *npar,  int *np, int *ndiv, double *t, double **par, double **icrange, int *indexX, int *indexY, double **x);
+static void read_params(int dim, int npar,  int *np, int *ndiv, double *t, double **par, double **icrange, int *indexX, int *indexY, double **x);
 static void print_info(FILE *info ,int dim, int npar, int np, int ndiv, double t, double *x, double *par, double *icrange, int indexX, int indexY, char* funcname, size_t maxlength, double percname, char* mode);
 
-void epbasin(char *funcname, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
+void epbasin(char *funcname, unsigned int DIM, unsigned int nPar, char* outputname, void (*edosys)(int, double *, double, double *, double *)) {
     
-    // Parameters related to printing information
-    size_t maxLen = 71;             // Max length of the info printed on the screen and on info file
-    double percName = 0.6;          // Percentage of space occuped by the name of the quantity printed
     // Declare Program Parameters
-    const double pi = 4 * atan(1);  // Pi number definition
-    int DIM;                        // Dimension of the system
     int nP;                         // Number of forcing periods analyzed
     int nDiv;                       // Number of divisions in each forcing period
-    int nPar;                       // Number of parameters of the system
     int indexX;                     // Index of control parameter in X
     int indexY;                     // Index of control parameter in Y
     // Assign values for program parameters, system parameters and initial conditions
-    char *input_filename = get_input_filename();
     double t;
     double *x = NULL;
     double *par = NULL;
     double *icRange = NULL;
-    read_params_and_IC(input_filename, &DIM, &nPar, &nP, &nDiv, &t, &par, &icRange, &indexX, &indexY, &x);
-    
+    read_params(DIM, nPar, &nP, &nDiv, &t, &par, &icRange, &indexX, &indexY, &x);
     // Create output files to store results
-    char output_epbasin_name[200];
-    char output_info_name[200];
-    const char *rawdir = "data/EPBasin/out/";                                                            // Directory of output file
-    char *dir = convert_dir(rawdir);
-    const char *ext = ".csv";                                                                           // Extension of output file
-    const char *ext_info = ".txt";                                                                      // Extension of info file
-    snprintf(output_epbasin_name, sizeof(output_epbasin_name), "%s%s_epbasin", dir, outputname);            // Assign name for output file without extension
-    snprintf(output_info_name, sizeof(output_info_name), "%s%s_info", dir, outputname);                   // Assign name for output info without extension
-    FILE *output_epbasin = create_output_file(output_epbasin_name, ext, dir);                             // Create dynamical diagram output file 
-    FILE *output_info = create_output_file(output_info_name, ext_info, dir);                            // Create info output file
-    
+    const char *directory = "data/EPBasin/out/";                                                    // Directory of output file
+    const char *module = "epbasin";
+    FILE *output_epbasin = name_and_create_output_files(outputname, directory, module, ".csv");     // Create dynamical diagram output file 
+    FILE *output_info = name_and_create_output_files(outputname, directory, "info", ".txt");        // Create info output file
     // Print information in screen and info output file
-    print_info(output_info, DIM, nPar, nP, nDiv, t, x, par, icRange, indexX, indexY, funcname, maxLen, percName, "screen");
-    print_info(output_info, DIM, nPar, nP, nDiv, t, x, par, icRange, indexX, indexY, funcname, maxLen, percName, "file");
-    
+    print_info(output_info, DIM, nPar, nP, nDiv, t, x, par, icRange, indexX, indexY, funcname, MAX_PRINT_LEN, PERC_PRINT_NAME, "screen");
+    print_info(output_info, DIM, nPar, nP, nDiv, t, x, par, icRange, indexX, indexY, funcname, MAX_PRINT_LEN, PERC_PRINT_NAME, "file");
     // Call solution
-    ep_basin_of_attraction_2D(output_epbasin, output_info, DIM, nP, nDiv, t, &x, indexX, indexY, icRange, par, nPar, edosys, p_write_epbasin_results);    
+    ep_basin_of_attraction_2D(output_epbasin, output_info, DIM, nP, nDiv, t, &x, indexX, indexY, icRange, par, nPar, edosys);    
     // Close output file
-    fclose(output_epbasin);
-    fclose(output_info);
-
+    close_files(2, output_epbasin, output_info);
     // Free allocated memory
-    free(dir);
-    free(input_filename);
-    free(x); free(par); free(icRange);
-
+    free_mem(x, par, icRange, NULL);
 }
 
-static void read_params_and_IC(char *name, int *dim, int *npar,  int *np, int *ndiv, double *t, double **par, double **icrange, int *indexX, int *indexY, double **x) {
+static void read_params(int dim, int npar,  int *np, int *ndiv, double *t, double **par, double **icrange, int *indexX, int *indexY, double **x) {
     // Open input file
-    FILE *input = fopen(name, "r");
-    if (input == NULL) {
-        // Return error if input does not exist 
-        perror(name);
-        exit(1);
-    }
-    // Read and assign system constants
-    fscanf(input, "%d", dim);
-    fscanf(input, "%d", npar);
+    char *input_filename = get_input_filename();
+    FILE *input = fopen(input_filename, "r");
+    file_safety_check(input);
     // Read and assign program parameters
     fscanf(input, "%d %d", np, ndiv); 
     // Read and assign initial time
     fscanf(input, "%lf", t);
     // Allocate memory for x[dim] and par[npar] vectors
-    *x = malloc((*dim) * sizeof **x);
-    *par = malloc((*npar) * sizeof **par);
+    *x = malloc(dim * sizeof **x);
+    *par = malloc(npar * sizeof **par);
     *icrange = malloc (6 * sizeof *icrange);
-    // Security check for pointers
-    if(*x == NULL || *par == NULL || *icrange == NULL) {
-        free(*x); free(*par); free(*icrange);
-        printf("Memory allocation for *x or *par did not complete successfully");
-        return;
-    }
+    ptr_safety_check(x, "*x in read_params()");
+    ptr_safety_check(par, "*par in read_params()");
+    ptr_safety_check(icrange, "*icrange in read_params()");
     // assign IC to x[dim] vector
-    for (int i = 0; i < *dim; i++) {
+    for (int i = 0; i < dim; i++) {
         fscanf(input, "%lf ", &(*x)[i]);     
     }
     // Assign parameter values to par[npar] vector
-    for (int i = 0; i < *npar; i++) {
+    for (int i = 0; i < npar; i++) {
         fscanf(input, "%lf\n", &(*par)[i]);
     }
     // Assign index of X control parameter of the diagram
@@ -110,6 +82,8 @@ static void read_params_and_IC(char *name, int *dim, int *npar,  int *np, int *n
     }
     // Close input file
     fclose(input);
+    // Free memory
+    free(input_filename);
     /* The user is responsible to free (x), (par) or (parrange) after the function call */
 }
 
