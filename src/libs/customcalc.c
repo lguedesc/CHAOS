@@ -885,6 +885,12 @@ void customcalc_multidirectional_hybrid_EH(double *x, double *par, double t, dou
 	return;
 }
 
+void customcalc_multidirectional_hybrid_EH_zero_pend_length(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
+	return;
+}
+
+
+
 /* Model for customcalc functions: 
 
 void customcalc_name(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode)

@@ -9,25 +9,26 @@ pltconf.plot_params(True, 10, 0.2, fast = True)
 
 save = False
 
-filenum = 12
+filenum = 1
 #system = "pendulum_EMEH"
 #system = "lin_oscillator_gravity"
 #system = "pend_oscillator_EH"
-system = "multidirect_hybrid_EH"
+#system = "multidirect_hybrid_EH"
+system = "multidirect_hybrid_EH_zero_len_pend"
 ext = ".png"
 simulation = "ftimeseries"
 
 df, df_poinc = pltconf.read_CHAOS_data(system, filenum, simulation)
         
-dim = 8
+dim = 5
 nP = 800
 nDiv = 6000
 trans = 650
 plot_i = nDiv*trans
 
 angles = False
-xvar = 'x[4]'
-yvar = 'x[7]'
+xvar = 'x[0]'
+yvar = 'x[2]'
 
 #=======================================================================#
 # Figure Parameters                                                     #

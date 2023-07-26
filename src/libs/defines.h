@@ -115,7 +115,7 @@ typedef struct {
 // main program macros 
 #define MAX_NAMELENGTH 120
 #define NUM_OF_GNL_SYSTEMS 4
-#define NUM_OF_HOS_SYSTEMS 19
+#define NUM_OF_HOS_SYSTEMS 20
 #define NUM_OF_TOOLBOXES 2
 #define NUM_OF_HOS_MODULES 11
 #define NUM_OF_GNL_MODULES 3
@@ -282,5 +282,12 @@ typedef struct {
 #define HOS_NPAR_19 16
 #define HOS_ANGLES_19 1
 #define HOS_ANGINDEX0_19 4
+
+#define HOS_FUNC_20 multidirectional_hybrid_EH_zero_pend_length
+#define HOS_CUSTOM_20 customcalc_multidirectional_hybrid_EH_zero_pend_length                 
+#define HOS_OUTPUTNAME_20 "multidirect_hybrid_EH_zero_len_pend"
+#define HOS_DIM_20 5
+#define HOS_NPAR_20 10
+#define HOS_ANGLES_20 0
 
 #endif

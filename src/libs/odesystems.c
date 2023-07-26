@@ -798,7 +798,7 @@ void linear_oscillator_gravity(int dim, double *x, double t, double *p, double *
     }
 }
 
-void multidirectional_hybrid_EH_with_degree(int dim, double *x, double t, double *p, double *f) {
+void multidirectional_hybrid_EH(int dim, double *x, double t, double *p, double *f) {
     /* OMEGA   = p[0]   |   zeta_z    = p[5]   |   chiPZ     = p[10]   |   kappa_EM = p[15]   |   x[0] = x       |   x[5] = dphi/dt
        gamma   = p[1]   |   zeta_phi  = p[6]   |   varphi_PZ = p[11]   |                      |   x[1] = dx/dt   |   x[6] = v
        mu      = p[2]   |   OMEGA_s   = p[7]   |   kappa_PZ  = p[12]   |                      |   x[2] = z       |   x[7] = i
@@ -894,6 +894,55 @@ void multidirectional_hybrid_EH_with_degree(int dim, double *x, double t, double
                 (1 + p[3])*p[9]*(-2*p[6]*x[5] + p[13]*x[7]))/p[9];
         f[6] = -(p[12]*x[3]) - p[11]*x[6];
         f[7] = -(p[15]*x[5]) - p[14]*x[7];
+        lin_eqs(rdim, jac, x, f);
+    }
+    else {
+        error();
+    }
+}
+
+void multidirectional_hybrid_EH_zero_pend_length(int dim, double *x, double t, double *p, double *f) {
+    /*  This is a version of 'multidirectional_hybrid_EH(..)' with a "pendulum of zero length" (l = 0), 
+        that is, two planar concentric masses at the same place. This implementation is needed 
+        as many equations of the original system are divided by l, which results in undefined
+        behavior if the user sets l = 0. 
+        Another approach could be used by inserting a series of 'ifs' within the original function. 
+        However, this could potentially slow down the simulations depending on the parameters. This is 
+        why a separate implementation was preferred. */
+    
+    /* OMEGA   = p[0]   |   zeta_z    = p[5]   |   x[0] = x         
+       gamma   = p[1]   |   OMEGA_s   = p[6]   |   x[1] = dx/dt     
+       mu      = p[2]   |   chiPZ     = p[7]   |   x[2] = z         
+       rho     = p[3]   |   varphi_PZ = p[8]   |   x[3] = dz/dt   
+       zeta_x  = p[4]   |   kappa_PZ  = p[9]   |   x[4] = v         */       
+
+    // Convert mu from degree to rad
+    double mu = degree_to_rad(p[2]);
+    // Define forcing terms
+    double ddrb = -p[1]*p[0]*p[0]*sin(p[0]*t);
+    double ddxb = ddrb*sin(mu);
+    double ddzb = ddrb*cos(mu);
+    // System of Equations
+    if (dim == 5) { 
+        f[0] = x[1];
+        f[1] = -((ddxb*(1 + p[3]) + p[6]*p[6]*x[0] + 2*p[4]*x[1])/(1 + p[3])); 
+        f[2] = x[3];
+        f[3] = -ddzb + (-x[2] - 2*p[5]*x[3] + p[7]*x[4])/(1 + p[3]);
+        f[4] = -(p[9]*x[3]) - p[8]*x[4];
+    } 
+    else if (dim == 30) {
+        uint8_t rdim = 5; // (-1 + sqrt(1 + 4*dim))/2
+        // Jacobian
+        double jac[5][5] = { {                       0,                    1,               0,                    0,               0 }, 
+                             { -(p[6]*p[6]/(1 + p[3])), (-2*p[4])/(1 + p[3]),               0,                    0,               0 },
+                             {                       0,                    0,               0,                    1,               0 },
+                             {                       0,                    0, -(1/(1 + p[3])), (-2*p[5])/(1 + p[3]), p[7]/(1 + p[3]) },
+                             {                       0,                    0,               0,                -p[9],           -p[8] }  };
+        f[0] = x[1];
+        f[1] = -((ddxb*(1 + p[3]) + p[6]*p[6]*x[0] + 2*p[4]*x[1])/(1 + p[3])); 
+        f[2] = x[3];
+        f[3] = -ddzb + (-x[2] - 2*p[5]*x[3] + p[7]*x[4])/(1 + p[3]);
+        f[4] = -(p[9]*x[3]) - p[8]*x[4];
         lin_eqs(rdim, jac, x, f);
     }
     else {
