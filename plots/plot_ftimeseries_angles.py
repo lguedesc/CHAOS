@@ -2,11 +2,27 @@
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pandas as pd
-import os
+import numpy as np
 from libs import plotconfig as pltconf
 from dataclasses import dataclass
+from matplotlib.ticker import FuncFormatter
 
 pltconf.plot_params(True, 10, 0.2, fast = True)
+
+def pi_multiple_formatter(x, pos):
+    """
+    A custom formatter to display tick labels in multiples of π.
+    """
+    N = int(np.round(x / np.pi))
+    if N == 0:
+        return "0"
+    elif N == 1:
+        return r"$\pi$"
+    elif N == -1:
+        return r"-$\pi$"
+    else:
+        return r"${0}\pi$".format(N)
+
 
 @dataclass
 class Var:
@@ -16,7 +32,7 @@ class Var:
 
 save = False
 
-filenum = 13
+filenum = 2
 #system = "pendulum_EMEH"
 #system = "lin_oscillator_gravity"
 #system = "pend_oscillator_EH"
@@ -35,8 +51,8 @@ plot_i = nDiv*trans
 
 angles = False
 xvar = Var('x[4]', r"$\bar{\phi}$")
-yvar = Var('x[7]', r"$\bar{I}$")
-#yvar = Var('x[5]', r"$\dot{\bar{x}}$")
+#yvar = Var('x[7]', r"$\bar{I}$")
+yvar = Var('x[5]', r"$\dot{\bar{\phi}}$")
 #yvar = Var('x[6]', r"$\bar{v}$")
 
 #=======================================================================#
@@ -48,25 +64,27 @@ dpi = pltconf.set_fig_quality(save = save, base_dpi = 200)
 
 fig = plt.figure(1, figsize = figsize, dpi = dpi, layout = "constrained")
 fig.set_constrained_layout_pads(hspace=0, wspace=0.1)
-grid = fig.add_gridspec(3, 4)
+grid = fig.add_gridspec(2, 4)
 
 ax1 = fig.add_subplot(grid[0,:-2])
 ax2 = fig.add_subplot(grid[1,:-2])
-ax3 = fig.add_subplot(grid[0:2,2:4])
-ax4 = fig.add_subplot(grid[2,:-2])
+ax3 = fig.add_subplot(grid[:,2:4])
 
 size = 1.5
 
 if angles == True:
-    ax1.plot(df['Time'], df[f'{xvar.var}_remainder'], rasterized = True, color = "red", linewidth = 1, zorder = 1)
-    ax1.scatter(df_poinc['Time'], df_poinc[f'{xvar.var}_remainder'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)
+    ax1.plot(df['Time'], df[f'{xvar.var}_norm'], rasterized = True, color = "red", linewidth = 1, zorder = 1)
+    ax1.scatter(df_poinc['Time'], df_poinc[f'{xvar.var}_norm'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)
 else:
     ax1.plot(df['Time'], df[f'{xvar.var}'], rasterized = True, color = "red", linewidth = 1, zorder = 1)
     ax1.scatter(df_poinc['Time'], df_poinc[f'{xvar.var}'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)    
-    
+
 ax1.set_ylabel(xvar.name)
 ax1.set_xlabel(r'$\tau$')
 ax1.set_xlim(df['Time'].min(), df['Time'].max())
+#custom_formatter = FuncFormatter(pi_multiple_formatter)
+#ax1.yaxis.set_major_formatter(custom_formatter)
+
 
 ax2.plot(df['Time'], df[f'{yvar.var}'], rasterized = True, color = "blue", linewidth = 1, zorder = 1)
 ax2.scatter(df_poinc['Time'], df_poinc[f'{yvar.var}'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)
@@ -75,16 +93,14 @@ ax2.set_xlabel(r'$\tau$')
 ax2.set_xlim(df['Time'].min(), df['Time'].max())
 
 if angles == True:
-    ax3.scatter(df[f'{xvar.var}_remainder'].iloc[plot_i:-1], df[f'{yvar.var}'].iloc[plot_i:-1], rasterized = True, color = "darkorange", s = 0.5, linewidths = 0, zorder = 1)
-    ax3.scatter(df_poinc[f'{xvar.var}_remainder'], df_poinc[f'{yvar.var}'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)
+    ax3.scatter(df[f'{xvar.var}_norm'].iloc[plot_i:-1], df[f'{yvar.var}'].iloc[plot_i:-1], rasterized = True, color = "darkorange", s = 0.5, linewidths = 0, zorder = 1)
+    ax3.scatter(df_poinc[f'{xvar.var}_norm'], df_poinc[f'{yvar.var}'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)
 else:
     ax3.plot(df[f'{xvar.var}'].iloc[plot_i:-1], df[f'{yvar.var}'].iloc[plot_i:-1], rasterized = True, color = "darkorange", linewidth = 1, zorder = 1)
     ax3.scatter(df_poinc[f'{xvar.var}'], df_poinc[f'{yvar.var}'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)
 ax3.set_ylabel(yvar.name)
 ax3.set_xlabel(xvar.name)
 #ax3.set_aspect('equal')
-
-
 
 #========================================================================#
 # Show and Save Figure                                                   #

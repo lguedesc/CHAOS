@@ -5,6 +5,7 @@
 #include <time.h>
 #include <math.h>
 #include "msg.h"
+#include "defines.h"
 
 // Main Interface 
 void clear_screen(void) {
@@ -149,13 +150,13 @@ void progress_bar(int mode, double var, double var_i, double var_f) {
         perc = (var/(var_f - var_i))*100;
     }
     // Filled Part of the progress bar
-    int fill = (perc * 50) / 100;  // 50 is the bar length
+    int fill = (perc * PROGRESS_BAR_LEN) / 100;  
     printf("\r  Progress: |");
     for(int i = 0; i < fill; i++) {
         printf("#");
     }
     // Unfilled part of the progress bar
-    for (int i = 0; i < 50 - fill; i++) {
+    for (int i = 0; i < PROGRESS_BAR_LEN - fill; i++) {
         printf(".");
     }
     if (perc > 100) {

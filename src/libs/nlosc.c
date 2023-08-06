@@ -592,6 +592,7 @@ void HOS_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, in
         // Print results in output file
         HOS_write_bifurc_results(output_file, dim, par[parindex], x, xmin, xmax, overallxmin, overallxmax, nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, angles, 3);
         // Progress Monitor
+        /*
         if (parrange[2] > 100) {
             if (k % 50 == 0) {
                 progress_bar(0, par[parindex], parrange[0], parrange[1]);
@@ -601,6 +602,12 @@ void HOS_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, in
             }
         } else {
             progress_bar(0, par[parindex], parrange[0], parrange[1]);
+        }*/
+        if (k == parrange[2] - 1) {
+            progress_bar(1, (double)k, 0.0, parrange[2]);
+        }
+        else {
+            progress_bar(0, (double)k, 0.0, parrange[2]);
         }
     }
     // Free Memory
@@ -779,7 +786,7 @@ void HOS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, i
         HOS_write_fbifurc_results(output_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, npoinc, poinc,
                                   nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, angles, 3);
         // Progress Monitor
-        if (parrange[2] > 100) {
+        /*if (parrange[2] > 100) {
             if (k % 50 == 0) {
                 progress_bar(0, par[parindex], parrange[0], parrange[1]);
             }
@@ -788,7 +795,14 @@ void HOS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, i
             }
         } else {
             progress_bar(0, par[parindex], parrange[0], parrange[1]);
+        }*/
+        if (k == parrange[2] - 1) {
+            progress_bar(1, (double)k, 0.0, parrange[2]);
         }
+        else {
+            progress_bar(0, (double)k, 0.0, parrange[2]);
+        }
+
     }
     // Free memory
     free_mem(f, cum, s_cum, lambda, s_lambda, znorm, gsc, LE, IC, xmax, xmin, overallxmax, overallxmin,
@@ -825,6 +839,7 @@ void HOS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv
     {   
         //Get number of threads
         int ID = omp_get_thread_num();
+        int nThr = omp_get_num_threads();
         // Allocate memory for x` = f(x)
         double *f = malloc(dim * sizeof *f);
         // Declare vector and allocate memory to store poincare map values: poinc[number of permanent regime forcing periods][dimension original system]
@@ -968,9 +983,11 @@ void HOS_dynamical_diagram_solution(FILE *output_file, int dim, int np, int ndiv
             }
             // Progress Monitor
             if (ID == 0) {
-                progress_bar(0, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
-                if (k == ((int)parrange[5] - 1)/omp_get_num_threads() ) {
-                    progress_bar(1, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
+                if (k == ((int)parrange[5] - 1)/nThr ) {
+                    progress_bar(1, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/nThr);
+                }
+                else {
+                    progress_bar(0, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/nThr);
                 }
             }
         }
@@ -1018,6 +1035,7 @@ void HOS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
     {   
         //Get number of threads
         int ID = omp_get_thread_num();
+        int nThr = omp_get_num_threads();
         // Allocate memory for x` = f(x)
         double *f = malloc(dim * sizeof *f);
         // Allocate memory for vectors necessary for lyapunov exponents calculation
@@ -1182,9 +1200,11 @@ void HOS_full_dynamical_diagram_solution(FILE *output_file, int dim, int np, int
             if (ID == 0) {
                 //printf("PAR[%d] = %lf\n", indexX, PAR[indexX]);
                 //printf("%-5s%-3d%-7s%-3d%-12s%-11lf%-11s%-12lf%-14s%-2d%-15s%-2d%-10s%-11lf%-10s%-11lf\n", "[k = ", k, "] [m = ", m, "]: parY = ", PAR[indexY], ", parX = ", PAR[indexX], ", Attractor = ", attrac, ", diffAttrac = ", diffAttrac, ", LE[0] = ", LE[0], ", LE[1] = ", LE[1]);
-                progress_bar(0, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
-                if (k == ((int)parrange[5] - 1)/omp_get_num_threads() ) {
-                    progress_bar(1, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/omp_get_num_threads());
+                if (k == ((int)parrange[5] - 1)/nThr) {
+                    progress_bar(1, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/nThr);
+                } 
+                else {
+                    progress_bar(0, PAR[indexY], parrange[3], (parrange[4] - varstep[1])/nThr);
                 }
             }
         }
@@ -1233,6 +1253,7 @@ void HOS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim,
     {   
         //Get number of threads
         int ID = omp_get_thread_num();
+        int nThr = omp_get_num_threads();
         // Allocate memory for x` = f(x)
         double *f = malloc(dim * sizeof *f);
         // Allocate memory for vectors necessary for lyapunov exponents calculation
@@ -1390,9 +1411,11 @@ void HOS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim,
                 //                                 nrms, rmsindex, xrms, overallxrms, nprintf, printfindex, customvalues);
                 // Progress Monitor
                 if (ID == 0) {
-                    progress_bar(0, (double)k, 0, (icrange[5]-1)/omp_get_num_threads());
-                    if (k == ((int)icrange[5] - 1)/omp_get_num_threads() ) {
-                        progress_bar(1, (double)k, 0, (icrange[5]-1)/omp_get_num_threads());
+                    if (k == ((int)icrange[5] - 1)/nThr) {
+                        progress_bar(1, (double)k, 0, (icrange[5]-1)/nThr);
+                    } 
+                    else {
+                        progress_bar(0, (double)k, 0, (icrange[5]-1)/nThr);
                     }
                 }
                 //printf("results[%d][1] = IC[%d] | %lf = %lf\n", index, indexX, results[index][1], IC[indexX]);

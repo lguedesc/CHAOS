@@ -5,6 +5,7 @@
 
 #define PI (4 * atan(1))
 #define TWOPI 2*PI
+#define SC "%.10e"
 
 int main()
 {
@@ -18,6 +19,9 @@ int main()
     double wz = 39;
 
     printf("Omega_phi = %lf\n", wphi/wz);
+    printf("g = "SC"\n", g);
+    
+    printf("g = " SC " Omega_phi = " SC "\n", g, wphi/wz);
     
     return 0;
 }

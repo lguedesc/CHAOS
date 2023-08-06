@@ -281,7 +281,7 @@ static void write_state_vars_angles(FILE *output_file, double *x, ang_info *angl
         // Write header
         if (mode == 1) {
             for(int i = 0; i < angles->n_angles; i++) {
-                fprintf(output_file, "x[%d]_remainder ", angles->index[i]);
+                fprintf(output_file, "x[%d]_norm ", angles->index[i]);
             }
         }
         // Write results
@@ -329,7 +329,100 @@ static void write_min_max(FILE *output_file, int dim, double *xmin, double *xmax
     }
 }
 
+/*
+static void min_max_conditions_angles_old(FILE *output_file, ang_info *angles, double *xmin, double *xmax) {
+    for (int i = 0; i < angles->n_angles; i++) {
+        if (fabs(xmax[angles->index[i]] - xmin[angles->index[i]]) > TWOPI) {
+            if ((fabs(xmax[angles->index[i]]) > PI) && (fabs(xmin[angles->index[i]]) < PI)) {
+                fprintf(output_file, "%.10lf ", xmin[angles->index[i]]);
+                fprintf(output_file, "%.10lf ", PI);    
+            }
+            else if ((fabs(xmax[angles->index[i]]) < PI) && (fabs(xmin[angles->index[i]]) > PI)) {
+                fprintf(output_file, "%.10lf ", -PI);
+                fprintf(output_file, "%.10lf ", xmax[angles->index[i]]);
+            }
+            else {
+                fprintf(output_file, "%.10lf ", -PI);
+                fprintf(output_file, "%.10lf ", PI);
+            }
+        }
+        else {
+            fprintf(output_file, "%.10lf ", remainder(xmin[angles->index[i]], TWOPI));
+            fprintf(output_file, "%.10lf ", remainder(xmax[angles->index[i]], TWOPI));
+        }
+    }
+}
+*/
+
+static void min_max_conditions_angles(FILE *output_file, ang_info *angles, double *xmin, double *xmax) {
+    // This functions transform the xmax and xmin values to be in the range -pi to pi and prints it 
+    // in the output file
+    for (int i = 0; i < angles->n_angles; i++) {
+        // Define new variables to better readability and performance
+        double XMAX = xmax[angles->index[i]];
+        double XMIN = xmin[angles->index[i]];
+        // If the difference of max and min values are greater than 2*pi:
+        if (fabs(XMAX - XMIN) > TWOPI) {
+            fprintf(output_file, "%.10lf ", -PI);
+            fprintf(output_file, "%.10lf ", PI);
+        }
+        else {
+            // If xmax is above pi, but xmin is below:
+            if ((XMAX > PI) && (XMIN < PI) && (XMIN > -PI)) {
+                fprintf(output_file, "%.10lf ", XMIN);
+                fprintf(output_file, "%.10lf ", PI);
+            }
+            // If max is above -pi, but xmin is below:            
+            else if ((XMAX < PI) && (XMAX > -PI) && (XMIN < -PI)) {
+                fprintf(output_file, "%.10lf ", -PI);
+                fprintf(output_file, "%.10lf ", XMAX);
+            }
+            // If xmax and xmin are between -pi and pi:
+            else if ((XMAX < PI) && (XMAX > -PI) && (XMIN > -PI) && (XMIN < PI)) {
+                fprintf(output_file, "%.10lf ", XMIN);
+                fprintf(output_file, "%.10lf ", XMAX);
+            } 
+            // If xmin and xmax are above pi or below -pi:
+            else {
+                fprintf(output_file, "%.10lf ", remainder(XMIN, TWOPI));
+                fprintf(output_file, "%.10lf ", remainder(XMAX, TWOPI));
+            }
+        }
+    }
+}
+
 static void write_min_max_angles(FILE *output_file, ang_info *angles, double *xmin, double *xmax, double *overallxmin, double *overallxmax, int mode) {
+    // If it has any angle within the set of state variables, add remainder (remainder of value/2*pi)
+    if (angles->n_angles > 0) {
+         // Header results
+        if (mode == 1) {
+            for(int i = 0; i < angles->n_angles; i++) {
+                fprintf(output_file, "xMIN[%d]_norm ", angles->index[i]);
+                fprintf(output_file, "xMAX[%d]_norm ", angles->index[i]);
+            }
+            for(int i = 0; i < angles->n_angles; i++) {
+                fprintf(output_file, "OverallxMIN[%d]_norm ", angles->index[i]);
+                fprintf(output_file, "OverallxMAX[%d]_norm ", angles->index[i]);
+            }
+        }
+        // Results 
+        else if (mode == 2) {
+            // xmin and xmax
+            min_max_conditions_angles(output_file, angles, xmin, xmax);
+            // Overallxmin and Overallxmax
+            min_max_conditions_angles(output_file, angles, overallxmin, overallxmax);
+        }
+        else {
+            print_debug("Failed to write results in output file with function 'write_max_min_angles()' using mode (%d)...\n", mode);
+            return;
+        }
+    }
+    else {
+        return;
+    }
+}
+/*
+static void write_min_max_angles_old(FILE *output_file, ang_info *angles, double *xmin, double *xmax, double *overallxmin, double *overallxmax, int mode) {
     // If it has any angle within the set of state variables, add remainder (remainder of value/2*pi)
     if (angles->n_angles > 0) {
          // Header results
@@ -376,7 +469,7 @@ static void write_min_max_angles(FILE *output_file, ang_info *angles, double *xm
     else {
         return;
     }
-}
+}*/
 
 static void write_rms_state_vars(FILE *output_file, int nrms, double *xrms, double *overallxrms, int *rmsindex, int mode) {
     // If there is any RMS calculations to be performed
@@ -602,36 +695,36 @@ static void write_min_max_angles_result_matrix_in_file(FILE *output_file, ang_in
     if (angles->n_angles > 0)  {
         if (mode == 1) {
                 for (int i = 0; i < angles->n_angles; i++) {
-                    fprintf(output_file, "xMAX[%d]_remainder ", angles->index[i]);
+                    fprintf(output_file, "xMAX[%d]_norm ", angles->index[i]);
                 }
                 for (int i = 0; i < angles->n_angles; i++) {
-                    fprintf(output_file, "xMIN[%d]_remainder ", angles->index[i]);
+                    fprintf(output_file, "xMIN[%d]_norm ", angles->index[i]);
                 }
                 for (int i = 0; i < angles->n_angles; i++) {
-                    fprintf(output_file, "OverallxMAX[%d]_remainder ", angles->index[i]);
+                    fprintf(output_file, "OverallxMAX[%d]_norm ", angles->index[i]);
                 }
                 for (int i = 0; i < angles->n_angles; i++) {
-                    fprintf(output_file, "OverallxMIN[%d]_remainder ", angles->index[i]);
+                    fprintf(output_file, "OverallxMIN[%d]_norm ", angles->index[i]);
                 }
             }
             // Results
             else if (mode == 2) {
-                // Write xmax[angles->n_angles]_remainder
+                // Write xmax[angles->n_angles]_norm
                 for (int j = 0; j < angles->n_angles; j++) {
                     fprintf(output_file, "%.10lf ", results[(*col_offset) + j]);
                 }
                 (*col_offset) += angles->n_angles;
-                // Write xmin[angles->n_angles]_remainder
+                // Write xmin[angles->n_angles]_norm
                 for (int j = 0; j < angles->n_angles; j++) {
                     fprintf(output_file, "%.10lf ", results[(*col_offset) + j]); 
                 }
                 (*col_offset) += angles->n_angles;
-                // Write overallxmax[angles->n_angles]_remainder
+                // Write overallxmax[angles->n_angles]_norm
                 for (int j = 0; j < angles->n_angles; j++) {
                     fprintf(output_file, "%.10lf ", results[(*col_offset) + j]); 
                 }
                 (*col_offset) += angles->n_angles;
-                // Write overallxmin[angles->n_angles]_remainder
+                // Write overallxmin[angles->n_angles]_norm
                 for (int j = 0; j < angles->n_angles; j++) {
                     fprintf(output_file, "%.10lf ", results[(*col_offset) + j]); 
                 }

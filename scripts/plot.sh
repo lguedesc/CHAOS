@@ -12,6 +12,8 @@ echo "8  - Full Dynamical Diagram"
 echo "9  - Basin of Attraction (Equilibrium Point)"
 echo "10 - Basin of Attraction (Forced)"
 echo "11 - Stability Analysis"
+echo "12 - Full Time Series (angle test)"
+echo "13 - Full Bifurcation Diagram (angle test)"
 echo "0  - EXIT"
 echo "====================================================================="
 printf "Plot Module: "
@@ -50,6 +52,12 @@ then
 elif [ $plt -eq 11 ]
 then
     python -B -m StabilityAnalysis.Potential_and_EP-only_mechanical
+elif [ $plt -eq 12 ]
+then
+    python plots/plot_ftimeseries_angles.py
+elif [ $plt -eq 13 ]
+then
+    python plots/plot_fbifurc_angles.py
 elif [ $plt -eq 0 ]
 then
     exit 0

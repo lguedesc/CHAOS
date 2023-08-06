@@ -746,31 +746,31 @@ void pendulum_EMEH(int dim, double *x, double t, double *p, double *f) {
     }
 }
 
-void pendulum_EMEH_old(int dim, double *x, double t, double *p, double *f) {
-    /* OMEGA   = p[0]   |   varphi   = p[5]   |    x[0] = phi (angle) 
-       gamma   = p[1]   |   kappa    = p[6]   |    x[1] = dphi/dt (angular velocity) 
-       zeta    = p[2]   |                     |    x[2] = i (current)
-       omega_n = p[3]   |                     |   
-       chi     = p[4]   |                     |                                        */
+void pendulum_EMEH_dimensional(int dim, double *x, double t, double *p, double *f) {
+    /* OMEGA   = p[0]   |   L  = p[5]  (inductance)              |    x[0] = phi (angle) 
+       A       = p[1]   |   R  = p[6]  (electrical resistance)   |    x[1] = dphi/dt (angular velocity) 
+       zeta    = p[2]   |                                        |    x[2] = i (current)
+       omega_n = p[3]   |                                        |   
+       theta   = p[4]   |                                        |                                        */
     if (dim == 3) {
         f[0] = x[1];
         f[1] = p[1]*sin(p[0]*t) - 2*p[2]*x[1] - p[3]*p[3]*sin(x[0]) + p[4]*x[2];
-        f[2] = -p[5]*x[2] - p[6]*x[1];
+        f[2] = -(p[6]*x[2] + p[4]*x[1])/p[5];
     }
     else if (dim == 12) {
+        int rdim = 3; //(-1 + sqrt(1 + 4*dim))/2;
+        double jac[3][3] = { {                    0,         1,           0 }, 
+                             { -p[3]*p[3]*cos(x[0]),    -2*p[2],       p[4] },
+                             {                    0, -p[4]/p[5], -p[6]/p[5] } };
+        // System with linearized equations
         f[0] = x[1];
         f[1] = p[1]*sin(p[0]*t) - 2*p[2]*x[1] - p[3]*p[3]*sin(x[0]) + p[4]*x[2];
-        f[2] = -p[5]*x[2] - p[6]*x[1];
-        for (int i = 0; i < 3; i ++) {
-            f[3 + i] = x[6 + i];
-            f[6 + i] = -p[3]*p[3]*cos(x[0])*x[3 + i] - 2*p[2]*x[6 + i] + p[4]*x[9 + i];
-            f[9 + i] = -p[6]*x[6 + i] - p[5]*x[9 + i];
-        } 
+        f[2] = -(p[6]*x[2] + p[4]*x[1])/p[5];
+        lin_eqs(rdim, jac, x, f);
     }
     else {
         error();
     }
-
 }
 
 void linear_oscillator_gravity(int dim, double *x, double t, double *p, double *f) {

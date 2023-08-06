@@ -15,6 +15,9 @@
 #define MAX_PRINT_LEN 71            // Max length of the info printed on the screen and on info file
 #define PERC_PRINT_NAME 0.6         // Percentage of space occuped by the name of the quantity printed
 #define MAX_CCALC_NAME_LEN 31       // Maximum length of custom calculations names
+#define PROGRESS_BAR_LEN 49         // Length of the progress bar
+#define LF "%.10lf"                 // Significant digits for double numbers
+#define SC "%.10e"                   // Signigicant digits for double numbers in scientific format 
 
 // Math constants
 #define PI (4 * atan(1))
@@ -115,7 +118,7 @@ typedef struct {
 // main program macros 
 #define MAX_NAMELENGTH 120
 #define NUM_OF_GNL_SYSTEMS 4
-#define NUM_OF_HOS_SYSTEMS 20
+#define NUM_OF_HOS_SYSTEMS 21
 #define NUM_OF_TOOLBOXES 2
 #define NUM_OF_HOS_MODULES 11
 #define NUM_OF_GNL_MODULES 3
@@ -289,5 +292,13 @@ typedef struct {
 #define HOS_DIM_20 5
 #define HOS_NPAR_20 10
 #define HOS_ANGLES_20 0
+
+#define HOS_FUNC_21 pendulum_EMEH_dimensional
+#define HOS_CUSTOM_21 customcalc_pendulum_EMEH_dimensional
+#define HOS_OUTPUTNAME_21 "pendulum_EMEH_dimensional"
+#define HOS_DIM_21 3
+#define HOS_NPAR_21 7
+#define HOS_ANGLES_21 1
+#define HOS_ANGINDEX0_21 0
 
 #endif

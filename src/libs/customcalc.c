@@ -889,7 +889,9 @@ void customcalc_multidirectional_hybrid_EH_zero_pend_length(double *x, double *p
 	return;
 }
 
-
+void customcalc_pendulum_EMEH_dimensional(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
+	return;
+}
 
 /* Model for customcalc functions: 
 

@@ -29,7 +29,7 @@ system = "multidirect_hybrid_EH"
 #system = "pendulum_EMEH_dimensional"
 ext = ".pdf"
 
-filenum = 10
+filenum = 1
 simulation = "fbifurc"
 dim = 8
 angles = True
@@ -59,6 +59,7 @@ rmscolor = 'red'
 names = [r'$x$', r'$\dot{x}$', r'$z$', r'$\dot{z}$', r'$\phi$', r'$\dot{\phi}$', r'$v$', r'$I$']
 #names = [r'$\phi$', r'$\dot{\phi}$', r'$I$']
 xticks = [df['Cpar'].min(), 1, df['Cpar'].max()]
+
 
 colormap = pltconf.set_colormap(df['Attractor'])
 
@@ -99,23 +100,11 @@ for ax, i in zip(axs2, angles_indexes):
         ax.set_ylabel(names[i])
         ax.set_xlabel(r'$\Omega$')
         ax.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
-        ax.set_xticks(xticks)
-        ax.xaxis.set_major_formatter(FormatStrFormatter('%.g'))
+        #ax.set_xticks(xticks)
+        #ax.xaxis.set_major_formatter(FormatStrFormatter('%.g'))
         ax.set_yticks([-np.pi, 0, np.pi])
         ax.set_yticklabels([r"$-\pi$", 0, r"$\pi$"])
 
-plt.show(block = False)
-
-fig3, axs3, = pltconf.makefig_and_axs(figsize3, 1, 1, dpi, hspace = 0.1, wspace = 0.1)
-
-for i in range(dim):
-    axs3.plot(df['Cpar'], df[f'LE[{i}]'], rasterized = True, linewidth = 1, zorder = 1+i, label = fr"$\lambda_{i}$")
-    axs3.hlines(0, df['Cpar'].min(), df['Cpar'].max(), color = "black", linewidth = 0.5, zorder = 3)
-    axs3.set_ylabel(r'$\lambda$')
-    axs3.set_xlabel(r'$\tau$')
-    axs3.set_xlim(df['Cpar'].min(), df['Cpar'].max())
-    axs3.legend(loc = "best", prop={'size': 6}, ncols = dim/2, frameon = False, handlelength = 0.7, handletextpad = 0.5)
-    
 plt.show()
 #========================================================================#
 # Show and Save Figure                                                   #
