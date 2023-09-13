@@ -16,7 +16,7 @@ class Var:
 
 save = False
 
-filenum = 13
+filenum = 5
 #system = "pendulum_EMEH"
 #system = "lin_oscillator_gravity"
 #system = "pend_oscillator_EH"

@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 // macros for compilers
 #define _CRT_SECURE_NO_WARNINGS
@@ -20,7 +21,8 @@
 #define SC "%.10e"                   // Signigicant digits for double numbers in scientific format 
 
 // Math constants
-#define PI (4 * atan(1))
+//#define PI (4 * atan(1))
+#define PI 3.141592653589793
 #define TWOPI 2*PI
 
 // Macro to handle variable names
