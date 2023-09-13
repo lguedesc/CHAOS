@@ -482,6 +482,32 @@ void tristable_EH(int dim, double *x, double t, double *par, double *f) {
     }
 }
 
+void tetrastable_EH(int dim, double *x, double t, double *p, double *f) {
+    /* OMEGA = p[0] -> Forcing Freuency   |   sigma  = p[5] -> Rest. Force Coef. 
+       gamma = p[1] -> Forcing Amplitude  |   delta  = p[6] -> Rest. Force Coef.
+       zeta  = p[2] -> Dissipation Coef.  |   chi    = p[7] -> Electromechanical Coupling
+       alpha = p[3] -> Rest. Force Coef.  |   varphi = p[8] -> Resistance Term
+       beta  = p[4] -> Rest. Force Coef.  |   kappa  = p[9] -> Electromechanical Coupling  */
+    if (dim == 3) {
+        f[0] = x[1];
+        f[1] = p[1]*sin(p[0] * t) - 2*p[2]*x[1] - p[3]*x[0] - p[4]*x[0]*x[0]*x[0] - p[5]*x[0]*x[0]*x[0]*x[0]*x[0] - p[6]*x[0]*x[0]*x[0]*x[0]*x[0]*x[0]*x[0] + p[7]*x[2];
+        f[2] = -p[8]*x[2] - p[9]*x[1];
+    }
+    else if (dim == 12) {
+        f[0] = x[1];
+        f[1] = p[1]*sin(p[0] * t) - 2*p[2]*x[1] - p[3]*x[0] - p[4]*x[0]*x[0]*x[0] - p[5]*x[0]*x[0]*x[0]*x[0]*x[0] - p[6]*x[0]*x[0]*x[0]*x[0]*x[0]*x[0]*x[0] + p[7]*x[2];
+        f[2] = -p[8]*x[2] - p[9]*x[1];
+        for (int i = 0; i < 3; i ++) {
+            f[3 + i] = x[6 + i];
+            f[6 + i] = - 2*p[2]*x[6 + i] + p[7]*x[9 + i] - (p[3] + 3*p[4]*x[0]*x[0] + 5*p[5]*x[0]*x[0]*x[0]*x[0] + 7*p[6]*x[0]*x[0]*x[0]*x[0]*x[0]*x[0])*x[3 + i];
+            f[9 + i] = -p[8]*x[9 + i] - p[9]*x[6 + i];
+        }
+    }
+    else {
+        error();
+    }
+}
+
 void pend_oscillator_EH(int dim, double *x, double t, double *par, double *f) {
     /* OMEGA   = par[0]   |   zeta_z    = par[5]   |   l         = par[10]   |   chi_PZ = par[15]       |   x[0] = x       |   x[5] = dphi/dt
        gamma   = par[1]   |   zeta_t    = par[6]   |   varphi_PZ = par[11]   |   chi_EM = par[16]       |   x[1] = dx/dt   |   x[6] = v

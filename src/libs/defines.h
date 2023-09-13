@@ -120,7 +120,7 @@ typedef struct {
 // main program macros 
 #define MAX_NAMELENGTH 120
 #define NUM_OF_GNL_SYSTEMS 4
-#define NUM_OF_HOS_SYSTEMS 21
+#define NUM_OF_HOS_SYSTEMS 22
 #define NUM_OF_TOOLBOXES 2
 #define NUM_OF_HOS_MODULES 11
 #define NUM_OF_GNL_MODULES 3
@@ -302,5 +302,12 @@ typedef struct {
 #define HOS_NPAR_21 7
 #define HOS_ANGLES_21 1
 #define HOS_ANGINDEX0_21 0
+
+#define HOS_FUNC_22 tetrastable_EH
+#define HOS_CUSTOM_22 customcalc_tetrastable_EH               
+#define HOS_OUTPUTNAME_22 "tetrastable_EH"
+#define HOS_DIM_22 3
+#define HOS_NPAR_22 10
+#define HOS_ANGLES_22 0
 
 #endif
