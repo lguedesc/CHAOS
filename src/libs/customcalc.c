@@ -893,8 +893,56 @@ void customcalc_pendulum_EMEH_dimensional(double *x, double *par, double t, doub
 	return;
 }
 
+void customcalc_tristable_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
+	// Mode to define names to be printed in the output file
+    if (mode == 0) {    
+        char *names[] = {  
+                            "TotalPout"
+                        };
+        // Assign names to custom values
+        assign_names(names, ncustomvalues, customnames);
+    }
+    // Mode to perform calculations in steady state regime of the time series
+    else if (mode == 1) { 
+        
+    }
+    // Mode to perform calculations over the entire time series (transient + steady state)
+    else if (mode == 2) {
+        
+    } 
+    // Mode to perform calculations at the end of the time series
+    else if (mode == 3) {
+        customvalue[0] = par[7]*xrms[2]*xrms[2];
+    }
+    else {
+        error(mode);
+    }
+}
+
 void customcalc_tetrastable_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
-	return;
+	// Mode to define names to be printed in the output file
+    if (mode == 0) {    
+        char *names[] = {  
+                            "TotalPout"
+                        };
+        // Assign names to custom values
+        assign_names(names, ncustomvalues, customnames);
+    }
+    // Mode to perform calculations in steady state regime of the time series
+    else if (mode == 1) { 
+        
+    }
+    // Mode to perform calculations over the entire time series (transient + steady state)
+    else if (mode == 2) {
+        
+    } 
+    // Mode to perform calculations at the end of the time series
+    else if (mode == 3) {
+        customvalue[0] = par[8]*xrms[2]*xrms[2];
+    }
+    else {
+        error(mode);
+    }
 }
 
 /* Model for customcalc functions: 

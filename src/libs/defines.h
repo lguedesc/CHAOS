@@ -209,7 +209,7 @@ typedef struct {
 #define HOS_ANGLES_8 0
 
 #define HOS_FUNC_9 tristable_EH
-#define HOS_CUSTOM_9 customcalc               
+#define HOS_CUSTOM_9 customcalc_tristable_EH               
 #define HOS_OUTPUTNAME_9 "tristable_EH"
 #define HOS_DIM_9 3
 #define HOS_NPAR_9 9
