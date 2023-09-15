@@ -10,11 +10,17 @@
 #include "defines.h"
 #include "msg.h"
 
+// Macro to create the format string
+#define STR(x) #x
+#define STRINGIFY(x) STR(x)
+#define MAX_FILENAME_LEN_STRING STRINGIFY(MAX_FILENAME_LEN)
+
 #ifdef _WIN32
     #include <direct.h>
     const char SEP = '\\';
 #else
     const char SEP = '/';
+    #include <unistd.h>
 #endif    
 
 struct stat info;
@@ -176,7 +182,7 @@ FILE *name_and_create_output_files(const char *systemname, const char *directory
     return output_file;
 }
 
-char* get_input_filename(void) {
+char* get_input_filename_old(void) {
     char* filename = malloc((MAX_FILENAME_LEN + 1) * sizeof(char));
     if (filename == NULL) {
         print_error("Failed to allocate memory for the input filename.\n");
@@ -195,6 +201,43 @@ char* get_input_filename(void) {
         free(filename);
         return NULL;
     }
+    // Remove trailing newline character, if present
+    size_t length = strlen(filename);
+    if (length > 0 && filename[length - 1] == '\n') {
+        filename[length - 1] = '\0';
+        length--;
+    }
+    // Check if input exceeds maximum length
+    if (length == MAX_FILENAME_LEN && getchar() != '\n') {
+        print_error("Invalid input: Filename exceeds maximum length of %d characters.\n", MAX_FILENAME_LEN);
+        print_error("Please, reduce the name of the file or/and allocate the file in a directory with smaller string size\n");
+        free(filename);
+        return NULL;
+    }
+
+    return filename;
+}
+
+char* get_input_filename(void) {
+    char* filename = malloc((MAX_FILENAME_LEN + 1) * sizeof(char));
+    if (filename == NULL) {
+        print_error("Failed to allocate memory for the input filename.\n");
+        return NULL;
+    }
+    // Clear the input buffer
+    //int c;
+    //while ((c = getchar()) != '\n' && c != EOF) {
+    //    // Empty loop body intentionally
+    //};
+    // Asks for the user for the filename
+    printf("Enter Input Filename: ");
+    fflush(stdout);  // Flush stdout to ensure prompt is displayed
+    if (scanf("%" MAX_FILENAME_LEN_STRING "s", filename) != 1) {
+        print_error("Failed to read input: '%s'\n", filename);
+        free(filename);
+        return NULL;
+    }
+    
     // Remove trailing newline character, if present
     size_t length = strlen(filename);
     if (length > 0 && filename[length - 1] == '\n') {

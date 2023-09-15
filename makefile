@@ -2,8 +2,8 @@
 # To use Intel compiler (icx) in windows, insert at terminal before call make:
 # call "C:\Program Files (x86)\Intel\oneAPI\setvars.bat" intel64
 
-CC=icc
-CSTD=c99
+CC=clang
+CSTD=c17
 NAME=CHAOS
 
 # Indentify Operating System

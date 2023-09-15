@@ -22,14 +22,15 @@ save = False
 #system = "lin_2DoF_EH"
 #system = "duffing_2DoF_EH"
 #system = "bistable_EH"
+system = "tristable_EH"
 #system = "duffing"
-system = "pend_oscillator_EH"
+#system = "pend_oscillator_EH"
 ext = ".pdf"
 
-filenum = 2
+filenum = 6
 simulation = "bifurc"
-dim = 8
-angles = True
+dim = 3
+angles = False
 angles_indexes = { 4 }
 
 df, dfpoinc = pltconf.read_CHAOS_data(system, filenum, simulation)
@@ -76,23 +77,23 @@ for col in range(cols):
         else:
             pass
 
-
-fig2, axs2 = pltconf.makefig_and_axs(figsize2, len(angles_indexes), cols, dpi, hspace = 0.1, wspace = 0.1)
-# Check if axs2 is a single subplot
-if isinstance(axs2, Axes):
-    axs2 = [axs2]  # Convert single subplot to a list with one element
-    
-for ax, i in zip(axs2, angles_indexes):
-        ax.scatter(dfpoinc['Cpar'], dfpoinc[f'x[{i}]_remainder'], rasterized = True, color = "black", s = size, linewidths = 0, marker = '.', zorder = 2)
-        ax.plot(df['Cpar'], df[f'xMAX[{i}]_remainder'], rasterized = True, color = color, lw = 0.5, zorder = 1)
-        ax.plot(df['Cpar'], df[f'xMIN[{i}]_remainder'], rasterized = True, color = color, lw = 0.5, zorder = 1)
-        #ax.plot(df['Cpar'], df[f'xRMS[{i}]'], rasterized = True, color = rmscolors[i], lw = 0.5, zorder = 3)
-        ax.fill_between(df['Cpar'], df[f'xMAX[{i}]_remainder'], df[f'xMIN[{i}]_remainder'], color = color, zorder = 0)
-        ax.set_ylabel(names[i])
-        ax.set_xlabel(r'$\Omega$')
-        ax.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
-        ax.set_xticks(xticks)
-        ax.xaxis.set_major_formatter(FormatStrFormatter('%.g'))
+if angles == True:
+    fig2, axs2 = pltconf.makefig_and_axs(figsize2, len(angles_indexes), cols, dpi, hspace = 0.1, wspace = 0.1)
+    # Check if axs2 is a single subplot
+    if isinstance(axs2, Axes):
+        axs2 = [axs2]  # Convert single subplot to a list with one element
+        
+    for ax, i in zip(axs2, angles_indexes):
+            ax.scatter(dfpoinc['Cpar'], dfpoinc[f'x[{i}]_remainder'], rasterized = True, color = "black", s = size, linewidths = 0, marker = '.', zorder = 2)
+            ax.plot(df['Cpar'], df[f'xMAX[{i}]_remainder'], rasterized = True, color = color, lw = 0.5, zorder = 1)
+            ax.plot(df['Cpar'], df[f'xMIN[{i}]_remainder'], rasterized = True, color = color, lw = 0.5, zorder = 1)
+            #ax.plot(df['Cpar'], df[f'xRMS[{i}]'], rasterized = True, color = rmscolors[i], lw = 0.5, zorder = 3)
+            ax.fill_between(df['Cpar'], df[f'xMAX[{i}]_remainder'], df[f'xMIN[{i}]_remainder'], color = color, zorder = 0)
+            ax.set_ylabel(names[i])
+            ax.set_xlabel(r'$\Omega$')
+            ax.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
+            ax.set_xticks(xticks)
+            ax.xaxis.set_major_formatter(FormatStrFormatter('%.g'))
 
 #========================================================================#
 # Show and Save Figure                                                   #
