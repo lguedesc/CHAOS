@@ -16,26 +16,27 @@ class Var:
 
 save = False
 
-filenum = 5
+filenum = 4
 #system = "pendulum_EMEH"
 #system = "lin_oscillator_gravity"
 #system = "pend_oscillator_EH"
-system = "multidirect_hybrid_EH"
+#system = "multidirect_hybrid_EH"
+system = "duffing_2DoF_EH"
 #system = "multidirect_hybrid_EH_zero_len_pend"
 ext = ".png"
 simulation = "ftimeseries"
 
 df, df_poinc = pltconf.read_CHAOS_data(system, filenum, simulation)
         
-dim = 8
-nP = 800
-nDiv = 6000
-trans = 650
+dim = 6
+nP = 4000
+nDiv = 1000
+trans = 3500
 plot_i = nDiv*trans
 
 angles = False
-xvar = Var('x[4]', r"$\bar{\phi}$")
-yvar = Var('x[7]', r"$\bar{I}$")
+xvar = Var('x[0]', r"$\bar{\phi}$")
+yvar = Var('x[2]', r"$\bar{I}$")
 #yvar = Var('x[5]', r"$\dot{\bar{x}}$")
 #yvar = Var('x[6]', r"$\bar{v}$")
 

@@ -1407,8 +1407,8 @@ void HOS_full_forced_basin_of_attraction_2D_solution(FILE *output_file, int dim,
                 // Verify the type of motion of the system
                 attrac = get_attractor(poinc, LE, dim, np, trans, maxper, xmin, xmax, numtol, angles);
                 // Write results in matrix
-                //store_results_in_matrix_fdyndiag(&results, k, m, icrange, IC, indexY, indexX, attrac, dim, LE, xmax, xmin, overallxmax, overallxmin,
-                //                                 nrms, rmsindex, xrms, overallxrms, nprintf, printfindex, customvalues);
+                store_results_in_matrix_fdyndiag(&results, k, m, icrange, IC, angles, indexY, indexX, attrac, dim, LE, xmax, xmin, overallxmax, overallxmin,
+                                                 nrms, rmsindex, xrms, overallxrms, nprintf, printfindex, customvalues);
                 // Progress Monitor
                 if (ID == 0) {
                     if (k == ((int)icrange[5] - 1)/nThr) {

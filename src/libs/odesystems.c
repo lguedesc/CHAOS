@@ -436,6 +436,7 @@ void bistable_EH(int dim, double *x, double t, double *par, double *f) {
        alpha = par[3]   |
        beta  = par[4]   |                */
     double ddxb = par[1]*par[0]*par[0]*sin(par[0] * t);
+    //double ddxb = par[1]*sin(par[0] * t);
     if (dim == 3) {
         f[0] = x[1];
         f[1] = ddxb - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] + par[5]*x[2];

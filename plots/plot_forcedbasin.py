@@ -132,9 +132,10 @@ def plot_maps(ax, x, y, z, colormap, norm, custom = False):
 # =========================================================================== #
 save = False
 system = "bistable_EH"
+#system = "duffing"
 ext = ".pdf"
 
-readpath = "data/FForcBasin/out/" + system + "_fforcedbasin.csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "data/FForcBasin/out/" + system + "_fforcedbasin(3).csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "data/FForcBasin/figs"; savepath = pltconf.convert_dir(savepath)
 
 raw_data = pd.read_csv(readpath, delimiter = " ")

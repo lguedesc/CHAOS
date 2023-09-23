@@ -70,7 +70,7 @@ def plot_maps(ax, x, y, z, colormap):
 #                                    Read Data                                #
 # =========================================================================== #
 save = False
-system = "duffing"
+system = "duffing_2DoF"
 ext = ".pdf"
 
 filenum = 1
