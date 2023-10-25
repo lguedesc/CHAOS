@@ -436,7 +436,7 @@ void bistable_EH(int dim, double *x, double t, double *par, double *f) {
        alpha = par[3]   |
        beta  = par[4]   |                */
     double ddxb = par[1]*par[0]*par[0]*sin(par[0] * t);
-    //double ddxb = par[1]*sin(par[0] * t);
+    //double ddxb = par[1]*par[0]*sin(par[0] * t);
     if (dim == 3) {
         f[0] = x[1];
         f[1] = ddxb - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] + par[5]*x[2];
@@ -464,6 +464,7 @@ void tristable_EH(int dim, double *x, double t, double *par, double *f) {
        alpha = par[3]   |   kappa  = par[8]
        beta  = par[4]   |                */
     double ddxb = par[1]*par[0]*par[0]*sin(par[0] * t);
+    //double ddxb = par[1]*sin(par[0] * t);
     if (dim == 3) {
         f[0] = x[1];
         f[1] = ddxb - 2*par[2]*x[1] - par[3]*x[0] - par[4]*x[0]*x[0]*x[0] - par[5]*x[0]*x[0]*x[0]*x[0]*x[0] + par[6]*x[2];
@@ -491,6 +492,7 @@ void tetrastable_EH(int dim, double *x, double t, double *p, double *f) {
        alpha = p[3] -> Rest. Force Coef.  |   varphi = p[8] -> Resistance Term
        beta  = p[4] -> Rest. Force Coef.  |   kappa  = p[9] -> Electromechanical Coupling  */
     double ddxb = p[1]*p[0]*p[0]*sin(p[0] * t);
+    //double ddxb = p[1]*sin(p[0] * t);
     if (dim == 3) {
         f[0] = x[1];
         f[1] = ddxb - 2*p[2]*x[1] - p[3]*x[0] - p[4]*x[0]*x[0]*x[0] - p[5]*x[0]*x[0]*x[0]*x[0]*x[0] - p[6]*x[0]*x[0]*x[0]*x[0]*x[0]*x[0]*x[0] + p[7]*x[2];
@@ -847,7 +849,7 @@ void multidirectional_hybrid_EH(int dim, double *x, double t, double *p, double 
                 p[3]*(-2*ddxb - 2*cos(x[4])*cos(x[4])*(p[7]*p[7]*x[0] + 2*p[4]*x[1]) + 
                 sin(2*x[4])*((1 + p[3])*p[8]*p[8]*p[9] + x[2] + 2*p[5]*x[3]) + 
                 4*cos(x[4])*(1 + p[3])*p[6]*p[9]*x[5] + 2*p[9]*sin(x[4])*x[5]*x[5] - 
-                p[10]*sin(2*x[4])*x[6] - 2*cos(x[4])*(1 + p[3])*p[9]*p[13]*x[7]))/(2.*(1 + p[3])); 
+                p[10]*sin(2*x[4])*x[6] - 2*cos(x[4])*(1 + p[3])*p[9]*p[13]*x[7]))/(2.0*(1 + p[3])); 
         f[2] = x[3];
         f[3] = (-2*(ddzb + x[2] + 2*p[5]*x[3] - p[10]*x[6]) + 
                 p[3]*(-2*ddzb + sin(2*x[4])*(p[7]*p[7]*x[0] + 2*p[4]*x[1]) - 
@@ -865,26 +867,26 @@ void multidirectional_hybrid_EH(int dim, double *x, double t, double *p, double 
         uint8_t rdim = 8; // (-1 + sqrt(1 + 4*dim))/2
         
         // Second row of the jacobian
-        double j20 = -0.5*((2 + p[3] + cos(2*x[4])*p[3])*p[7]*p[7])/(1 + p[3]);
-        double j21 = (-2*(p[4] + cos(x[4])*cos(x[4])*p[3]*p[4]))/(1 + p[3]);
-        double j22 = (cos(x[4])*p[3]*sin(x[4]))/(1 + p[3]);
-        double j23 = (p[3]*p[5]*sin(2*x[4]))/(1 + p[3]);
+        double j20 = -0.5*((2 + p[3] + cos(2*x[4])*p[3])*p[7]*p[7])/(1.0 + p[3]);
+        double j21 = (-2*(p[4] + cos(x[4])*cos(x[4])*p[3]*p[4]))/(1.0 + p[3]);
+        double j22 = (cos(x[4])*p[3]*sin(x[4]))/(1.0 + p[3]);
+        double j23 = (p[3]*p[5]*sin(2*x[4]))/(1.0 + p[3]);
         double j24 = (p[3]*(sin(2*x[4])*(p[7]*p[7]*x[0] + 2*p[4]*x[1]) + cos(x[4])*p[9]*x[5]*x[5] + 
                       cos(2*x[4])*((1 + p[3])*p[8]*p[8]*p[9] + x[2] + 2*p[5]*x[3] - p[10]*x[6]) + 
-                      (1 + p[3])*p[9]*sin(x[4])*(-2*p[6]*x[5] + p[13]*x[7])))/(1 + p[3]);
-        double j25 = 2*p[3]*p[9]*(cos(x[4])*p[6] + (sin(x[4])*x[5])/(1 + p[3]));
-        double j26 = -((cos(x[4])*p[3]*p[10]*sin(x[4]))/(1 + p[3]));
+                      (1 + p[3])*p[9]*sin(x[4])*(-2*p[6]*x[5] + p[13]*x[7])))/(1.0 + p[3]);
+        double j25 = 2*p[3]*p[9]*(cos(x[4])*p[6] + (sin(x[4])*x[5])/(1.0 + p[3]));
+        double j26 = -((cos(x[4])*p[3]*p[10]*sin(x[4]))/(1.0 + p[3]));
         double j27 = -(cos(x[4])*p[3]*p[9]*p[13]);
         // Fourth row of the jacobian
-        double j40 = (cos(x[4])*p[3]*p[7]*p[7]*sin(x[4]))/(1 + p[3]);
+        double j40 = (cos(x[4])*p[3]*p[7]*p[7]*sin(x[4]))/(1.0 + p[3]);
         double j41 = (p[3]*p[4]*sin(2*x[4]))/(1 + p[3]);
-        double j42 = -((1 + p[3]*sin(x[4])*sin(x[4]))/(1 + p[3]));
-        double j43 = (-2*(p[5] + p[3]*p[5]*sin(x[4])*sin(x[4])))/(1 + p[3]);
+        double j42 = -((1 + p[3]*sin(x[4])*sin(x[4]))/(1.0 + p[3]));
+        double j43 = (-2*(p[5] + p[3]*p[5]*sin(x[4])*sin(x[4])))/(1.0 + p[3]);
         double j44 = (p[3]*(cos(2*x[4])*(p[7]*p[7]*x[0] + 2*p[4]*x[1]) - p[9]*sin(x[4])*x[5]*x[5] - 
                       sin(2*x[4])*((1 + p[3])*p[8]*p[8]*p[9] + x[2] + 2*p[5]*x[3] - p[10]*x[6]) + 
-                      cos(x[4])*(1 + p[3])*p[9]*(-2*p[6]*x[5] + p[13]*x[7])))/(1 + p[3]);
-        double j45 = 2*p[3]*p[9]*(-(p[6]*sin(x[4])) + (cos(x[4])*x[5])/(1 + p[3]));
-        double j46 = (p[10] + p[3]*p[10]*sin(x[4])*sin(x[4]))/(1 + p[3]);
+                      cos(x[4])*(1 + p[3])*p[9]*(-2*p[6]*x[5] + p[13]*x[7])))/(1.0 + p[3]);
+        double j45 = 2*p[3]*p[9]*(-(p[6]*sin(x[4])) + (cos(x[4])*x[5])/(1.0 + p[3]));
+        double j46 = (p[10] + p[3]*p[10]*sin(x[4])*sin(x[4]))/(1.0 + p[3]);
         double j47 = p[3]*p[9]*p[13]*sin(x[4]);
         // Sixth row of the jacobian
         double j60 = (cos(x[4])*p[7]*p[7])/p[9];
@@ -910,13 +912,13 @@ void multidirectional_hybrid_EH(int dim, double *x, double t, double *p, double 
                 p[3]*(-2*ddxb - 2*cos(x[4])*cos(x[4])*(p[7]*p[7]*x[0] + 2*p[4]*x[1]) + 
                 sin(2*x[4])*((1 + p[3])*p[8]*p[8]*p[9] + x[2] + 2*p[5]*x[3]) + 
                 4*cos(x[4])*(1 + p[3])*p[6]*p[9]*x[5] + 2*p[9]*sin(x[4])*x[5]*x[5] - 
-                p[10]*sin(2*x[4])*x[6] - 2*cos(x[4])*(1 + p[3])*p[9]*p[13]*x[7]))/(2.*(1 + p[3])); 
+                p[10]*sin(2*x[4])*x[6] - 2*cos(x[4])*(1 + p[3])*p[9]*p[13]*x[7]))/(2.0*(1 + p[3])); 
         f[2] = x[3];
         f[3] = (-2*(ddzb + x[2] + 2*p[5]*x[3] - p[10]*x[6]) + 
                 p[3]*(-2*ddzb + sin(2*x[4])*(p[7]*p[7]*x[0] + 2*p[4]*x[1]) - 
                 4*(1 + p[3])*p[6]*p[9]*sin(x[4])*x[5] + 2*cos(x[4])*p[9]*x[5]*x[5] - 
                 2*sin(x[4])*sin(x[4])*((1 + p[3])*p[8]*p[8]*p[9] + x[2] + 2*p[5]*x[3] - p[10]*x[6]) + 
-                2*(1 + p[3])*p[9]*p[13]*sin(x[4])*x[7]))/(2.*(1 + p[3]));
+                2*(1 + p[3])*p[9]*p[13]*sin(x[4])*x[7]))/(2.0*(1 + p[3]));
         f[4] = x[5];
         f[5] = (cos(x[4])*(p[7]*p[7]*x[0] + 2*p[4]*x[1]) - 
                 sin(x[4])*((1 + p[3])*p[8]*p[8]*p[9] + x[2] + 2*p[5]*x[3] - p[10]*x[6]) + 

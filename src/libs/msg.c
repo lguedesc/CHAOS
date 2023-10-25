@@ -3,28 +3,25 @@
 #include <stdio.h>
 
 /* Colors */
-static void yellow(void) {
+void yellow(void) {
     printf("\033[0;33m");
 }
-static void green(void) {
+void green(void) {
     printf("\033[0;32m");
 }
-static void red(void) {
+void red(void) {
     printf("\033[0;31m");
 }
-
-static void blue(void) {
+void blue(void) {
     printf("\033[0;34m");
 }
-
-static void purple(void) {
+void purple(void) {
     printf("\033[0;35m");
 }
-
-static void cyan(void) {
+void cyan(void) {
     printf("\033[0;36m");
 }
-static void reset_color(void) {
+void reset_color(void) {
     printf("\033[0m");
 }
 

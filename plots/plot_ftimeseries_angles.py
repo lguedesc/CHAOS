@@ -32,7 +32,7 @@ class Var:
 
 save = False
 
-filenum = 2
+filenum = 0
 #system = "pendulum_EMEH"
 #system = "lin_oscillator_gravity"
 #system = "pend_oscillator_EH"
@@ -51,8 +51,8 @@ plot_i = nDiv*trans
 
 angles = False
 xvar = Var('x[4]', r"$\bar{\phi}$")
-#yvar = Var('x[7]', r"$\bar{I}$")
-yvar = Var('x[5]', r"$\dot{\bar{\phi}}$")
+yvar = Var('x[7]', r"$\bar{I}$")
+#yvar = Var('x[5]', r"$\dot{\bar{\phi}}$")
 #yvar = Var('x[6]', r"$\bar{v}$")
 
 #=======================================================================#

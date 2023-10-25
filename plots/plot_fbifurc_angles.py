@@ -29,7 +29,7 @@ system = "multidirect_hybrid_EH"
 #system = "pendulum_EMEH_dimensional"
 ext = ".pdf"
 
-filenum = 1
+filenum = 3
 simulation = "fbifurc"
 dim = 8
 angles = True

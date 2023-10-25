@@ -107,7 +107,7 @@ def plot_maps(ax, x, y, z, colormap, norm, custom = False):
     if custom == 'attractors':
         plot = ax.pcolormesh(x, y, z, shading = 'nearest', rasterized = raster, cmap = colormap, vmin = cmap1_min - 0.5, vmax=cmap1_max + 0.5)
         ticks = [1,2,3,4,5,6,7,8]
-        labels = ['P1','P2','P3','P4','P5','MP','Ch','HCh']
+        labels = ['P1','P2','P3','P4','P5','MP','Ch','HC']
         cbar = plt.colorbar(plot, ax=ax, cax = cax, orientation = 'vertical', ticks = ticks, drawedges = True)
         cax.set_yticklabels(labels)
         cbar.ax.tick_params(size = 0, labelsize = lsize)
@@ -135,7 +135,7 @@ save = False
 #system = "duffing"
 system = "duffing_2DoF_EH"
 ext = ".pdf"
-numb = 5
+numb = 0
 
 if numb == 0:
     readpath = "data/FForcBasin/out/" + system + f"_fforcedbasin.csv"; readpath = pltconf.convert_dir(readpath)

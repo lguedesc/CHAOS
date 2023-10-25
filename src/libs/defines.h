@@ -18,12 +18,12 @@
 #define MAX_CCALC_NAME_LEN 31       // Maximum length of custom calculations names
 #define PROGRESS_BAR_LEN 49         // Length of the progress bar
 #define LF "%.10lf"                 // Significant digits for double numbers
-#define SC "%.10e"                   // Signigicant digits for double numbers in scientific format 
+#define SC "%.10e"                  // Signigicant digits for double numbers in scientific format 
 
 // Math constants
-//#define PI (4 * atan(1))
+//#define PI (4.0 * atan(1.0))
 #define PI 3.141592653589793
-#define TWOPI 2*PI
+#define TWOPI 2.0*PI
 
 // Macro to handle variable names
 #define getName(var) #var
