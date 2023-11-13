@@ -9,14 +9,14 @@
 </p> 
 
 ## What is the purpose of CHAOS?
-**CHAOS** is a user-friendly command line software package designed to facilitate numerical simulations of nonlinear dynamical systems subjected to harmonic forcing. Originally created as a personal productivity tool in my daily life as PhD student, it has since evolved into a collaborative project within our research lab, aimed at standardizing our approach to investigating nonlinear dynamics systems. Our goal is to provide an open source platform that is accessible and easy to use for anyone interested in exploring the fascinating world of nonlinear dynamics. With **CHAOS**, you can perform advanced simulations and gain valuable insights into complex systems without needing extensive programming expertise.
+**CHAOS** is a user-friendly command line software package designed to facilitate numerical simulations of nonlinear dynamical systems subjected to harmonic excitation. Originally created as a personal productivity tool in my daily life as PhD student, it has since evolved into a collaborative project, aimed at standardizing our approach to investigating nonlinear dynamics systems. Our goal is to provide an open source platform that is accessible and easy to use for anyone interested in exploring the fascinating world of nonlinear dynamics. With **CHAOS**, you can perform advanced simulations and gain valuable insights into complex systems without needing extensive programming expertise.
 </p>
 
 ## Current Capabilities
 Currently, **CHAOS** offers an array of features to be used in pre-programmed dynamical systems:
 
 * Numerical Integration of systems of 1st order ordinary differential equations (ODEs)
-* Stroboscopic Poincaré Maps
+* Poincaré Maps
 * Lyapunov Spectra (Method from [Wolf et al. 1985](https://doi.org/10.1016/0167-2789(85)90011-9))
 * Bifurcation Diagrams
 * 1D and 2D Parameter Diagrams
