@@ -4,6 +4,13 @@ CHAOS PACKAGE
 *** KNOWN ISSUES AND POSSIBLE BUGS ***
     1. Bug in progress bar in dyndiag (showing two %%) and bifurcation (when starting from a advance number, it bugs at 
        100% always).
+    2. When a system is stationary at zero or a specific number, the automatic tolerance of 'check_periodicity()' function
+       makes the motion to be classified as 'many periods', as the difference between the maximum and minimum is very small 
+       (numeric residue). This issue needs a solution.
+    3. Check remainders of maximum and minimum angles in bifurc, fbifurc, dyndiag, fdyndiag, etc...
+    4. Remove the *f malloc array for the runge-kutta scheme. It is not needed. (MAYBE)
+    5. ADD THE PRINT OF INITIAL CONDITIONS IN OUTPUT FILES WITH A PRECISION OF %.15lf
+    6. MODIFY THE PRINT OF KEY PARAMETERS IN OUTPUTFILES TO A PRECISION OF %.15lf
 
 *** FUTURE MAJOR FEATURES (TO BE IMPLEMENTED) ***
     1. Better input files: The user can put the variables in any order, just by declaring it by name. 

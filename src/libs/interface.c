@@ -5,6 +5,7 @@
 #include <time.h>
 #include <math.h>
 #include "msg.h"
+#include "defines.h"
 
 // Main Interface 
 void clear_screen(void) {
@@ -139,7 +140,7 @@ int int_length(int value) {
     }
 }
 
-void progress_bar(int mode, double var, double var_i, double var_f) {
+void progress_bar_old(int mode, double var, double var_i, double var_f) {
     double perc;
     // Actual percentage
     if (mode == 1) {
@@ -149,13 +150,13 @@ void progress_bar(int mode, double var, double var_i, double var_f) {
         perc = (var/(var_f - var_i))*100;
     }
     // Filled Part of the progress bar
-    int fill = (perc * 50) / 100;  // 50 is the bar length
+    int fill = (perc * PROGRESS_BAR_LEN) / 100;  
     printf("\r  Progress: |");
     for(int i = 0; i < fill; i++) {
         printf("#");
     }
     // Unfilled part of the progress bar
-    for (int i = 0; i < 50 - fill; i++) {
+    for (int i = 0; i < PROGRESS_BAR_LEN - fill; i++) {
         printf(".");
     }
     if (perc > 100) {
@@ -163,6 +164,54 @@ void progress_bar(int mode, double var, double var_i, double var_f) {
     }
     printf("| %.1lf %% ", perc);
     fflush(stdout);
+}
+
+static void print_progress_bar(double perc) {
+    // Filled Part of the progress bar
+    int fill = (perc * PROGRESS_BAR_LEN) / 100;  
+    printf("\r  Progress: |");
+    for(int i = 0; i < fill; i++) {
+        printf("#");
+    }
+    // Unfilled part of the progress bar
+    for (int i = 0; i < PROGRESS_BAR_LEN - fill; i++) {
+        printf(".");
+    }
+    if (perc > 100) {
+        perc = 100;
+    }
+    printf("| %.1lf %% ", perc);
+    fflush(stdout);
+}
+
+void progress_bar(int mode, double var, double var_i, double var_f) {
+    double perc;
+    // Actual percentage
+    if (mode == 1) {
+        perc = 100;
+    }
+    else {
+        perc = (var/(var_f - var_i))*100;
+    }
+    // Print bar
+    if (perc < 33) {
+        red();
+        print_progress_bar(perc);
+        reset_color();
+    }
+    else if ((perc >= 33) && (perc < 66)) {
+        yellow();
+        print_progress_bar(perc);
+        reset_color();
+    }
+    else if (perc >= 66) {
+        green();
+        print_progress_bar(perc);
+        reset_color();
+    }
+    else {
+        print_progress_bar(perc);
+    }
 }
 
 // Simulation Prints
@@ -332,9 +381,9 @@ void write_initial_conditions(int dim, double *x, double t, size_t maxlength, do
     partition(2, maxlength);
     printf("  Initial Conditions\n");
     partition(2, maxlength);
-    printf("%-*s %-*g\n", spcname, "  Initial Time (t):", spcvalue, t);
+    printf("%-*s %-*.15lf\n", spcname, "  Initial Time (t):", spcvalue, t);
     for (int i = 0; i < dim; i++) {
-        printf("%s%d%-*s %-*g\n", "  x[", i, spcname - 4 - int_length(i),"]:", spcvalue, x[i]);
+        printf("%s%d%-*s %-*.15lf\n", "  x[", i, spcname - 4 - int_length(i),"]:", spcvalue, x[i]);
     }
 }
 
@@ -344,9 +393,9 @@ void fwrite_initial_conditions(FILE *output_file, int dim, double *x, double t, 
     fpartition(output_file, 2, maxlength);
     fprintf(output_file, "  Initial Conditions\n");
     fpartition(output_file, 2, maxlength);
-    fprintf(output_file, "%-*s %-*g\n", spcname, "  Initial Time (t):", spcvalue, t);
+    fprintf(output_file, "%-*s %-*.15lf\n", spcname, "  Initial Time (t):", spcvalue, t);
     for (int i = 0; i < dim; i++) {
-        fprintf(output_file, "%s%d%-*s %-*g\n", "  x[", i, spcname - 4 - int_length(i),"]:", spcvalue, x[i]);
+        fprintf(output_file, "%s%d%-*s %-*.15lf\n", "  x[", i, spcname - 4 - int_length(i),"]:", spcvalue, x[i]);
     }
 }
 

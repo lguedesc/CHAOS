@@ -50,7 +50,7 @@ save = False
 system = "duffing"
 ext = ".pdf"
 
-readpath = "data/FDynDiagram/out/" + system + "_fdyndiag.csv"; readpath = pltconf.convert_dir(readpath)
+readpath = "data/FDynDiagram/out/" + system + "_fdyndiag(1).csv"; readpath = pltconf.convert_dir(readpath)
 savepath = "data/FDynDiagram/figs"; savepath = pltconf.convert_dir(savepath)
 
 raw_data = pd.read_csv(readpath, delimiter = " ")

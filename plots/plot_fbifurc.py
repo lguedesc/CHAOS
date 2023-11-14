@@ -1,6 +1,6 @@
 #%% -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
-import os
+import numpy as np
 from matplotlib.ticker import FormatStrFormatter
 from libs import plotconfig as pltconf
 from matplotlib.axes import Axes
@@ -23,10 +23,13 @@ save = False
 #system = "duffing_2DoF_EH"
 #system = "bistable_EH"
 #system = "duffing"
-system = "pend_oscillator_EH"
+#system = "pend_oscillator_EH"
+system = "multidirect_hybrid_EH"
+#system = "pendulum_EMEH"
+#system = "pendulum_EMEH_dimensional"
 ext = ".pdf"
 
-filenum = 0
+filenum = 10
 simulation = "fbifurc"
 dim = 8
 angles = True
@@ -54,6 +57,7 @@ i = 0
 color = 'lightgray'
 rmscolor = 'red'
 names = [r'$x$', r'$\dot{x}$', r'$z$', r'$\dot{z}$', r'$\phi$', r'$\dot{\phi}$', r'$v$', r'$I$']
+#names = [r'$\phi$', r'$\dot{\phi}$', r'$I$']
 xticks = [df['Cpar'].min(), 1, df['Cpar'].max()]
 
 colormap = pltconf.set_colormap(df['Attractor'])
@@ -87,16 +91,18 @@ if isinstance(axs2, Axes):
     axs2 = [axs2]  # Convert single subplot to a list with one element
     
 for ax, i in zip(axs2, angles_indexes):
-        ax.scatter(dfpoinc['Cpar'], dfpoinc[f'x[{i}]_remainder'], rasterized = True, c = dfpoinc['Attractor'], cmap = colormap, s = size, linewidths = 0, marker = '.', zorder = 2)
-        ax.plot(df['Cpar'], df[f'xMAX[{i}]_remainder'], rasterized = True, color = color, lw = 0.5, zorder = 1)
-        ax.plot(df['Cpar'], df[f'xMIN[{i}]_remainder'], rasterized = True, color = color, lw = 0.5, zorder = 1)
+        ax.scatter(dfpoinc['Cpar'], dfpoinc[f'x[{i}]_norm'], rasterized = True, c = dfpoinc['Attractor'], cmap = colormap, s = size, linewidths = 0, marker = '.', zorder = 2)
+        ax.plot(df['Cpar'], df[f'xMAX[{i}]_norm'], rasterized = True, color = color, lw = 0.5, zorder = 1)
+        ax.plot(df['Cpar'], df[f'xMIN[{i}]_norm'], rasterized = True, color = color, lw = 0.5, zorder = 1)
         #ax.plot(df['Cpar'], df[f'xRMS[{i}]'], rasterized = True, color = rmscolors[i], lw = 0.5, zorder = 3)
-        ax.fill_between(df['Cpar'], df[f'xMAX[{i}]_remainder'], df[f'xMIN[{i}]_remainder'], color = color, zorder = 0)
+        ax.fill_between(df['Cpar'], df[f'xMAX[{i}]_norm'], df[f'xMIN[{i}]_norm'], color = color, zorder = 0)
         ax.set_ylabel(names[i])
         ax.set_xlabel(r'$\Omega$')
         ax.set_xlim(dfpoinc['Cpar'].min(), dfpoinc['Cpar'].max())
         ax.set_xticks(xticks)
         ax.xaxis.set_major_formatter(FormatStrFormatter('%.g'))
+        ax.set_yticks([-np.pi, 0, np.pi])
+        ax.set_yticklabels([r"$-\pi$", 0, r"$\pi$"])
 
 plt.show(block = False)
 

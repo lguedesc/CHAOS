@@ -83,11 +83,11 @@ endif
 
 # Rule that produce the final binary that depends on the object files
 $(BINDIR)$(NAME)$(EXT): $(OBJS)
-	@$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^
 
 # Rule that produce the object files. Each object file depends on its corresponding source file and the header file
 $(OBJDIR)%.o: $(SRCDIR)%.c $(wildcard $(SRCDIR)*.h)
-	@$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 run: $(BINDIR)$(NAME)$(EXT)
 	@$(EXEC)$^
@@ -97,6 +97,15 @@ ifeq ($(OSFLAG), win)
 	@scripts\plot.bat
 else
 	@bash scripts/plot.sh
+endif
+
+test:
+ifeq ($(OSFLAG), win)
+	@$(CC) -o tests\\test tests\\test.c
+	@tests\\test.exe
+else
+	@$(CC) -o tests/test tests/test.c
+	@./tests/test
 endif
 
 clean: 

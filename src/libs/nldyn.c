@@ -189,7 +189,7 @@ int check_periodicity(int dim, int np, double **poinc, int trans, int maxper, do
     // Determine final tolerance
     for (int i = 0; i < dim; i++) {
         tol[i] = systol[i]*numtol;
-        print_warning("systol[%d] = %e | tol[%d] = %e\n", i, systol[i], i, tol[i]);
+        //print_warning("systol[%d] = %e | tol[%d] = %e\n", i, systol[i], i, tol[i]);
     }
     // Check periodicity in each dimension
     for (int j = 0; j < dim; j++) {
@@ -547,9 +547,11 @@ void ep_basin_of_attraction_2D(FILE *output_file, FILE *info_file, int dim, int 
             }   
             // Progress Monitor
             if (ID == 0) {
-                progress_bar(0, (double)k, 0, (icrange[5]-1)/nThr);
                 if (k == ((int)icrange[5] - 1)/nThr ) {
                     progress_bar(1, (double)k, 0, (icrange[5]-1)/nThr);
+                }
+                else {
+                    progress_bar(0, (double)k, 0, (icrange[5]-1)/nThr);
                 }
             }
         }

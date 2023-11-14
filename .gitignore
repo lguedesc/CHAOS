@@ -1,4 +1,12 @@
 *.csv
 *_info.txt
 *_info*.txt
+*.o
 !*O=1.75*
+*.mp4
+animation*.py
+input_from*.py
+test_*.py
+.vscode
+test_*.py
+test.py

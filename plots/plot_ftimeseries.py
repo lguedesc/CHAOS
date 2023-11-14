@@ -4,31 +4,41 @@ import matplotlib as mpl
 import pandas as pd
 import os
 from libs import plotconfig as pltconf
+from dataclasses import dataclass
 
 pltconf.plot_params(True, 10, 0.2, fast = True)
 
+@dataclass
+class Var:
+    var: str
+    name: str
+
+
 save = False
 
-filenum = 1
+filenum = 0
 #system = "pendulum_EMEH"
 #system = "lin_oscillator_gravity"
 #system = "pend_oscillator_EH"
-#system = "multidirect_hybrid_EH"
-system = "multidirect_hybrid_EH_zero_len_pend"
+system = "multidirect_hybrid_EH"
+#system = "duffing_2DoF_EH"
+#system = "multidirect_hybrid_EH_zero_len_pend"
 ext = ".png"
 simulation = "ftimeseries"
 
 df, df_poinc = pltconf.read_CHAOS_data(system, filenum, simulation)
         
-dim = 5
-nP = 800
-nDiv = 6000
-trans = 650
+dim = 6
+nP = 4000
+nDiv = 1000
+trans = 3500
 plot_i = nDiv*trans
 
 angles = False
-xvar = 'x[0]'
-yvar = 'x[2]'
+xvar = Var('x[4]', r"$\bar{\phi}$")
+yvar = Var('x[7]', r"$\bar{I}$")
+#yvar = Var('x[5]', r"$\dot{\bar{x}}$")
+#yvar = Var('x[6]', r"$\bar{v}$")
 
 #=======================================================================#
 # Figure Parameters                                                     #
@@ -49,39 +59,33 @@ ax4 = fig.add_subplot(grid[2,:-2])
 size = 1.5
 
 if angles == True:
-    ax1.plot(df['Time'], df[f'{xvar}_remainder'], rasterized = True, color = "red", linewidth = 1, zorder = 1)
-    ax1.scatter(df_poinc['Time'], df_poinc[f'{xvar}_remainder'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)
+    ax1.plot(df['Time'], df[f'{xvar.var}_remainder'], rasterized = True, color = "red", linewidth = 1, zorder = 1)
+    ax1.scatter(df_poinc['Time'], df_poinc[f'{xvar.var}_remainder'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)
 else:
-    ax1.plot(df['Time'], df[f'{xvar}'], rasterized = True, color = "red", linewidth = 1, zorder = 1)
-    ax1.scatter(df_poinc['Time'], df_poinc[f'{xvar}'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)    
-
-ax1.set_ylabel(r'$x$')
+    ax1.plot(df['Time'], df[f'{xvar.var}'], rasterized = True, color = "red", linewidth = 1, zorder = 1)
+    ax1.scatter(df_poinc['Time'], df_poinc[f'{xvar.var}'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)    
+    
+ax1.set_ylabel(xvar.name)
 ax1.set_xlabel(r'$\tau$')
 ax1.set_xlim(df['Time'].min(), df['Time'].max())
 
-ax2.plot(df['Time'], df[f'{yvar}'], rasterized = True, color = "blue", linewidth = 1, zorder = 1)
-ax2.scatter(df_poinc['Time'], df_poinc[f'{yvar}'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)
-ax2.set_ylabel(r'$\dot{x}$')
+ax2.plot(df['Time'], df[f'{yvar.var}'], rasterized = True, color = "blue", linewidth = 1, zorder = 1)
+ax2.scatter(df_poinc['Time'], df_poinc[f'{yvar.var}'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)
+ax2.set_ylabel(yvar.name)
 ax2.set_xlabel(r'$\tau$')
 ax2.set_xlim(df['Time'].min(), df['Time'].max())
 
 if angles == True:
-    ax3.scatter(df[f'{xvar}_remainder'].iloc[plot_i:-1], df[f'{yvar}'].iloc[plot_i:-1], rasterized = True, color = "darkorange", s = 0.5, linewidths = 0, zorder = 1)
-    ax3.scatter(df_poinc[f'{xvar}_remainder'], df_poinc[f'{yvar}'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)
+    ax3.scatter(df[f'{xvar.var}_remainder'].iloc[plot_i:-1], df[f'{yvar.var}'].iloc[plot_i:-1], rasterized = True, color = "darkorange", s = 0.5, linewidths = 0, zorder = 1)
+    ax3.scatter(df_poinc[f'{xvar.var}_remainder'], df_poinc[f'{yvar.var}'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)
 else:
-    ax3.plot(df[f'{xvar}'].iloc[plot_i:-1], df[f'{yvar}'].iloc[plot_i:-1], rasterized = True, color = "darkorange", linewidth = 1, zorder = 1)
-    ax3.scatter(df_poinc[f'{xvar}'], df_poinc[f'{yvar}'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)
-ax3.set_ylabel(r'$\dot{x}$')
-ax3.set_xlabel(r'$x$')
+    ax3.plot(df[f'{xvar.var}'].iloc[plot_i:-1], df[f'{yvar.var}'].iloc[plot_i:-1], rasterized = True, color = "darkorange", linewidth = 1, zorder = 1)
+    ax3.scatter(df_poinc[f'{xvar.var}'], df_poinc[f'{yvar.var}'], rasterized = True, color = "black", s = size, linewidths = 0, zorder = 2)
+ax3.set_ylabel(yvar.name)
+ax3.set_xlabel(xvar.name)
 #ax3.set_aspect('equal')
 
-for i in range(dim):
-    ax4.plot(df['Time'], df[f'LE[{i}]'], rasterized = True, linewidth = 1, zorder = 1+i, label = fr"$\lambda_{i}$")
-ax4.hlines(0, df['Time'].min(), df['Time'].max(), color = "black", linewidth = 0.5, zorder = 3)
-ax4.set_ylabel(r'$\lambda$')
-ax4.set_xlabel(r'$\tau$')
-ax4.set_xlim(df['Time'].min(), df['Time'].max())
-ax4.legend(loc = "best", prop={'size': 6}, ncols = dim/2, frameon = False, handlelength = 0.7, handletextpad = 0.5)
+
 
 #========================================================================#
 # Show and Save Figure                                                   #

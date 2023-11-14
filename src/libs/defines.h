@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 // macros for compilers
 #define _CRT_SECURE_NO_WARNINGS
@@ -15,10 +16,14 @@
 #define MAX_PRINT_LEN 71            // Max length of the info printed on the screen and on info file
 #define PERC_PRINT_NAME 0.6         // Percentage of space occuped by the name of the quantity printed
 #define MAX_CCALC_NAME_LEN 31       // Maximum length of custom calculations names
+#define PROGRESS_BAR_LEN 49         // Length of the progress bar
+#define LF "%.10lf"                 // Significant digits for double numbers
+#define SC "%.10e"                  // Signigicant digits for double numbers in scientific format 
 
 // Math constants
-#define PI (4 * atan(1))
-#define TWOPI 2*PI
+//#define PI (4.0 * atan(1.0))
+#define PI 3.141592653589793
+#define TWOPI 2.0*PI
 
 // Macro to handle variable names
 #define getName(var) #var
@@ -115,7 +120,7 @@ typedef struct {
 // main program macros 
 #define MAX_NAMELENGTH 120
 #define NUM_OF_GNL_SYSTEMS 4
-#define NUM_OF_HOS_SYSTEMS 20
+#define NUM_OF_HOS_SYSTEMS 22
 #define NUM_OF_TOOLBOXES 2
 #define NUM_OF_HOS_MODULES 11
 #define NUM_OF_GNL_MODULES 3
@@ -204,7 +209,7 @@ typedef struct {
 #define HOS_ANGLES_8 0
 
 #define HOS_FUNC_9 tristable_EH
-#define HOS_CUSTOM_9 customcalc               
+#define HOS_CUSTOM_9 customcalc_tristable_EH               
 #define HOS_OUTPUTNAME_9 "tristable_EH"
 #define HOS_DIM_9 3
 #define HOS_NPAR_9 9
@@ -289,5 +294,20 @@ typedef struct {
 #define HOS_DIM_20 5
 #define HOS_NPAR_20 10
 #define HOS_ANGLES_20 0
+
+#define HOS_FUNC_21 pendulum_EMEH_dimensional
+#define HOS_CUSTOM_21 customcalc_pendulum_EMEH_dimensional
+#define HOS_OUTPUTNAME_21 "pendulum_EMEH_dimensional"
+#define HOS_DIM_21 3
+#define HOS_NPAR_21 7
+#define HOS_ANGLES_21 1
+#define HOS_ANGINDEX0_21 0
+
+#define HOS_FUNC_22 tetrastable_EH
+#define HOS_CUSTOM_22 customcalc_tetrastable_EH               
+#define HOS_OUTPUTNAME_22 "tetrastable_EH"
+#define HOS_DIM_22 3
+#define HOS_NPAR_22 10
+#define HOS_ANGLES_22 0
 
 #endif

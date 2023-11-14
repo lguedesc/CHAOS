@@ -107,7 +107,7 @@ def plot_maps(ax, x, y, z, colormap, norm, custom = False):
     if custom == 'attractors':
         plot = ax.pcolormesh(x, y, z, shading = 'nearest', rasterized = raster, cmap = colormap, vmin = cmap1_min - 0.5, vmax=cmap1_max + 0.5)
         ticks = [1,2,3,4,5,6,7,8]
-        labels = ['P1','P2','P3','P4','P5','MP','Ch','HCh']
+        labels = ['P1','P2','P3','P4','P5','MP','Ch','HC']
         cbar = plt.colorbar(plot, ax=ax, cax = cax, orientation = 'vertical', ticks = ticks, drawedges = True)
         cax.set_yticklabels(labels)
         cbar.ax.tick_params(size = 0, labelsize = lsize)
@@ -131,10 +131,17 @@ def plot_maps(ax, x, y, z, colormap, norm, custom = False):
 #                                    Read Data                                #
 # =========================================================================== #
 save = False
-system = "bistable_EH"
+#system = "bistable_EH"
+#system = "duffing"
+system = "duffing_2DoF_EH"
 ext = ".pdf"
+numb = 0
 
-readpath = "data/FForcBasin/out/" + system + "_fforcedbasin.csv"; readpath = pltconf.convert_dir(readpath)
+if numb == 0:
+    readpath = "data/FForcBasin/out/" + system + f"_fforcedbasin.csv"; readpath = pltconf.convert_dir(readpath)
+else:
+    readpath = "data/FForcBasin/out/" + system + f"_fforcedbasin({numb}).csv"; readpath = pltconf.convert_dir(readpath)
+
 savepath = "data/FForcBasin/figs"; savepath = pltconf.convert_dir(savepath)
 
 raw_data = pd.read_csv(readpath, delimiter = " ")

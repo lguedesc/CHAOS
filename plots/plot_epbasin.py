@@ -70,10 +70,10 @@ def plot_maps(ax, x, y, z, colormap):
 #                                    Read Data                                #
 # =========================================================================== #
 save = False
-system = "duffing"
+system = "duffing_2DoF"
 ext = ".pdf"
 
-filenum = 1
+filenum = 0
 
 if filenum == 0:
     readpath = "data/EPBasin/out/" + system + f"_epbasin.csv"; readpath = pltconf.convert_dir(readpath)
