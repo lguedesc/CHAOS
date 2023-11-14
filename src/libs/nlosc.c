@@ -136,6 +136,12 @@ static void store_results_in_matrix_fdyndiag(double ***results, int k, int m, do
     store_specific_results_in_matrix(customvalues, nprintf, printfindex, &col_offset, index, results);
 }
 
+static double *store_IC(double *x, double *IC, int dim) {
+    for (int i = 0; i < dim; i++) {
+        IC[i] = x[i];
+    }
+    return IC;
+}
 
 // Functions to handle ang_info struct
 ang_info *init_angle_struct(unsigned int nangles) {
@@ -592,17 +598,6 @@ void HOS_bifurc_solution(FILE *output_file, FILE *output_poinc_file, int dim, in
         // Print results in output file
         HOS_write_bifurc_results(output_file, dim, par[parindex], x, xmin, xmax, overallxmin, overallxmax, nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, angles, 3);
         // Progress Monitor
-        /*
-        if (parrange[2] > 100) {
-            if (k % 50 == 0) {
-                progress_bar(0, par[parindex], parrange[0], parrange[1]);
-            }
-            if (k == parrange[2] - 1) {
-                progress_bar(9, par[parindex], parrange[0], parrange[1]);
-            }
-        } else {
-            progress_bar(0, par[parindex], parrange[0], parrange[1]);
-        }*/
         if (k == parrange[2] - 1) {
             progress_bar(1, (double)k, 0.0, parrange[2]);
         }
@@ -675,9 +670,9 @@ void HOS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, i
         customfunc((*x), par, t, xrms, xmin, xmax, IC, t0, N, currenttimestep, steadystateperc, ncustomvalues, customnames, customvalues, 0);
     }
     // Make the header of output files
-    HOS_write_fbifurc_results(output_poinc_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, npoinc, poinc,
+    HOS_write_fbifurc_results(output_poinc_file, dim, np, trans, par[parindex], (*x), IC, bifmode,  xmin, xmax, overallxmin, overallxmax, LE, attrac, npoinc, poinc,
                              nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, angles, 0);
-    HOS_write_fbifurc_results(output_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, npoinc, poinc,
+    HOS_write_fbifurc_results(output_file, dim, np, trans, par[parindex], (*x), IC, bifmode, xmin, xmax, overallxmin, overallxmax, LE, attrac, npoinc, poinc,
                              nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, angles, 2);
     // Starts to increment bifurcation control parameter
     for (int k = 0; k < (int)parrange[2]; k++) {
@@ -688,6 +683,9 @@ void HOS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, i
             for (int i = 0; i < dim; i++) {
                 (*x)[i] = IC[i];
             }
+        } else if (bifmode == 0) {
+            // Store initial conditions to be printed into output file
+            IC = store_IC((*x), IC, dim);
         }
         // Reset Variables
         t = t0;
@@ -781,21 +779,11 @@ void HOS_full_bifurcation_solution(FILE *output_file, FILE *output_poinc_file, i
         // Verify the type of motion of the system
         attrac = get_attractor(poinc, LE, dim, np, trans, maxper, xmin, xmax, numtol, angles);
         // Write results in file
-        HOS_write_fbifurc_results(output_poinc_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, npoinc, poinc,
+        HOS_write_fbifurc_results(output_poinc_file, dim, np, trans, par[parindex], (*x), IC, bifmode, xmin, xmax, overallxmin, overallxmax, LE, attrac, npoinc, poinc,
                                   nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, angles, 1);
-        HOS_write_fbifurc_results(output_file, dim, np, trans, par[parindex], (*x), xmin, xmax, overallxmin, overallxmax, LE, attrac, npoinc, poinc,
+        HOS_write_fbifurc_results(output_file, dim, np, trans, par[parindex], (*x), IC, bifmode, xmin, xmax, overallxmin, overallxmax, LE, attrac, npoinc, poinc,
                                   nrms, rmsindex, xrms, overallxrms, ncustomvalues, customnames, customvalues, nprintf, printfindex, angles, 3);
         // Progress Monitor
-        /*if (parrange[2] > 100) {
-            if (k % 50 == 0) {
-                progress_bar(0, par[parindex], parrange[0], parrange[1]);
-            }
-            if (k == parrange[2] - 1) {
-                progress_bar(0, par[parindex], parrange[0], parrange[1]);
-            }
-        } else {
-            progress_bar(0, par[parindex], parrange[0], parrange[1]);
-        }*/
         if (k == parrange[2] - 1) {
             progress_bar(1, (double)k, 0.0, parrange[2]);
         }

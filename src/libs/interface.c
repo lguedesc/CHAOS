@@ -381,9 +381,9 @@ void write_initial_conditions(int dim, double *x, double t, size_t maxlength, do
     partition(2, maxlength);
     printf("  Initial Conditions\n");
     partition(2, maxlength);
-    printf("%-*s %-*g\n", spcname, "  Initial Time (t):", spcvalue, t);
+    printf("%-*s %-*.15lf\n", spcname, "  Initial Time (t):", spcvalue, t);
     for (int i = 0; i < dim; i++) {
-        printf("%s%d%-*s %-*g\n", "  x[", i, spcname - 4 - int_length(i),"]:", spcvalue, x[i]);
+        printf("%s%d%-*s %-*.15lf\n", "  x[", i, spcname - 4 - int_length(i),"]:", spcvalue, x[i]);
     }
 }
 
@@ -393,9 +393,9 @@ void fwrite_initial_conditions(FILE *output_file, int dim, double *x, double t, 
     fpartition(output_file, 2, maxlength);
     fprintf(output_file, "  Initial Conditions\n");
     fpartition(output_file, 2, maxlength);
-    fprintf(output_file, "%-*s %-*g\n", spcname, "  Initial Time (t):", spcvalue, t);
+    fprintf(output_file, "%-*s %-*.15lf\n", spcname, "  Initial Time (t):", spcvalue, t);
     for (int i = 0; i < dim; i++) {
-        fprintf(output_file, "%s%d%-*s %-*g\n", "  x[", i, spcname - 4 - int_length(i),"]:", spcvalue, x[i]);
+        fprintf(output_file, "%s%d%-*s %-*.15lf\n", "  x[", i, spcname - 4 - int_length(i),"]:", spcvalue, x[i]);
     }
 }
 

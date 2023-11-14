@@ -8,8 +8,10 @@ CHAOS PACKAGE
        makes the motion to be classified as 'many periods', as the difference between the maximum and minimum is very small 
        (numeric residue). This issue needs a solution.
     3. Check remainders of maximum and minimum angles in bifurc, fbifurc, dyndiag, fdyndiag, etc...
-    4. Remove the *f malloc array for the runge-kutta scheme. It is not needed.
-    
+    4. Remove the *f malloc array for the runge-kutta scheme. It is not needed. (MAYBE)
+    5. ADD THE PRINT OF INITIAL CONDITIONS IN OUTPUT FILES WITH A PRECISION OF %.15lf
+    6. MODIFY THE PRINT OF KEY PARAMETERS IN OUTPUTFILES TO A PRECISION OF %.15lf
+
 *** FUTURE MAJOR FEATURES (TO BE IMPLEMENTED) ***
     1. Better input files: The user can put the variables in any order, just by declaring it by name. 
        Example dim=3, nRMS=2; Maybe declaring the system in the input file removing the "choose dynamical system" menu.

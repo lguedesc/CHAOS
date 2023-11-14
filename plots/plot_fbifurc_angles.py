@@ -18,6 +18,9 @@ def remainder_dataframe(dataframe, divisor):
 
 save = False
 
+varphi_pz = 0.05
+varphi_em = 5.0
+
 #system = "lin_oscillator_2DoF"
 #system = "lin_2DoF_EH"
 #system = "duffing_2DoF_EH"
@@ -29,7 +32,7 @@ system = "multidirect_hybrid_EH"
 #system = "pendulum_EMEH_dimensional"
 ext = ".pdf"
 
-filenum = 3
+filenum = 0
 simulation = "fbifurc"
 dim = 8
 angles = True
@@ -42,9 +45,10 @@ df, dfpoinc = pltconf.read_CHAOS_data(system, filenum, simulation)
 cols = 1
 rows = dim
 
-figsize = pltconf.figsize_in_cm(15, 0.2*rows*15)
-figsize2 = pltconf.figsize_in_cm(15, 0.2*len(angles_indexes)*15)
-figsize3 = pltconf.figsize_in_cm(15, 0.2*15)
+each_row_size_ratio = 0.15
+figsize = pltconf.figsize_in_cm(15, each_row_size_ratio*rows*15)
+figsize2 = pltconf.figsize_in_cm(15, each_row_size_ratio*len(angles_indexes)*15)
+figsize3 = pltconf.figsize_in_cm(15, each_row_size_ratio*6*15)
 dpi = pltconf.set_fig_quality(save = save, base_dpi = 100)
 
 gama = 0.1
@@ -104,6 +108,35 @@ for ax, i in zip(axs2, angles_indexes):
         #ax.xaxis.set_major_formatter(FormatStrFormatter('%.g'))
         ax.set_yticks([-np.pi, 0, np.pi])
         ax.set_yticklabels([r"$-\pi$", 0, r"$\pi$"])
+
+fig3, axs3 = pltconf.makefig_and_axs(figsize2, 6, cols, dpi, hspace = 0.1, wspace = 0.1)
+
+PZ_clr = "red"
+EM_clr = "darkorange"
+Total_clr = "purple"
+
+scale = 1e3
+df["Pout_PZ"] = df["xRMS[6]"].multiply(df["xRMS[6]"].multiply(varphi_pz*scale))
+df["Pout_EM"] = df["xRMS[7]"].multiply(df["xRMS[7]"].multiply(varphi_em*scale))
+
+axs3[1].plot(df["Cpar"], df["Pout_PZ"], color = PZ_clr)
+axs3[1].fill_between(df['Cpar'], df["Pout_PZ"], 0, color=PZ_clr, alpha=.5)
+axs3[1].set_ylabel(r"$\bar{P}_{\mathrm{out}}^{(pz)}$")
+axs3[1].set_xlabel(r"$\Omega$")
+
+axs3[2].plot(df["Cpar"], df["Pout_EM"], color = EM_clr)
+axs3[2].fill_between(df['Cpar'], df["Pout_EM"], 0, color=EM_clr, alpha=.5)
+axs3[2].set_ylabel(r"$\bar{P}_{\mathrm{out}}^{(em)}$")
+axs3[2].set_xlabel(r"$\Omega$")
+
+
+TotalPout = df["Pout_PZ"] + df["Pout_EM"]
+axs3[3].plot(df["Cpar"], TotalPout, color = Total_clr)
+axs3[3].fill_between(df['Cpar'], TotalPout, 0, color=Total_clr, alpha=.5)
+axs3[3].set_ylabel(r"$\bar{P}_{\mathrm{out}}$")
+axs3[3].set_xlabel(r"$\Omega$")
+
+ax.plot()
 
 plt.show()
 #========================================================================#

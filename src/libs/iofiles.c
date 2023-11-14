@@ -290,6 +290,25 @@ static void write_state_vars(FILE *output_file, int dim, double *x, int mode) {
     }
 }
 
+static void write_IC(FILE *output_file, double dim, double *IC, int mode) {
+    // Write header
+    if (mode == 1) {
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "x0[%d] ", i);
+        }
+    }
+    // Write results
+    else if (mode == 2) {
+        for (int i = 0; i < dim; i++) {
+            fprintf(output_file, "%.15lf ", IC[i]);
+        }
+    }
+    else {
+        print_debug("Failed to write results in output file with function 'write_state_vars()' using mode (%d)...\n", mode);
+        return;
+    }
+}
+
 static void write_lyap_exp(FILE *output_file, int dim, double *lambda, double *s_lambda, bool short_lamb, int mode) {
     // Write header
     if (mode == 1) {
@@ -577,7 +596,7 @@ static void write_bifurc_control_parameter(FILE *output_file, double varpar, int
     }
     // Write results
     else if (mode == 2) {
-        fprintf(output_file, "%.10f ", varpar);
+        fprintf(output_file, "%.15lf ", varpar);
     }
     else {
         print_debug("Failed to write results in output file with function 'write_bifurc_control_parameter()' using mode (%d)...\n", mode);
@@ -605,7 +624,7 @@ static void write_2D_control_params_result_matrix_in_file(FILE *output_file, int
         fprintf(output_file, "CparY CparX ");
     } 
     else if (mode == 2) {
-        fprintf(output_file, "%.10lf %.10lf ", results[0], results[1]);
+        fprintf(output_file, "%.15lf %.15lf ", results[0], results[1]);
         (*col_offset) += 2;
     }
     else {
@@ -889,9 +908,9 @@ void p_write_epbasin_results(FILE *output_file, double **results, int pixels, in
     fprintf(output_file, "%s\n", "Attractor");
     // Write Results
     for (int i = 0; i < pixels; i++) {
-        fprintf(output_file, "%.10lf %.10lf ", results[i][0], results[i][1]);
+        fprintf(output_file, "%.15lf %.15lf ", results[i][0], results[i][1]);
         for (int j = 0; j < dim; j++) {
-            fprintf(output_file, "%.10lf ", results[i][j+2]);
+            fprintf(output_file, "%.15lf ", results[i][j+2]);
         }
         fprintf(output_file, "%d\n", (int)results[i][dim + 2]);
     }
@@ -1021,8 +1040,8 @@ void HOS_write_bifurc_results(FILE *output_file, int dim, double varpar, double 
         return;
     }
 }
-
-void HOS_write_fbifurc_results(FILE *output_file, int dim, int np, int trans, double varpar, double *x, double *xmin, double *xmax, double *overallxmin, double *overallxmax, double *LE, int attractor, size_t npoinc, double **poinc, int nrms, int *rmsindex, double *xrms, double *overallxrms,
+/*
+void HOS_write_fbifurc_results_old(FILE *output_file, int dim, int np, int trans, double varpar, double *x, double *xmin, double *xmax, double *overallxmin, double *overallxmax, double *LE, int attractor, size_t npoinc, double **poinc, int nrms, int *rmsindex, double *xrms, double *overallxrms,
                               int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, ang_info *angles, int mode) {
     // Check the mode of the function
     // Header for poincare bifurc
@@ -1059,6 +1078,65 @@ void HOS_write_fbifurc_results(FILE *output_file, int dim, int np, int trans, do
     // Write Results for lyapunov, min, max values, customvalues
     else if (mode == 3) {
         write_bifurc_control_parameter(output_file, varpar, 2);
+        write_min_max(output_file, dim, xmin, xmax, overallxmin, overallxmax, 2);
+        write_min_max_angles(output_file, angles, xmin, xmax, overallxmin, overallxmax, 2);
+        write_rms_state_vars(output_file, nrms, xrms, overallxrms, rmsindex, 2);
+        write_lyap_exp(output_file, dim, LE, NULL, false, 2);
+        write_attractor(output_file, attractor, 2);        
+        write_customcalc(output_file, ncustomvalues, customvalue, nprintf, customnames, printfindex, 2);
+        fprintf(output_file, "\n");
+    }
+    // Error
+    else {
+        printf("Failed to write results in output file using mode (%d)...\n", mode);
+        return;
+    }
+}
+*/
+
+void HOS_write_fbifurc_results(FILE *output_file, int dim, int np, int trans, double varpar, double *x, double *IC, int bifmode, double *xmin, double *xmax, double *overallxmin, double *overallxmax, double *LE, int attractor, size_t npoinc, double **poinc, int nrms, int *rmsindex, double *xrms, double *overallxrms,
+                              int ncustomvalues, char **customnames, double *customvalue, int nprintf, int *printfindex, ang_info *angles, int mode) {
+    // Check the mode of the function
+    // Header for poincare bifurc
+    if (mode == 0) {
+        //write_fbifurc_poinc(output_file, dim, varpar, npoinc, poinc, attractor, angles, 1);
+        write_bifurc_control_parameter(output_file, varpar, 1);
+        write_state_vars(output_file, dim, NULL, 1);
+        write_state_vars_angles(output_file, NULL, angles, 1);
+        write_attractor(output_file, attractor, 1);
+        fprintf(output_file, "\n");
+    } 
+    // Write Results for poincare bifurc
+    else if (mode == 1) {
+        for(int q = 0; q < npoinc; q ++) {
+            //write_fbifurc_poinc(output_file, dim, varpar, npoinc, poinc, attractor, angles, 2);
+            write_bifurc_control_parameter(output_file, varpar, 2);
+            write_state_vars(output_file, dim, poinc[q], 2);
+            write_state_vars_angles(output_file, poinc[q], angles, 2);
+            write_attractor(output_file, attractor, 2);
+            fprintf(output_file, "\n");
+        }
+    }
+    // Header for initial conditions, lyapunov, min, max values, customvalues
+    else if (mode == 2) {
+        write_bifurc_control_parameter(output_file, varpar, 1);
+        if (bifmode == 0) {
+            write_IC(output_file, dim, IC, 1);
+        }
+        write_min_max(output_file, dim, xmin, xmax, overallxmin, overallxmax, 1);
+        write_min_max_angles(output_file, angles, xmin, xmax, overallxmin, overallxmax, 1);
+        write_rms_state_vars(output_file, nrms, xrms, overallxrms, rmsindex, 1);
+        write_lyap_exp(output_file, dim, LE, NULL, false, 1);
+        write_attractor(output_file, attractor, 1);        
+        write_customcalc(output_file, ncustomvalues, customvalue, nprintf, customnames, printfindex, 1);
+        fprintf(output_file, "\n");
+    }
+    // Write Results for lyapunov, min, max values, customvalues
+    else if (mode == 3) {
+        write_bifurc_control_parameter(output_file, varpar, 2);
+        if (bifmode == 0) {
+            write_IC(output_file, dim, IC, 2);
+        }
         write_min_max(output_file, dim, xmin, xmax, overallxmin, overallxmax, 2);
         write_min_max_angles(output_file, angles, xmin, xmax, overallxmin, overallxmax, 2);
         write_rms_state_vars(output_file, nrms, xrms, overallxrms, rmsindex, 2);
