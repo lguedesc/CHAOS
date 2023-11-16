@@ -15,7 +15,7 @@ void red(void) {
 void blue(void) {
     printf("\033[0;34m");
 }
-void purple(void) {
+void magenta(void) {
     printf("\033[0;35m");
 }
 void cyan(void) {
@@ -59,8 +59,8 @@ void print_blue(char *msg, ...) {
     va_end(args);
     reset_color();
 }
-void print_purple(char *msg, ...) {
-    purple();
+void print_magenta(char *msg, ...) {
+    magenta();
     va_list args;
     va_start(args, msg);
     vprintf(msg, args);

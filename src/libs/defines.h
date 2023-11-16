@@ -8,18 +8,21 @@
 // macros for compilers
 #define _CRT_SECURE_NO_WARNINGS
 
+// macros to handle reading of input parameters
+#define INPUT_BUFSIZE 512
+
 // macros to handle file names
 #define MAX_FILE_NUM 1000           // maximum number of repeatable files that the program can create in the directory
 #define MAX_FILENAME_LEN 500        // Define maximum length of filename strings
 
 // Macros related to printing information
-#define MAX_PRINT_LEN 71            // Max length of the info printed on the screen and on info file
-#define PERC_PRINT_NAME 0.6         // Percentage of space occuped by the name of the quantity printed
-#define MAX_CCALC_NAME_LEN 31       // Maximum length of custom calculations names
-#define PROGRESS_BAR_LEN 49         // Length of the progress bar
-#define LF "%.10lf"                 // Significant digits for double numbers
-#define SC "%.10e"                  // Signigicant digits for double numbers in scientific format 
-
+#define MAX_PRINT_LEN 71                // Max length of the info printed on the screen and on info file
+#define PERC_PRINT_NAME 0.6             // Percentage of space occuped by the name of the quantity printed
+#define MAX_CCALC_NAME_LEN 31           // Maximum length of custom calculations names
+#define PROGRESS_BAR_LEN 49             // Length of the progress bar
+#define LF "%.10lf"                     // Significant digits for double numbers
+#define SC "%.10e"                      // Signigicant digits for double numbers in scientific format 
+#define PRINT_BOOL ? "true" : "false"   // Macro to print booleans more straightforward
 // Math constants
 //#define PI (4.0 * atan(1.0))
 #define PI 3.141592653589793

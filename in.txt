@@ -1,0 +1,26 @@
+group = HOS
+system = bistable_EH
+simulation = timeseries
+
+integrator = RK4
+integration_mode = period_explicit
+
+nP = 1000
+nDiv = 1000
+trans = 750
+maxper = 6
+
+IC = { 0.01, 1.0, 0.0 }
+t0 = 0.0
+
+p[0] = 1
+p[1] = 0.5
+p[2] = 0.025
+p[3] = -0.5
+p[4] = 0.5
+p[5] = 0.05
+p[6] = 0.05
+p[7] = 0.5
+
+nrms = 3
+xRMS = { 0, 1, 2 }

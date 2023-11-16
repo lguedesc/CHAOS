@@ -1130,23 +1130,23 @@ void add_system_call(sys system) {
 /* Welcome and Tutorial */
 void file_tutorial(void) {
     printf("\nBelow there is an example of how a input file must be formatted and organized:\n\n");
-    print_purple("# INFO:\n");
-    print_purple("dim = 2\n");
-    print_purple("name = Test Oscillator\n");
-    print_purple("abrev = TOsc\n");
-    print_purple("outfile = test_oscillator\n");
-    print_purple("group = HOS\n");
-    print_purple("\n# COMMENTS:\n");
-    print_purple("par[0] = Forcing frequency\n");
-    print_purple("par[1] = Forcing amplitude\n");
-    print_purple("par[2] = Damping Coefficient\n");
-    print_purple("par[3] = Spring Stiffness\n");
-    print_purple("\n# EQUATIONS:\n");
-    print_purple("f[0] = x[1];\n");
-    print_purple("f[1] = -(1/par[2])*(par[2]*x[1] + par[3]*x[0]) + par[1]*sin(par[0]*t);\n");
-    print_purple("\n# LINEARIZED EQUATIONS:\n");
-    print_purple("f[2 + i] = x[4 + i];\n");
-    print_purple("f[4 + i] = -2*par[2]*par[3]*x[4 + i] - par[3]*par[3]*x[2 + i];\n\n");
+    print_magenta("# INFO:\n");
+    print_magenta("dim = 2\n");
+    print_magenta("name = Test Oscillator\n");
+    print_magenta("abrev = TOsc\n");
+    print_magenta("outfile = test_oscillator\n");
+    print_magenta("group = HOS\n");
+    print_magenta("\n# COMMENTS:\n");
+    print_magenta("par[0] = Forcing frequency\n");
+    print_magenta("par[1] = Forcing amplitude\n");
+    print_magenta("par[2] = Damping Coefficient\n");
+    print_magenta("par[3] = Spring Stiffness\n");
+    print_magenta("\n# EQUATIONS:\n");
+    print_magenta("f[0] = x[1];\n");
+    print_magenta("f[1] = -(1/par[2])*(par[2]*x[1] + par[3]*x[0]) + par[1]*sin(par[0]*t);\n");
+    print_magenta("\n# LINEARIZED EQUATIONS:\n");
+    print_magenta("f[2 + i] = x[4 + i];\n");
+    print_magenta("f[4 + i] = -2*par[2]*par[3]*x[4 + i] - par[3]*par[3]*x[2 + i];\n\n");
 
     printf("1. The '# INFO:' block holds the information about how CHAOS will handle\n");
     printf("   your system. It require the following fields:\n");

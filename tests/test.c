@@ -1,27 +1,76 @@
 #include <stdio.h>
-#include <stdarg.h>
 #include <stdlib.h>
-#include <math.h>
+#include <string.h>
+#include <stdbool.h>
 
-#define PI (4 * atan(1))
-#define TWOPI 2*PI
-#define SC "%.10e"
+bool is_string_number(char *str) {
+    char *ptr;
+    // Check if string is not NULL
+    if (str != NULL) {
+        // Try to convert string to double
+        double number = strtod(str, &ptr);
+        // Check if the pointers are equal (if no characters were converted, these pointers are equal)
+        // and if the entire string was converted to ensure it is a whole number
+        if (ptr == str || *ptr != '\n' && *ptr != '\0') {
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
+    else {
+        return false;
+    }
+}
 
-int main()
-{
+bool is_string_double(char *str) {
+    /* THIS FUNCTION SHOULD ONLY BE USED IF *str IS A NUMBER */
+    char *ptr;
+    // Check if string is not NULL
+    if (str != NULL) {
+        // Try to convert string to double
+        double number = strtod(str, &ptr);
+        // Check if is a decimal point in the string
+        if (strchr(str, '.') != NULL) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        return false;
+    }
+}
+
+void checkNumberType(char* str) {
+    char *ptr;
+    double number = strtod(str, &ptr); // try to convert string to double
+
+    // Check if the entire string was converted
+    if (ptr == str || *ptr != '\n' && *ptr != '\0') {
+        printf("This is not a number.\n");
+    } else {
+        if (strchr(str, '.') != NULL) { // check if there is a decimal point in the string
+            printf("This is a double.\n");
+        } else {
+            printf("This is an integer.\n");
+        }
+    }
+}
+
+int main() {
     
-    double L = 0.005; 
-    double g = 9.81;
+    char *str = "-10.0";
+    char *ptr;
 
-    double wphi = sqrt(g/L);
-    printf("wn = %lf Hz\n", wphi);
-
-    double wz = 39;
-
-    printf("Omega_phi = %lf\n", wphi/wz);
-    printf("g = "SC"\n", g);
-    
-    printf("g = " SC " Omega_phi = " SC "\n", g, wphi/wz);
-    
+    bool is_number = is_string_number(str);
+    printf("is_number = %s\n", is_number ? "true" : "false");
+    if (is_number == true) {
+        bool is_double = is_string_double(str);
+        printf("is_double = %s\n", is_double ? "true" : "false");
+    }
     return 0;
 }
+
+
