@@ -9,7 +9,8 @@
 #include "systems_placeholder.h"
 
 #define MAX_INPUT_FIELD_VALUE_LEN 200
-
+#define MAX_INPUT_FIELD_LEN 20
+#define MAX_NUMBER_LEN_INSIDE_BRACKET 5
 /*
 Steps:
 
@@ -21,9 +22,10 @@ Steps:
    - If field is a number (int or double) [done!]
    - If field is a negative number [done!]
 4. Handle system identification to read system parameters and IC [done!]
-5. Handle lists 
-6. Handle optional arguments
-7. 'nrms' is not needed (read length of list and determine nrms (default length=0))
+5. Handle lists [done!]
+6. Handle optional arguments [done !]
+7. 'nrms' is not needed (read length of list and determine nrms (default length=0)) [scrapped]
+8. Revise the size_t limit argument. Maybe a pointer to set NULL if needed.
 
 */
 
@@ -70,6 +72,10 @@ typedef struct {
     bool valid;
     bool read;
 } field;
+
+typedef struct {
+    field *system;
+} input_fields;
 
 field *init_field_struct(size_t length, char **field_names) {
     field *params = malloc(length * sizeof(*params));    
@@ -119,6 +125,47 @@ void print_field_struct(field params, char *field_mode) {
         }
         else if (strcmp(field_mode, "double_list") == 0 || strcmp(field_mode, "double_list+") == 0) {
             printf("--\n" RESET_STYLE);
+        }
+        else {
+            printf("--\n" RESET_STYLE);
+        }
+    } else {
+        printf("NULL\n" RESET_STYLE);
+    }
+}
+
+void print_field_list_struct(field params, size_t n_cells, char *field_mode) {
+    printf(COLOR_GREEN "name " COLOR_YELLOW "= " COLOR_MAGENTA "%16s" COLOR_WHITE " | " RESET_STYLE, params.name);
+    printf(COLOR_GREEN "missing " COLOR_YELLOW "= " COLOR_MAGENTA "%5s" COLOR_WHITE " | " RESET_STYLE, params.missing PRINT_BOOL);
+    printf(COLOR_GREEN "duplicate " COLOR_YELLOW "= " COLOR_MAGENTA "%5s" COLOR_WHITE " | " RESET_STYLE, params.duplicate PRINT_BOOL);
+    printf(COLOR_GREEN "valid " COLOR_YELLOW "= " COLOR_MAGENTA "%5s" COLOR_WHITE " | " RESET_STYLE, params.valid PRINT_BOOL);
+    printf(COLOR_GREEN "read " COLOR_YELLOW "= " COLOR_MAGENTA "%5s" COLOR_WHITE " | " RESET_STYLE, params.read PRINT_BOOL );
+    
+    printf(COLOR_GREEN "value " COLOR_YELLOW "= " COLOR_MAGENTA);
+    if (params.value != NULL) {
+        if (strcmp(field_mode, "int_list") == 0 || strcmp(field_mode, "int_list+") == 0) {
+            printf("{ ");
+            for (int i = 0; i < n_cells; i++) {
+                if (i == n_cells - 1) {
+                    printf("%d", ((int *)params.value)[i]);    
+                }
+                else {
+                    printf("%d, ", ((int *)params.value)[i]);
+                }
+            }
+            printf(" }\n" RESET_STYLE);
+        }
+        else if (strcmp(field_mode, "double_list") == 0 || strcmp(field_mode, "double_list+") == 0) {
+            printf("{ ");
+            for (int i = 0; i < n_cells; i++) {
+                if (i == n_cells - 1) {
+                    printf("%g", ((double *)params.value)[i]);    
+                }
+                else {
+                    printf("%g, ", ((double *)params.value)[i]);
+                }
+            }
+            printf(" }\n" RESET_STYLE);
         }
         else {
             printf("--\n" RESET_STYLE);
@@ -231,60 +278,6 @@ char *read_input_file_and_store_contents(bool print_steps, bool print_file_conte
 
 /* ================== FUNCTIONS TO GET INFORMATIONS ==================== */
 
-char *get_field_content_old(char* file_contents, char *field_name, char *field_mode) {
-    // Copy file_contents information to manipulate it without modifying the original string
-    char *file_contents_copy = copy_pointer(file_contents, strlen(file_contents) + 1, sizeof(char));
-    //print_warning("FILE_CONTENTS_COPY:\n%s\n", file_contents_copy);
-    // Find the substring of file_contents_copy containing 'field_name' at its beggining
-    char *substring = strstr(file_contents_copy, field_name);
-    // Check if field_name really occurs in "substring"
-    if (substring != NULL) {
-        print_magenta("substring 1 = %s\n", substring);
-        // Find the start of the field content
-        while (substring > file_contents_copy && *substring != '\n') {
-            substring--;
-        }
-        print_magenta("substring 2 = %s\n", substring);
-        // Move one character forward to exclude the newline character (if newline char exists)
-        if (*substring == '\n') {
-            substring++;
-        }
-        print_magenta("substring 3= %s\n", substring);
-        // Check field mode to determine end of content character
-        if (strcmp(field_mode, "int_list") == 0 || strcmp(field_mode, "int_list+") == 0 || strcmp(field_mode, "double_list") == 0 || strcmp(field_mode, "double_list+") == 0){
-            // Find the first occurrence of "}" (end of the content)
-            char *end_of_content = strchr(substring, '}');
-            if (end_of_content != NULL) {
-                // Move one character forward
-                end_of_content++;
-                // Null-terminate the content to print only to part containing the field content
-                *end_of_content = '\0';
-            }
-        }
-        else {
-            // Find the first occurrence of "\n" (end of the content)
-            char *end_of_content = strstr(substring, "\n");
-            if (end_of_content != NULL) {
-                // Null-terminate the line to print only the part containing "field_name"
-                *end_of_content = '\0';
-            }
-        }
-
-        // Make a copy of the substring before freeing file_contents_copy
-        char *field_content = copy_pointer(substring, strlen(substring) + 1, sizeof(char));
-        // Free memory
-        free(file_contents_copy);
-
-        return field_content;
-    } 
-    else {
-        // Free memory
-        free(file_contents_copy);
-
-        return NULL;
-    }
-}
-
 char *get_field_content(char* file_contents, char *field_name, char *field_mode) {
     // Copy file_contents information to manipulate it without modifying the original string
     char *file_contents_copy = copy_pointer(file_contents, strlen(file_contents) + 1, sizeof(char));
@@ -381,9 +374,40 @@ void assign_field_value(field *param, char *field_value, char *field_mode) {
         (*tmp_value) = atof(field_value);
         param->value = tmp_value;
     }
-    
+    else {
+        print_debug("Invalid 'char *field_mode' in ' void assign_field_value(...)' function.\n");
+    }
     // Change read member to true if param.value is not null
     if ((*param).value != NULL) {
+        (*param).read = true;
+    }
+}
+
+void assign_field_list_values(field *param, char **field_values_array, size_t n_cells, char *field_mode) {
+    // Assign field value based on mode
+    if (strcmp(field_mode, "int_list") == 0 || strcmp(field_mode, "int_list+") == 0) {
+        int *tmp_values = malloc(n_cells * sizeof *tmp_values);
+        // Iterate over the values 
+        for (int i = 0; i < n_cells; i++) {
+            tmp_values[i] = atoi(field_values_array[i]);
+        }
+        // Assign values to struct
+        param->value = tmp_values;
+    }
+    else if (strcmp(field_mode, "double_list") == 0 || strcmp(field_mode, "double_list+") == 0) {
+        double *tmp_values = malloc(n_cells * sizeof *tmp_values);
+        // Iterate over the values 
+        for (int i = 0; i < n_cells; i++) {
+            tmp_values[i] = atof(field_values_array[i]);
+        }
+        // Assign values to struct
+        param->value = tmp_values;
+    }
+    else {
+        print_debug("Invalid 'char *field_mode' in ' void assign_field_list_values(...)' function.\n");
+    }
+    // Change read member to true if param.value is not null
+    if (param->value != NULL) {
         (*param).read = true;
     }
 }
@@ -473,6 +497,30 @@ char **get_each_element_of_list(char *list, size_t n_cells, char *list_name) {
             }
         }
         return list_elements;
+    }
+}
+
+char **get_names_of_table(size_t npar, char *name_of_cell) {
+    // Check if there is any number of elements to allocate memory
+    if (npar == 0) {
+        return NULL;
+    }
+    else {
+        char **table_element_names = NULL;
+        if (strlen(name_of_cell) > MAX_INPUT_FIELD_VALUE_LEN - MAX_NUMBER_LEN_INSIDE_BRACKET - 2) {
+            print_debug("String in 'char *name_of_cell' too long in char **get_names_of_table(...) function\n");   
+            print_exit_prog();
+            exit(EXIT_FAILURE);
+        } 
+        else {
+            // Create an array of strings to store each element of the table
+            table_element_names = alloc_string_array(npar, MAX_INPUT_FIELD_VALUE_LEN);
+            // Assign string names
+            for (int i = 0; i < npar; i++) {
+                sprintf(table_element_names[i], "%s[%d]", name_of_cell, i);
+            }
+        }
+        return table_element_names;
     }
 }
 
@@ -667,7 +715,46 @@ bool is_each_element_of_list_a_positive_number(char **array_with_all_elements, s
     return true;
 }
 
-bool is_field_value_valid(char *field_value, char *field_mode) {
+bool is_limit_crossed(char *str_number, size_t *limit, char *field_mode) {
+    /* ONLY USE THIS FUNCTION IF str_number IS INDEED A NUMBER */
+    // Check if str_number is null
+    if (str_number != NULL && limit != NULL) {
+        // Check variable type
+        if (strcmp(field_mode, "int") == 0 || strcmp(field_mode, "int+") == 0) {
+            int number = atoi(str_number);
+            if (number > (*limit)) {
+                return true;
+            }
+        }
+        else if (strcmp(field_mode, "double") == 0 || strcmp(field_mode, "double+") == 0) {
+            double number = atof(str_number);
+            if (number > (*limit)) {
+                return true;
+            }
+        }
+        else {
+            print_debug("Invalid 'char *var_type' in 'bool is_limit_crossed(...) function.\n");
+            print_exit_prog();
+            exit(EXIT_FAILURE);
+        }
+    } 
+    
+    return false;
+}
+
+bool does_list_contain_duplicates(char **field_values_array, size_t n_cells) {
+    // Iterate over the field_values string array and compare all of them
+    for (int i = 0; i < n_cells; i++) {
+        for (int j = 0; j < n_cells; j++) {
+            if(strcmp(field_values_array[i], field_values_array[j]) == 0 && i != j) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool is_field_value_valid(char *field_value, size_t *limit, char *field_mode) {
     // Check if field_value is NULL or if field value is missing
     if (field_value == NULL) {
         return false;
@@ -675,27 +762,27 @@ bool is_field_value_valid(char *field_value, char *field_mode) {
     // Check if field value is a number and a double
     bool is_number = is_string_number(field_value);
     bool is_double = is_string_number_double(field_value);
+    bool limit_crossed = is_limit_crossed(field_value, limit, field_mode);
     // Check mode to make compararisons
     if (strcmp(field_mode, "string") == 0) {
         // return true if field_value is not a number, and false if field_value is a number
-        //print_blue("!is_number = %s\n", !is_number PRINT_BOOL);
         return !is_number;
     }
     else if (strcmp(field_mode, "int") == 0) {
-        // returns true if field_value is a number AND field_value is not a double
-        return is_number && !is_double;
+        // returns true if field_value is a number AND field_value is not a double AND field_valie not crossed the limit
+        return is_number && !is_double && !limit_crossed;
     }
     else if (strcmp(field_mode, "int+") == 0) {
-        // returns true if field_value is a number AND field_value is not a double AND field_value is positive
-        return is_number && !is_double && is_string_number_positive(field_value);
+        // returns true if field_value is a number AND field_value is not a double AND field_value is positive AND field_valie not crossed the limit
+        return is_number && !is_double && is_string_number_positive(field_value) && !limit_crossed;;
     }
     else if (strcmp(field_mode, "double") == 0) {
-        // returns true if field_value is a number AND field_value is a double
-        return is_number && is_double;
+        // returns true if field_value is a number AND field_value is a double AND field_valie not crossed the limit
+        return is_number && is_double && !limit_crossed;;
     }
     else if (strcmp(field_mode, "double+") == 0) {
-        // returns true if field_value is a number AND field_value is a double AND field_value is positive
-        return is_number && is_double && is_string_number_positive(field_value);
+        // returns true if field_value is a number AND field_value is a double AND field_value is positive AND field_valie not crossed the limit
+        return is_number && is_double && is_string_number_positive(field_value) && !limit_crossed;;
     }
     else {
         print_debug("'char *field_mode' in 'is_field_value_valid()' function is invalid. Please check the code and enter one of the following: 'string', 'int', 'int+' 'double', 'double+'.\n");
@@ -704,7 +791,7 @@ bool is_field_value_valid(char *field_value, char *field_mode) {
     }
 }
 
-bool is_field_list_valid(char **field_values_array, size_t n_cells, size_t expected_n_cells, char *field_mode) {
+bool is_field_list_valid(char **field_values_array, size_t n_cells, size_t expected_n_cells, bool allow_cell_duplicates, char *field_mode) {
     // Check if field_values_array is NULL
     if (field_values_array == NULL || *field_values_array == NULL) {
         return false;
@@ -714,6 +801,12 @@ bool is_field_list_valid(char **field_values_array, size_t n_cells, size_t expec
     bool overflow = is_list_overflow(n_cells, expected_n_cells);
     bool underflow = is_list_underflow(n_cells, expected_n_cells);
     bool is_all_double = is_each_element_of_list_a_double_number(field_values_array, n_cells);
+    bool contain_duplicates = does_list_contain_duplicates(field_values_array, n_cells);
+
+    // Check for duplicates
+    if (allow_cell_duplicates == false && contain_duplicates == true) {
+        return false;
+    }
 
     // Check mode and make comparisons
     if (strcmp(field_mode, "int_list") == 0) {
@@ -795,9 +888,8 @@ size_t get_dimension_of_system(char *func_name, ode_system *system_list, size_t 
 }
 /* ==================== FULL CHECKS FOR PARAMETERS ===================== */
 
-void check_fields(char *file_contents, size_t num_fields, field params[num_fields], char **field_names, ode_system *system_list, size_t expected_n_cells, char *field_mode) {
+void check_fields(char *file_contents, size_t num_fields, field params[num_fields], char **field_names, char *field_mode, size_t *limit_value, bool optional) {
     print_field_mode(field_mode);
-    bool invalid = false;
     unsigned int n = 0;
     char *field_content = NULL;
     char *field_value = NULL;
@@ -817,33 +909,66 @@ void check_fields(char *file_contents, size_t num_fields, field params[num_field
         params[i].duplicate = is_field_duplicate(n);
         // Get the corresponding field content based on parameter (field) name and the field value
         field_content = get_field_content(file_contents, params[i].name, field_mode);
-        //print_blue("field_content = |%s|\n", field_content);
-        if (strcmp(field_mode, "int_list") == 0 || strcmp(field_mode, "int_list+") == 0 || strcmp(field_mode, "double_list") == 0 || strcmp(field_mode, "double_list+") == 0) {
-            field_value = get_field_list_value(field_content);
-            size_t n_cells = get_number_of_list_cells_declared(field_value);
-            char **field_values_array = get_each_element_of_list(field_value, n_cells, params[i].name);
-            params[i].valid = is_field_list_valid(field_values_array, n_cells, expected_n_cells, field_mode);
+        // Check if the field_value is valid based on field_mode
+        field_value = get_field_value(field_content);           
+        // Check conditions for optional fields
+        if (optional == true && params[i].missing == true) {
+            params[i].valid = true;
         }
         else {
-            // Check if the field_value is valid based on field_mode
-            field_value = get_field_value(field_content);           
-            params[i].valid = is_field_value_valid(field_value, field_mode); 
-            //print_blue("params[%d].valid = %s\n", i, params[i].valid PRINT_BOOL);
-            // Check if all conditions are met to assign value to param struct
-            if (params[i].missing == false && params[i].duplicate == false && params[i].valid == true) {
-                assign_field_value(&params[i], field_value, field_mode);
-            }
+            params[i].valid = is_field_value_valid(field_value, limit_value, field_mode); 
         }
-        print_blue("field_content = |%s| | field_value = |%s|\n", field_content, field_value);
-        
+        // Check if all conditions are met to assign value to param struct
+        if (params[i].missing == false && params[i].duplicate == false && params[i].valid == true) {
+            assign_field_value(&params[i], field_value, field_mode);
+        }
         print_field_struct(params[i], field_mode);
-    }
-    if (invalid == true) {
-        print_error("Invalid declarations in the input file. Check previous messages and fix input file fields accordingly.\n");
-        print_exit_prog();
-        exit(EXIT_FAILURE);
+        //print_blue("field_content = |%s| | field_value = |%s|\n", field_content, field_value);
     }
 }
+
+void check_list_fields(char *file_contents, size_t num_fields, field params[num_fields], char **field_names, size_t expected_n_cells, bool allow_duplicate_cells, size_t *cell_limit_value, char *field_mode, bool optional) {
+    print_field_mode(field_mode);
+    unsigned int n = 0;
+    char *field_content = NULL;
+    char *field_value = NULL;
+    // Loop through all fields
+    for (int i = 0; i < num_fields; i++) {
+        // Copy field name to params[i].name member 
+        if (strlen(field_names[i] + 1) <= INPUT_BUFSIZE) {
+            strcpy(params[i].name, field_names[i]);
+        }  
+        else {
+            print_debug("Field name '%s' with length greater than INPUT_BUFSIZE. Reduce the name.\n", field_names[i]);
+        }
+        // Count field occurrence
+        n = count_field_occurrence(file_contents, field_names[i]);
+        // Check for missing or duplicate field
+        params[i].missing = is_field_missing(n);
+        params[i].duplicate = is_field_duplicate(n);
+        // Get the corresponding field content based on parameter (field) name and the field value
+        field_content = get_field_content(file_contents, params[i].name, field_mode);
+        // Get field value based on field content
+        field_value = get_field_list_value(field_content);
+        // Get the number of cells of the list    
+        size_t n_cells = get_number_of_list_cells_declared(field_value);
+        // Store each element of the list into an array of strings
+        char **field_values_array = get_each_element_of_list(field_value, n_cells, params[i].name);
+        // Check conditions for optional fields
+        if (optional == true && params[i].missing == true) {
+            params[i].valid = true;
+        } 
+        else {
+            params[i].valid = is_field_list_valid(field_values_array, n_cells, expected_n_cells, allow_duplicate_cells, field_mode);
+        }
+        // Check if all conditions are met to assign values to param struct
+        if (params[i].missing == false && params[i].duplicate == false && params[i].valid == true) {
+            assign_field_list_values(params, field_values_array, n_cells, field_mode);
+        }
+        print_field_list_struct(params[i], n_cells, field_mode);
+        //print_blue("field_content = |%s| | field_value = |%s|\n", field_content, field_value);
+    }
+} 
 
 /* ============================ MAIN FUNCTION ========================== */
 
@@ -872,29 +997,35 @@ int main(void) {
     size_t system_field_names_len = sizeof(system_field_names) / sizeof(system_field_names[0]);
     char *simulation_field_names[] = {"simulation", "integrator", "integration_mode"};
     size_t simulation_field_names_len = sizeof(simulation_field_names) / sizeof(simulation_field_names[0]);
-    char *integrator_field_names[] = {"nP", "nDiv", "trans", "maxper"};
+    char *integrator_field_names[] = {"nP", "nDiv", "maxper"};
     size_t integrator_field_names_len = sizeof(integrator_field_names) / sizeof(integrator_field_names[0]);
+    char *transient_field_names[] = {"trans"};
+    size_t transient_field_names_len = sizeof(transient_field_names) / sizeof(transient_field_names[0]);
     char *IC_field_names[] = {"IC"};
     size_t IC_field_names_len = sizeof(IC_field_names) / sizeof(IC_field_names[0]);
     char *time_field_names[] = {"t0"};
     size_t time_field_names_len = sizeof(time_field_names) / sizeof(time_field_names[0]);
-    char *RMScalc_field_names[] = {"nrms", "xRMS"};
-    size_t RMScalc_fields_names_len = sizeof(RMScalc_field_names) / sizeof(RMScalc_field_names[0]);
+    char *n_RMScalc_field_names[] = {"nrms"};
+    size_t n_RMScalc_field_names_len = sizeof(n_RMScalc_field_names) / sizeof(n_RMScalc_field_names[0]);
+    char *RMScalc_field_names[] = {"RMS_calc"};
+    size_t RMScalc_field_names_len = sizeof(RMScalc_field_names) / sizeof(RMScalc_field_names[0]);
     /* ============================================================== */
     /* Initialize Structs */
     /* ============================================================== */
     field *system_fields = init_field_struct(system_field_names_len, system_field_names);
     field *simulation_fields = init_field_struct(simulation_field_names_len, simulation_field_names);
     field *integrator_fields = init_field_struct(integrator_field_names_len, integrator_field_names);
+    field *transient_fields = init_field_struct(transient_field_names_len, transient_field_names);
     field *IC_fields = init_field_struct(IC_field_names_len, IC_field_names);
     field *time_fields = init_field_struct(time_field_names_len, time_field_names);
-    field *RMScalc_fields = init_field_struct(RMScalc_fields_names_len, RMScalc_field_names);
+    field *n_RMScalc_fields = init_field_struct(n_RMScalc_field_names_len, n_RMScalc_field_names);
+    field *RMScalc_fields = init_field_struct(RMScalc_field_names_len, RMScalc_field_names);
     /* ============================================================== */
     /* Safety Checks in File Contents */
     /* ============================================================== */
     // Check for system_field_names
     printf(COLOR_YELLOW "=> " RESET_STYLE "Identifying system declared in file contents...\n" RESET_STYLE);
-    check_fields(fcontents, system_field_names_len, system_fields, system_field_names, systems, 0, "string");
+    check_fields(fcontents, system_field_names_len, system_fields, system_field_names, "string", NULL, false);
     // Assign all information of the system to key variables
     size_t npar = get_number_of_system_parameters(system_fields[1].value, systems, systems_len);
     size_t dim = get_dimension_of_system(system_fields[1].value, systems, systems_len);
@@ -902,12 +1033,23 @@ int main(void) {
     print_blue("dim = %d\n", dim);
     // Check for simulation_field_names
     printf(COLOR_YELLOW "=> " RESET_STYLE "Identifying simulation declared in file contents...\n" RESET_STYLE);
-    check_fields(fcontents, simulation_field_names_len, simulation_fields, simulation_field_names, systems, 0, "string");
-    // Check for integrator_field_names
+    check_fields(fcontents, simulation_field_names_len, simulation_fields, simulation_field_names, "string", NULL, false);
+    // Check for remaining fields
     printf(COLOR_YELLOW "=> " RESET_STYLE "Identifying remaining parameters declared in file contents...\n" RESET_STYLE);
-    check_fields(fcontents, integrator_field_names_len, integrator_fields, integrator_field_names, systems, 0, "int+");
-    check_fields(fcontents, IC_field_names_len, IC_fields, IC_field_names, systems, dim, "double_list");
+    check_fields(fcontents, integrator_field_names_len, integrator_fields, integrator_field_names, "int+", NULL, false);
+    check_fields(fcontents, transient_field_names_len, transient_fields, transient_field_names, "int+", &((size_t*)integrator_fields->value)[0], false);    
     
+    check_list_fields(fcontents, IC_field_names_len, IC_fields, IC_field_names, dim, true, NULL, "double_list", false);
+    check_fields(fcontents, time_field_names_len, time_fields, time_field_names, "double+", NULL, false);
+    // Check for optional fields
+    check_fields(fcontents, n_RMScalc_field_names_len, n_RMScalc_fields, n_RMScalc_field_names, "int+", &dim, true);
+    if (n_RMScalc_fields->value != NULL && *(size_t*)n_RMScalc_fields->value > 0) {
+        check_list_fields(fcontents, RMScalc_field_names_len, RMScalc_fields, RMScalc_field_names, *(size_t*)n_RMScalc_fields->value, false, &dim-1, "int_list+", false);
+    }
+    // Check for parameter fields 
+    char **syspar_field_names = get_names_of_table(npar, "p");
+    field *syspar = init_field_struct(npar, syspar_field_names);
+    check_fields(fcontents, npar, syspar, syspar_field_names, "double", NULL, false);
     /* ============================================================== */
     /* Test System determination */
     /* ============================================================== */
@@ -921,10 +1063,14 @@ int main(void) {
     /* Free Memory */
     /* ============================================================== */
     free(fcontents);
+    free_2D_mem((void**)syspar_field_names, npar);
     free_field_struct(system_field_names_len, system_fields);
     free_field_struct(simulation_field_names_len, simulation_fields); 
     free_field_struct(integrator_field_names_len, integrator_fields); 
+    free_field_struct(transient_field_names_len, transient_fields);
     free_field_struct(IC_field_names_len, IC_fields);
     free_field_struct(time_field_names_len, time_fields);
-    free_field_struct(RMScalc_fields_names_len, RMScalc_fields); 
+    free_field_struct(n_RMScalc_field_names_len, n_RMScalc_fields);
+    free_field_struct(RMScalc_field_names_len, RMScalc_fields);
+    free_field_struct(npar, syspar); 
 }
