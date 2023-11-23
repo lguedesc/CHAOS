@@ -199,3 +199,19 @@ int get_largest_element_int_array(int *arr, int size) {
     
     return largest;
 }
+
+void realloc_array(void **arr, size_t new_size, size_t size_of_datatype) {
+    printf("1\n");
+    void *tmp = realloc(*arr, new_size * size_of_datatype);
+    printf("2\n");
+    if (tmp == NULL) {
+        printf("3\n");
+        printf("Couldn't realloc vector in 'realloc_array' function.\n");
+        return;
+    }
+    else {
+        printf("4\n");
+        *arr = tmp;
+        printf("5\n");
+    }
+}

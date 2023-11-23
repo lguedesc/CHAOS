@@ -1,3 +1,3 @@
-clang -o CHAOS_input read_input_3.c src/libs/msg.c src/libs/iofiles.c src/libs/basic.c systems_placeholder.c 
-./CHAOS_input
-rm CHAOS_input
+clang -o CHAOS_input_test read_input_test.c src/libs/msg.c src/libs/iofiles.c src/libs/basic.c systems_placeholder.c 
+./CHAOS_input_test
+rm CHAOS_input_test

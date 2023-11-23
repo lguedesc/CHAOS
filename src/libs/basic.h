@@ -13,5 +13,6 @@ void file_safety_check(FILE *file);
 void ptr_safety_check(void *ptr, char *ptr_name);
 void double_ptr_safety_check(void** ptr, char *ptr_name);
 int get_largest_element_int_array(int *arr, int size);
+void realloc_array(void **arr, size_t new_size, size_t size_of_datatype);
 
 #endif

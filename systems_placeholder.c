@@ -1,21 +1,29 @@
 #include <stdio.h>
 
-void duffing(double a, double b) {
-    printf("Running duffing with a=%f, b=%f...\n", a, b);
+void linear_osc(int dim, double *x, double t, double *par, double *f) {
+    printf("Running linear_osc with dim=%d\n", dim);
 }
 
-void vanderpol(double a, double b) {
-    printf("Running vanderpol with a=%f, b=%f...\n", a, b);
+void duffing(int dim, double *x, double t, double *par, double *f) {
+    printf("Running duffing with dim=%d\n", dim);
 }
 
-void lorenz(double a, double b) {
-    printf("Running lorenz with a=%f, b=%f...\n", a, b);
+void vanderpol(int dim, double *x, double t, double *par, double *f) {
+    printf("Running vanderpol with dim=%d\n", dim);
 }
 
-void bistable_EH(double a, double b) {
-    printf("Running bistable_EH with a=%f, b=%f...\n", a, b);
+void bistable_EH(int dim, double *x, double t, double *par, double *f) {
+    printf("Running bistable_EH with dim=%d\n", dim);
 }
 
-void num_integrator(void (*odesys)(double, double), double a, double b) {
-    odesys(a, b);
+void num_integrator(void (*odesys)(int, double *, double, double *, double *), double dim, double *x, double t, double *par, double *f) {
+    odesys(dim, x, t, par, f);
+}
+
+void customcalc_duffing(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
+    printf("Running customcalc_duffing_EH.\n");
+}
+
+void customcalc_bistable_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
+    printf("Running customcalc_bistable_EH\n");
 }
