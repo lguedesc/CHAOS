@@ -882,7 +882,39 @@ void customcalc_chuas_circuit(double *x, double *par, double t, double *xrms, do
 }
 
 void customcalc_multidirectional_hybrid_EH(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
-	return;
+	/* OMEGA   = p[0]   |   zeta_z    = p[5]   |   chiPZ     = p[10]   |   kappa_EM = p[15]   |   x[0] = x       |   x[5] = dphi/dt
+       gamma   = p[1]   |   zeta_phi  = p[6]   |   varphi_PZ = p[11]   |                      |   x[1] = dx/dt   |   x[6] = v
+       mu      = p[2]   |   OMEGA_s   = p[7]   |   kappa_PZ  = p[12]   |                      |   x[2] = z       |   x[7] = i
+       rho     = p[3]   |   OMEGA_phi = p[8]   |   chi_EM    = p[13]   |                      |   x[3] = dz/dt   |
+       zeta_x  = p[4]   |   l         = p[9]   |   varphi_EM = p[14]   |                      |   x[4] = phi     |                   */       
+
+    // Mode to define names to be printed in the output file
+    if (mode == 0) {    
+        char *names[] = { "PoutPZ_Avg", "PoutEM_Avg", "Pout_Avg" };
+        // Assign names to custom values
+        assign_names(names, ncustomvalues, customnames);
+    }
+    // Mode to perform calculations in steady state regime of the time series
+    else if (mode == 1) { 
+        return;
+    }
+    // Mode to perform calculations over the entire time series (transient + steady state)
+    else if (mode == 2) {
+        return;    
+    } 
+    // Mode to perform calculations at the end of the time series    
+    else if (mode == 3) {
+        // Peak to Peak Average Electrical Output Power of the Piezoelectric Element
+        customvalue[0] = par[11]*xrms[6]*xrms[6];
+        // Peak to Peak Average Electrical Output Power of the Electromagnetic Converter
+        customvalue[1] = par[14]*xrms[7]*xrms[7];
+        // Peak to Peak Average Electrical Output Power of the Entire System
+        customvalue[2] = customvalue[0] + customvalue[1];
+    }
+    else {
+        error(mode);
+    }
+
 }
 
 void customcalc_multidirectional_hybrid_EH_zero_pend_length(double *x, double *par, double t, double *xrms, double *xmin, double *xmax, double *IC, double t0, int N, int currenttimestep, double steadystateperc, int ncustomvalues, char **customnames, double *customvalue, int mode) {
