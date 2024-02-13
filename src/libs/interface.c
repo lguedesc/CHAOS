@@ -139,16 +139,8 @@ int int_length(int value) {
         return (floor(log10(abs(value))) + 1);
     }
 }
-
-void progress_bar_old(int mode, double var, double var_i, double var_f) {
-    double perc;
-    // Actual percentage
-    if (mode == 1) {
-        perc = 100;
-    }
-    else {
-        perc = (var/(var_f - var_i))*100;
-    }
+/*
+static void print_progress_bar_old(double perc) {
     // Filled Part of the progress bar
     int fill = (perc * PROGRESS_BAR_LEN) / 100;  
     printf("\r  Progress: |");
@@ -166,21 +158,64 @@ void progress_bar_old(int mode, double var, double var_i, double var_f) {
     fflush(stdout);
 }
 
+void progress_bar_old(int mode, double var, double var_i, double var_f) {
+    double perc;
+    // Actual percentage
+    if (mode == 1) {
+        perc = 100;
+    }
+    else {
+        perc = (var/(var_f - var_i))*100;
+    }
+    // Print bar
+    if (perc < 33) {
+        red();
+        //print_progress_bar(perc);
+        reset_color();
+    }
+    else if ((perc >= 33) && (perc < 66)) {
+        yellow();
+        //print_progress_bar(perc);
+        reset_color();
+    }
+    else if (perc >= 66) {
+        green();
+        //print_progress_bar(perc);
+        reset_color();
+    }
+    else {
+        //print_progress_bar(perc);
+    }
+}
+*/
 static void print_progress_bar(double perc) {
     // Filled Part of the progress bar
     int fill = (perc * PROGRESS_BAR_LEN) / 100;  
-    printf("\r  Progress: |");
+    printf("\r  Progress: [");
     for(int i = 0; i < fill; i++) {
+        if (perc < 33) {
+            red();
+        }
+        else if ((perc >= 33) && (perc < 66)) {
+            yellow();
+        }
+        else if (perc >= 66) {
+            green();
+        }
+        else {
+            reset_color();
+        }
         printf("#");
+        reset_color();
     }
     // Unfilled part of the progress bar
     for (int i = 0; i < PROGRESS_BAR_LEN - fill; i++) {
-        printf(".");
+        printf(" ");
     }
     if (perc > 100) {
         perc = 100;
     }
-    printf("| %.1lf %% ", perc);
+    printf("] %.1lf %% ", perc);
     fflush(stdout);
 }
 
@@ -194,24 +229,7 @@ void progress_bar(int mode, double var, double var_i, double var_f) {
         perc = (var/(var_f - var_i))*100;
     }
     // Print bar
-    if (perc < 33) {
-        red();
-        print_progress_bar(perc);
-        reset_color();
-    }
-    else if ((perc >= 33) && (perc < 66)) {
-        yellow();
-        print_progress_bar(perc);
-        reset_color();
-    }
-    else if (perc >= 66) {
-        green();
-        print_progress_bar(perc);
-        reset_color();
-    }
-    else {
-        print_progress_bar(perc);
-    }
+    print_progress_bar(perc);
 }
 
 // Simulation Prints

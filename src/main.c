@@ -44,7 +44,8 @@ char *HOSsystemNames[NUM_OF_HOS_SYSTEMS] = {"Duffing Oscillator",
                                             "Multidirectional Hybrid Energy Harvester",
                                             "Multidirectional Hybrid Energy Harvester (Without Pendulum Length)",
                                             "Pendulum Electromagnetic Energy Harvester (Dimensional)",
-                                            "Polynomial Tetrastable Energy Harvester" };
+                                            "Polynomial Tetrastable Energy Harvester",
+                                            "Multidirectional Hybrid Energy Harvester (with Coupling Ratio)" };
  
 char *GNLsystemNames[NUM_OF_GNL_SYSTEMS] = {"Lorenz System",
                                             "Lotka-Volterra Predator-Prey Model",
@@ -238,6 +239,9 @@ static void call_HOS_system(unsigned int system, unsigned int module) {
             break;
         case 22:
             execute_HOS_modules(module, HOS_FUNC_22, HOS_CUSTOM_22, HOS_OUTPUTNAME_22, HOSsystemNames[21], HOS_DIM_22, HOS_NPAR_22, HOS_ANGLES_22);
+            break;
+        case 23:
+            execute_HOS_modules(module, HOS_FUNC_23, HOS_CUSTOM_23, HOS_OUTPUTNAME_23, HOSsystemNames[22], HOS_DIM_23, HOS_NPAR_23, HOS_ANGLES_23, HOS_ANGINDEX0_23);
             break;
         default:
             printf("Invalid...\n");

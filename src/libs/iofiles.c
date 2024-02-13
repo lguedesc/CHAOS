@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include "defines.h"
 #include "msg.h"
+#include "basic.h"
 
 // Macro to create the format string
 #define STR(x) #x
@@ -139,7 +140,7 @@ bool file_exists(const char* filename) {
     }
 }
 
-FILE *create_output_file(char *name, const char *ext, const char *dir) {
+FILE *create_output_file_old(char *name, const char *ext, const char *dir) {
     // Check for safety
     if ((name == NULL) || (ext == NULL) || (dir == NULL)) {
         print_error("Failed to create output file.\n");
@@ -169,12 +170,87 @@ FILE *create_output_file(char *name, const char *ext, const char *dir) {
     return fopen(name, "w");
 }
 
+FILE *create_output_file_try(char *name, const char *ext, const char *dir) {
+    // Check for safety
+    if ((name == NULL) || (ext == NULL) || (dir == NULL)) {
+        print_error("Failed to create output file.\n");
+        print_error("Please check the code.\n");
+        print_exit_prog();
+        exit(EXIT_FAILURE);
+    }
+    // Check if directory (dir) exists. If not, create
+    directory_exists(dir);
+    // Creates a variable storing the total size of name 
+    size_t size = MAX_FILENAME_LEN;
+    // Creates a variable storing the size of the first attributed name
+    size_t name_len = strlen(name);
+    size_t ext_len = strlen(ext);
+    size_t numbering_len = count_int_digits(MAX_FILE_NUM);
+    // Check if the final filename is too long
+    if ((name_len + ext_len + numbering_len + 1) > size) {
+        print_debug("Filename too long.\n");
+        exit(EXIT_FAILURE);
+    }
+    else {
+        strcat(name, ext);
+        printf("name = %s\n", name);
+    }
+    // Create new buffer
+    char buffer[size];
+    // Insert the extension of the file in the end of the name string
+    //snprintf(name + len, size - len, "%s", ext);
+    snprintf(buffer, size, "%s%s", name, ext);
+    // Checks if a file with the same name already exists in the directory
+    int j = 0;
+    while (file_exists(buffer)) {
+        j++;
+        if (j >= MAX_FILE_NUM) {
+            // All possible file versions in the limit of MAX_FILE_NUM tried
+            return NULL;
+        }
+        //snprintf(buffer - ext, ext_len + numbering_len, "(%i)%s", j, ext);
+    } 
+
+    return fopen(buffer, "w");
+}
+
+FILE *create_output_file(char *name, const char *ext, const char *dir) {
+    // Check for safety
+    if ((name == NULL) || (ext == NULL) || (dir == NULL)) {
+        print_error("Failed to create output file.\n");
+        print_error("Please check the code.\n");
+        print_exit_prog();
+        exit(EXIT_FAILURE);
+    }
+    // Check if directory (dir) exists. If not, create
+    directory_exists(dir);
+    // Creates a variable storing the total size of name (200) 
+    size_t size = MAX_FILENAME_LEN;
+    // Creates a variable storing the size of the first attributed name
+    size_t len = strlen(name);
+    // Insert the extension of the file in the end of the name string
+    snprintf(name + len, size - len, "%s", ext);
+    // Checks if a file with the same name already exists in the directory
+    int j = 0;
+    while (file_exists(name)) {
+        j++;
+        if (j >= MAX_FILE_NUM) {
+            // All possible file versions in the limit of MAX_FILE_NUM tried
+            return NULL;
+        }
+        snprintf(name + len, size - len, "(%i)%s", j, ext);
+    } 
+
+    return fopen(name, "w");
+}
+
 FILE *name_and_create_output_files(const char *systemname, const char *directory, const char *module, const char *ext) {
     // Create output files to store results
     char output_filename[MAX_FILENAME_LEN + 1];
     // Convert directory string to match operational system
     char *dir = convert_dir(directory);
     snprintf(output_filename, sizeof(output_filename), "%s%s_%s", dir, systemname, module); // Assign name for output file without extension
+    printf("output_filename = %s | strlen(output_filename) = %lu\n", output_filename, strlen(output_filename));
     FILE *output_file = create_output_file(output_filename, ext, dir);                       // Create output file 
     // Free memory
     free(dir);
