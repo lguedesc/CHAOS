@@ -1011,19 +1011,66 @@ void customcalc_multidirectional_hybrid_EH_coupling_ratio(double *x, double *par
        rho     = p[3]   |   OMEGA_phi = p[8]   |   eta       = p[13]   |       x[3] = dz/dt   |
        zeta_x  = p[4]   |   l         = p[9]   |   varphi_EM = p[14]   |       x[4] = phi     |                   */
     
+    // Define global quantities
+    double rb = par[1]*sin(par[0]*t);               // amplitude of excitation displacement
+    double drb = par[1]*par[0]*cos(par[0]*t);       // amplitude of excitation velocity
+
     // Mode to define names to be printed in the output file
     if (mode == 0) {    
-        char *names[] = { "PoutPZ_Avg", "PoutEM_Avg", "Pout_Avg" };
+        char *names[] = { "PoutPZ_Avg", "PoutEM_Avg", "Pout_Avg",
+                          "OVRLL_Xb", "OVRLL_Zb", "OVRLL_dXb", "OVRLL_dZb",
+                          "Sum(OVRLL_Xb)", "Sum(OVRLL_Zb)", "Sum(OVRLL_dXb)", "Sum(OVRLL_dZb)",
+                          "OVRLL_Xb_RMS", "OVRLL_Zb_RMS", "OVRLL_dXb_RMS", "OVRLL_dZb_RMS",
+                          "OVRLL_Xp", "OVRLL_Zp", "OVRLL_dXp", "OVRLL_dZp",
+                          "Sum(OVRLL_Xp)", "Sum(OVRLL_Zp)", "Sum(OVRLL_dXp)", "Sum(OVRLL_dZp)",
+                          "OVRLL_Xp_RMS", "OVRLL_Zp_RMS", "OVRLL_dXp_RMS", "OVRLL_dZp_RMS",
+                          "Xp", "Zp", "dXp", "dZp",
+                          "Sum(Xp)", "Sum(Zp)", "Sum(dXp)", "Sum(dZp)",
+                          "Xp_RMS", "Zp_RMS", "dXp_RMS", "dZp_RMS"};
         // Assign names to custom values
         assign_names(names, ncustomvalues, customnames);
     }
     // Mode to perform calculations in steady state regime of the time series
     else if (mode == 1) { 
-        return;
+        // Steady State Pendulum X position
+        customvalue[27] = par[9]*sin(x[4]);
+        // Steady State Pendulum Z position
+        customvalue[28] = par[9]*cos(x[4]);
+        // Steady State Pendulum X velocity
+        customvalue[29] = par[9]*x[4]*cos(x[4]);
+        // Steady State Pendulum Z velocity
+        customvalue[30] = -par[9]*x[4]*sin(x[4]);
+        // Accumulate the value of the square of the Steady State pendulum position and velocity values ("Sum(Xp)", "Sum(Zp)", "Sum(dXp)", "Sum(dZp)")
+        for (int i = 0; i < 4; i++) { // From customvalue[31] to customvalue[34]
+            customvalue[31+i] = RMS(&customvalue[31+i], customvalue[27+i], N, 0);
+        }
     }
     // Mode to perform calculations over the entire time series (transient + steady state)
     else if (mode == 2) {
-        return;    
+        // Overall Input Base Excitation Displacement in X direction ("OVRLL_Xb")
+        customvalue[3] = rb*sin((PI/180)*par[2]);
+        // Overall Input Base Excitation Displacement in Z direction ("OVRLL_Zb")
+        customvalue[4] = rb*cos((PI/180)*par[2]);
+        // Overall Input Base Excitation Velocity in X direction ("OVRLL_dXb")
+        customvalue[5] = drb*sin((PI/180)*par[2]);
+        // Overall Input Base Excitation Velocity in Z direction ("OVRLL_dZb")
+        customvalue[6] = drb*cos((PI/180)*par[2]);
+        // Accumulate the value of the square of the overall input base excitation values ("Sum(OVRLL_Xb)", "Sum(OVRLL_Zb)", "Sum(OVRLL_dXb)", "Sum(OVRLL_dZb)")
+        for (int i = 0; i < 4; i++) { // From customvalue[7] to customvalue[10]
+            customvalue[7+i] = RMS(&customvalue[7+i], customvalue[3+i], N, 0);
+        }
+        // Overall Pendulum X position
+        customvalue[14] = par[9]*sin(x[4]);
+        // Overall Pendulum Z position
+        customvalue[15] = par[9]*cos(x[4]);
+        // Overall Pendulum X velocity
+        customvalue[16] = par[9]*x[4]*cos(x[4]);
+        // Overalll Pendulum Z velocity
+        customvalue[17] = -par[9]*x[4]*sin(x[4]);
+        // Accumulate the value of the square of the overall pendulum position and velocity values ("Sum(OVRLL_Xp)", "Sum(OVRLL_Zp)", "Sum(OVRLL_dXp)", "Sum(OVRLL_dZp)")
+        for (int i = 0; i < 4; i++) { // From customvalue[18] to customvalue[22]
+            customvalue[18+i] = RMS(&customvalue[18+i], customvalue[14+i], N, 0);
+        }    
     } 
     // Mode to perform calculations at the end of the time series    
     else if (mode == 3) {
@@ -1033,6 +1080,18 @@ void customcalc_multidirectional_hybrid_EH_coupling_ratio(double *x, double *par
         customvalue[1] = par[14]*xrms[7]*xrms[7];
         // Peak to Peak Average Electrical Output Power of the Entire System
         customvalue[2] = customvalue[0] + customvalue[1];
+        // Overall RMS of the input base excitation ("OVRLL_Xb_RMS", "OVRLL_Zb_RMS", "OVRLL_dXb_RMS", "OVRLL_dZb_RMS")
+        for (int i = 0; i < 4; i++) { // From customvalue[11] to customvalue[14]
+            customvalue[11+i] = RMS(&customvalue[7+i], customvalue[3+i], N, 1);
+        }
+        // Overall RMS of the pendulum x and z (cartesian) positions and velocities ("OVRLL_Xp_RMS", "OVRLL_Zp_RMS", "OVRLL_dXp_RMS", "OVRLL_dZp_RMS")
+        for (int i = 0; i < 4; i++) { // From customvalue[23] to customvalue[26]
+            customvalue[23+i] = RMS(&customvalue[18+i], customvalue[14+i], N, 1);
+        }
+        // RMS of the steady state pendulum x and z (cartesian) positions and velocities ("Xp_RMS", "Zp_RMS", "dXp_RMS", "dZp_RMS")
+        for (int i = 0; i < 4; i++) { // From customvalue[35] to customvalue[38]
+            customvalue[35+i] = RMS(&customvalue[31+i], customvalue[27+i], N, 1);
+        }
     }
     else {
         error(mode);
